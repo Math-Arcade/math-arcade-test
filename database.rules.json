@@ -1,0 +1,35 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "usernames": {
+      "$name": {
+        ".read": true,
+        ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && !newData.exists()))",
+        ".validate": "newData.isString() && newData.val().length < 40"
+      }
+    },
+
+    "leaderboard": {
+      "$mode": {
+        ".read": true,
+        ".indexOn": ["score"],
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['name', 'score']) && newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('score').val() <= 100000 && (!data.exists() || newData.child('score').val() >= data.child('score').val())",
+          "name": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 16" },
+          "score": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}

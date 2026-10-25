@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="green">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121A24">
+  <meta name="description" content="Math Arcade: a fast, free mental-math arcade game. Beat the clock, chain combos, take on the daily challenge, or duel a friend.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Math Arcade">
+  <title>Math Arcade</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/jersey-25-latin-400-normal.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/press-start-2p-latin-400-normal.woff2" crossorigin>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-view="">
+<!-- SPRITE:START -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><symbol id="i-play" viewBox="0 0 9 9"><path d="M0 0h1v1h-1zM0 1h3v1h-3zM0 2h5v1h-5zM0 3h7v1h-7zM0 4h9v1h-9zM0 5h7v1h-7zM0 6h5v1h-5zM0 7h3v1h-3zM0 8h1v1h-1z"/></symbol><symbol id="i-pause" viewBox="0 0 7 9"><path d="M0 0h3v1h-3zM4 0h3v1h-3zM0 1h3v1h-3zM4 1h3v1h-3zM0 2h3v1h-3zM4 2h3v1h-3zM0 3h3v1h-3zM4 3h3v1h-3zM0 4h3v1h-3zM4 4h3v1h-3zM0 5h3v1h-3zM4 5h3v1h-3zM0 6h3v1h-3zM4 6h3v1h-3zM0 7h3v1h-3zM4 7h3v1h-3zM0 8h3v1h-3zM4 8h3v1h-3z"/></symbol><symbol id="i-back" viewBox="0 0 7 9"><path d="M4 0h3v1h-3zM3 1h3v1h-3zM2 2h3v1h-3zM1 3h3v1h-3zM0 4h3v1h-3zM1 5h3v1h-3zM2 6h3v1h-3zM3 7h3v1h-3zM4 8h3v1h-3z"/></symbol><symbol id="i-heart" viewBox="0 0 9 8"><path d="M1 0h2v1h-2zM6 0h2v1h-2zM0 1h4v1h-4zM5 1h4v1h-4zM0 2h9v1h-9zM0 3h9v1h-9zM1 4h7v1h-7zM2 5h5v1h-5zM3 6h3v1h-3zM4 7h1v1h-1z"/></symbol><symbol id="i-heart-o" viewBox="0 0 9 8"><path d="M1 0h2v1h-2zM6 0h2v1h-2zM0 1h1v1h-1zM3 1h1v1h-1zM5 1h1v1h-1zM8 1h1v1h-1zM0 2h1v1h-1zM4 2h1v1h-1zM8 2h1v1h-1zM0 3h1v1h-1zM8 3h1v1h-1zM1 4h1v1h-1zM7 4h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM3 6h1v1h-1zM5 6h1v1h-1zM4 7h1v1h-1z"/></symbol><symbol id="i-trophy" viewBox="0 0 9 9"><path d="M0 0h9v1h-9zM0 1h1v1h-1zM2 1h5v1h-5zM8 1h1v1h-1zM0 2h1v1h-1zM2 2h5v1h-5zM8 2h1v1h-1zM1 3h7v1h-7zM2 4h5v1h-5zM3 5h3v1h-3zM4 6h1v1h-1zM3 7h3v1h-3zM2 8h5v1h-5z"/></symbol><symbol id="i-chart" viewBox="0 0 9 9"><path d="M7 0h2v1h-2zM7 1h2v1h-2zM3 2h2v1h-2zM7 2h2v1h-2zM3 3h2v1h-2zM7 3h2v1h-2zM0 4h2v1h-2zM3 4h2v1h-2zM7 4h2v1h-2zM0 5h2v1h-2zM3 5h2v1h-2zM7 5h2v1h-2zM0 6h2v1h-2zM3 6h2v1h-2zM7 6h2v1h-2zM0 7h2v1h-2zM3 7h2v1h-2zM7 7h2v1h-2zM0 8h9v1h-9z"/></symbol><symbol id="i-cog" viewBox="0 0 9 9"><path d="M4 0h1v1h-1zM1 1h2v1h-2zM4 1h1v1h-1zM6 1h2v1h-2zM1 2h7v1h-7zM2 3h2v1h-2zM5 3h2v1h-2zM0 4h3v1h-3zM6 4h3v1h-3zM2 5h2v1h-2zM5 5h2v1h-2zM1 6h7v1h-7zM1 7h2v1h-2zM4 7h1v1h-1zM6 7h2v1h-2zM4 8h1v1h-1z"/></symbol><symbol id="i-user" viewBox="0 0 9 8"><path d="M3 0h3v1h-3zM2 1h5v1h-5zM2 2h5v1h-5zM3 3h3v1h-3zM1 4h7v1h-7zM0 5h9v1h-9zM0 6h9v1h-9zM0 7h9v1h-9z"/></symbol><symbol id="i-vol" viewBox="0 0 11 8"><path d="M4 0h1v1h-1zM3 1h2v1h-2zM7 1h1v1h-1zM0 2h4v1h-4zM8 2h1v1h-1zM0 3h4v1h-4zM5 3h1v1h-1zM8 3h1v1h-1zM0 4h4v1h-4zM5 4h1v1h-1zM8 4h1v1h-1zM0 5h4v1h-4zM8 5h1v1h-1zM3 6h2v1h-2zM7 6h1v1h-1zM4 7h1v1h-1z"/></symbol><symbol id="i-mute" viewBox="0 0 11 8"><path d="M4 0h1v1h-1zM3 1h2v1h-2zM0 2h4v1h-4zM5 2h1v1h-1zM9 2h1v1h-1zM0 3h4v1h-4zM6 3h1v1h-1zM8 3h1v1h-1zM0 4h4v1h-4zM7 4h1v1h-1zM0 5h4v1h-4zM6 5h1v1h-1zM8 5h1v1h-1zM3 6h2v1h-2zM6 6h1v1h-1zM10 6h1v1h-1zM4 7h1v1h-1z"/></symbol><symbol id="i-flame" viewBox="0 0 7 9"><path d="M3 0h1v1h-1zM3 1h2v1h-2zM2 2h3v1h-3zM1 3h4v1h-4zM6 3h1v1h-1zM1 4h5v1h-5zM0 5h6v1h-6zM0 6h6v1h-6zM1 7h4v1h-4zM2 8h2v1h-2z"/></symbol><symbol id="i-bolt" viewBox="0 0 7 8"><path d="M4 0h3v1h-3zM3 1h3v1h-3zM2 2h3v1h-3zM1 3h5v1h-5zM3 4h3v1h-3zM2 5h3v1h-3zM1 6h3v1h-3zM0 7h3v1h-3z"/></symbol><symbol id="i-cal" viewBox="0 0 9 9"><path d="M1 0h1v1h-1zM7 0h1v1h-1zM0 1h9v1h-9zM0 2h1v1h-1zM8 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM8 3h1v1h-1zM0 4h1v1h-1zM8 4h1v1h-1zM0 5h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM0 6h1v1h-1zM8 6h1v1h-1zM0 7h1v1h-1zM8 7h1v1h-1zM0 8h9v1h-9z"/></symbol><symbol id="i-check" viewBox="0 0 9 7"><path d="M8 0h1v1h-1zM7 1h2v1h-2zM0 2h1v1h-1zM6 2h2v1h-2zM0 3h2v1h-2zM5 3h2v1h-2zM1 4h2v1h-2zM4 4h2v1h-2zM2 5h3v1h-3zM3 6h1v1h-1z"/></symbol><symbol id="i-cross" viewBox="0 0 7 7"><path d="M0 0h2v1h-2zM5 0h2v1h-2zM0 1h3v1h-3zM4 1h3v1h-3zM1 2h5v1h-5zM2 3h3v1h-3zM1 4h5v1h-5zM0 5h3v1h-3zM4 5h3v1h-3zM0 6h2v1h-2zM5 6h2v1h-2z"/></symbol><symbol id="i-cat" viewBox="0 0 9 7"><path d="M0 0h1v1h-1zM8 0h1v1h-1zM0 1h2v1h-2zM7 1h2v1h-2zM0 2h9v1h-9zM0 3h1v1h-1zM2 3h1v1h-1zM6 3h1v1h-1zM8 3h1v1h-1zM0 4h9v1h-9zM1 5h3v1h-3zM5 5h3v1h-3zM2 6h5v1h-5z"/></symbol><symbol id="i-root" viewBox="0 0 8 7"><path d="M6 0h1v1h-1zM6 1h1v1h-1zM5 2h1v1h-1zM5 3h1v1h-1zM0 4h1v1h-1zM4 4h1v1h-1zM1 5h1v1h-1zM3 5h1v1h-1zM2 6h1v1h-1z"/></symbol><symbol id="i-swap" viewBox="0 0 9 10"><path d="M2 0h1v1h-1zM2 1h2v1h-2zM0 2h7v1h-7zM2 3h2v1h-2zM2 4h1v1h-1zM6 5h1v1h-1zM5 6h2v1h-2zM2 7h7v1h-7zM5 8h2v1h-2zM6 9h1v1h-1z"/></symbol></svg>
+<!-- SPRITE:END -->
+
+<div id="bg" aria-hidden="true">
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-symbols" id="bg-symbols"></div>
+</div>
+
+<main id="app" class="app">
+
+  <!-- HOME -->
+  <section class="screen home" data-screen="home" hidden>
+    <div class="topbar">
+      <button class="chip" id="h-player" type="button"><svg class="ico"><use href="#i-user"></use></svg><span id="h-name">Guest</span></button>
+      <button class="icon-btn" id="h-mute" type="button" aria-label="Toggle sound"><svg class="ico"><use href="#i-vol"></use></svg></button>
+    </div>
+    <h1 class="logo" aria-label="Math Arcade"><span class="logo-a">MATH</span><span class="logo-b">ARCADE</span></h1>
+    <div class="menu">
+      <button class="btn btn-primary btn-xl" id="h-play" type="button"><svg class="ico"><use href="#i-play"></use></svg>PLAY</button>
+      <button class="btn btn-daily" id="h-daily" type="button">
+        <svg class="ico ico-l"><use href="#i-cal"></use></svg>
+        <span class="daily-text"><b>DAILY CHALLENGE</b><small id="h-daily-sub">10 questions. Same for everyone.</small></span>
+        <span class="streak" id="h-streak" hidden><svg class="ico"><use href="#i-flame"></use></svg><span id="h-streak-n">0</span></span>
+      </button>
+      <div class="tiles">
+        <button class="tile" id="h-ranks" type="button"><svg class="ico"><use href="#i-trophy"></use></svg><span>RANKS</span></button>
+        <button class="tile" id="h-stats" type="button"><svg class="ico"><use href="#i-chart"></use></svg><span>STATS</span></button>
+        <button class="tile" id="h-settings" type="button"><svg class="ico"><use href="#i-cog"></use></svg><span>SETTINGS</span></button>
+      </div>
+    </div>
+    <div class="foot" id="h-version"></div>
+  </section>
+
+  <!-- MODE SELECT -->
+  <section class="screen modes" data-screen="modes" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
+      <h2>CHOOSE GAME</h2><span class="bar-spacer"></span>
+    </header>
+    <div class="section-label">OPERATION</div>
+    <div class="ops" id="m-ops" role="radiogroup" aria-label="Operation"></div>
+    <div class="cards">
+      <button class="card" id="m-blitz" type="button">
+        <svg class="ico card-ico"><use href="#i-bolt"></use></svg>
+        <span class="card-text"><b>BLITZ</b><small>Beat the clock. 3 lives. Chain combos for big points.</small></span>
+        <span class="card-best" id="m-blitz-best"></span>
+      </button>
+      <button class="card" id="m-zen" type="button">
+        <svg class="ico card-ico"><use href="#i-cat"></use></svg>
+        <span class="card-text"><b>ZEN</b><small>No timer, no pressure. Relax with the cat.</small></span>
+        <span class="card-best" id="m-zen-best"></span>
+      </button>
+      <div class="card-wrap">
+        <button class="card" id="m-duel" type="button">
+          <svg class="ico card-ico"><use href="#i-swap"></use></svg>
+          <span class="card-text"><b>DUEL</b><small>Two players, one phone. Face to face, first to the target wins.</small></span>
+        </button>
+        <div class="chips" id="m-targets" role="radiogroup" aria-label="Points to win"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME (Blitz / Zen / Daily) -->
+  <section class="screen game" data-screen="game" data-kind="blitz" hidden>
+    <header class="hud">
+      <button class="icon-btn" id="g-pausebtn" type="button" aria-label="Pause"><svg class="ico"><use href="#i-pause"></use></svg></button>
+      <div class="hud-score"><div class="hud-label" id="g-score-label">SCORE</div><div class="hud-value" id="g-score">0</div></div>
+      <div class="hearts" id="g-hearts" aria-label="Lives"></div>
+    </header>
+    <div class="clock" id="g-clock" role="timer"><div class="clock-fill" id="g-clock-fill"></div><span class="clock-text" id="g-clock-text">30</span></div>
+    <div class="levelrow" id="g-levelrow">
+      <span class="lv" id="g-lv">LV 1</span>
+      <div class="lvbar"><i id="g-lvfill"></i></div>
+      <span class="combo" id="g-combo" hidden>x2</span>
+    </div>
+    <div class="stage">
+      <div class="pcard" id="g-card">
+        <div class="problem" id="g-problem"></div>
+        <div class="verdict" id="g-verdict" aria-hidden="true"></div>
+      </div>
+      <div class="cat" id="g-cat" hidden></div>
+      <div class="banner" id="g-banner" hidden></div>
+    </div>
+    <div class="answers" id="g-answers">
+      <button class="answer" type="button" data-i="0"></button>
+      <button class="answer" type="button" data-i="1"></button>
+      <button class="answer" type="button" data-i="2"></button>
+      <button class="answer" type="button" data-i="3"></button>
+    </div>
+    <div class="countdown" id="g-count" hidden></div>
+
+    <div class="sheet" id="g-pause" hidden role="dialog" aria-modal="true" aria-labelledby="g-pause-t">
+      <div class="sheet-card">
+        <h2 id="g-pause-t">PAUSED</h2>
+        <div class="sheet-actions">
+          <button class="btn btn-primary" id="g-resume" type="button">RESUME</button>
+          <button class="btn" id="g-restart" type="button">RESTART</button>
+          <button class="btn btn-ghost" id="g-quit" type="button">QUIT</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet" id="g-result" hidden role="dialog" aria-modal="true" aria-labelledby="g-result-t">
+      <div class="sheet-card">
+        <h2 id="g-result-t">GAME OVER</h2>
+        <div class="newbest" id="g-newbest" hidden>NEW BEST!</div>
+        <div class="big-score" id="g-r-score">0</div>
+        <div class="muted" id="g-r-best"></div>
+        <div class="emoji-grid" id="g-r-grid" hidden></div>
+        <dl class="stats-mini" id="g-r-stats"></dl>
+        <div class="sheet-actions">
+          <button class="btn btn-primary" id="g-r-again" type="button">PLAY AGAIN</button>
+          <div class="row-2">
+            <button class="btn" id="g-r-share" type="button">SHARE</button>
+            <button class="btn btn-ghost" id="g-r-menu" type="button">MENU</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DUEL -->
+  <section class="screen duel" data-screen="duel" hidden>
+    <div class="half half-2" id="d-h1"></div>
+    <div class="mid">
+      <div class="tug" aria-hidden="true"><i class="tug-fill" id="d-fill"></i></div>
+      <div class="mid-row">
+        <span class="mid-score" id="d-s1">0</span>
+        <button class="icon-btn" id="d-pausebtn" type="button" aria-label="Pause"><svg class="ico"><use href="#i-pause"></use></svg></button>
+        <span class="mid-score" id="d-s2">0</span>
+      </div>
+    </div>
+    <div class="half half-1" id="d-h0"></div>
+    <div class="countdown" id="d-count" hidden></div>
+
+    <div class="sheet" id="d-pause" hidden role="dialog" aria-modal="true" aria-labelledby="d-pause-t">
+      <div class="sheet-card">
+        <h2 id="d-pause-t">PAUSED</h2>
+        <div class="sheet-actions">
+          <button class="btn btn-primary" id="d-resume" type="button">RESUME</button>
+          <button class="btn" id="d-restart" type="button">RESTART</button>
+          <button class="btn btn-ghost" id="d-quit" type="button">QUIT</button>
+        </div>
+      </div>
+    </div>
+    <div class="sheet" id="d-result" hidden role="dialog" aria-modal="true" aria-labelledby="d-result-t">
+      <div class="sheet-card">
+        <h2 id="d-result-t">PLAYER 1 WINS!</h2>
+        <div class="big-score" id="d-r-score">10 - 6</div>
+        <div class="sheet-actions">
+          <button class="btn btn-primary" id="d-r-again" type="button">REMATCH</button>
+          <button class="btn btn-ghost" id="d-r-menu" type="button">MENU</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section class="screen lb" data-screen="leaderboard" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
+      <h2>RANKS</h2><span class="bar-spacer"></span>
+    </header>
+    <div class="ops" id="lb-ops" role="radiogroup" aria-label="Leaderboard"></div>
+    <div class="lb-list" id="lb-list" role="list"></div>
+    <div class="lb-foot" id="lb-foot"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="screen stats" data-screen="stats" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
+      <h2>STATS</h2><span class="bar-spacer"></span>
+    </header>
+    <div class="scroll" id="st-body"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen settings" data-screen="settings" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
+      <h2>SETTINGS</h2><span class="bar-spacer"></span>
+    </header>
+    <div class="scroll">
+      <div class="group">
+        <h3>SOUND</h3>
+        <label class="row"><span>Sound effects</span><span class="switch"><input type="checkbox" id="s-sfx"><i></i></span></label>
+        <label class="row"><span>Effects volume</span><input class="range" type="range" id="s-sfxvol" min="0" max="1" step="0.05"></label>
+        <div class="row col"><span>Music</span><div class="chips" id="s-music" role="radiogroup" aria-label="Music"></div></div>
+        <label class="row"><span>Music volume</span><input class="range" type="range" id="s-musicvol" min="0" max="1" step="0.05"></label>
+        <label class="row"><span>Vibration</span><span class="switch"><input type="checkbox" id="s-haptics"><i></i></span></label>
+      </div>
+      <div class="group">
+        <h3>LOOK</h3>
+        <div class="row col"><span>Theme</span><div class="swatches" id="s-themes" role="radiogroup" aria-label="Theme"></div></div>
+        <label class="row"><span>Background grid</span><span class="switch"><input type="checkbox" id="s-grid"><i></i></span></label>
+        <label class="row"><span>CRT scanlines</span><span class="switch"><input type="checkbox" id="s-crt"><i></i></span></label>
+        <label class="row"><span>Particles</span><span class="switch"><input type="checkbox" id="s-particles"><i></i></span></label>
+        <label class="row"><span>Reduce motion</span><span class="switch"><input type="checkbox" id="s-motion"><i></i></span></label>
+      </div>
+      <div class="group">
+        <h3>DUEL</h3>
+        <label class="row"><span>Player 1</span><input class="text" type="text" id="s-p1" maxlength="12" autocomplete="off"></label>
+        <label class="row"><span>Player 2</span><input class="text" type="text" id="s-p2" maxlength="12" autocomplete="off"></label>
+      </div>
+      <div class="group">
+        <h3>ACCOUNT</h3>
+        <div id="s-account"></div>
+      </div>
+      <div class="group">
+        <h3>ABOUT</h3>
+        <div class="row"><span>Version</span><span class="muted" id="s-version"></span></div>
+        <div class="row"><span>Privacy policy</span><a class="link" href="privacy.html" target="_blank" rel="noopener">Read</a></div>
+        <div class="row"><button class="btn btn-ghost btn-sm" id="s-reset" type="button">RESET LOCAL STATS</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTH -->
+  <section class="screen auth" data-screen="auth" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
+      <h2 id="a-title">SIGN IN</h2><span class="bar-spacer"></span>
+    </header>
+    <form class="scroll" id="a-form" novalidate>
+      <p class="muted center" id="a-lead">Save your progress and join the leaderboard.</p>
+      <label class="field" id="a-name-f" hidden><span>Player name</span><input id="a-name" type="text" maxlength="16" autocomplete="nickname" autocapitalize="off"></label>
+      <label class="field"><span>Email</span><input id="a-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off"></label>
+      <label class="field"><span>Password</span><input id="a-pass" type="password" autocomplete="current-password"></label>
+      <div class="form-msg" id="a-msg" role="alert"></div>
+      <button class="btn btn-primary" id="a-submit" type="submit">SIGN IN</button>
+      <button class="link" id="a-forgot" type="button">Forgot password?</button>
+      <button class="link" id="a-switch" type="button">New here? Create an account</button>
+    </form>
+  </section>
+
+</main>
+
+<!-- confirm dialog (shared) -->
+<div class="sheet" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+  <div class="sheet-card">
+    <h2 id="dlg-t"></h2>
+    <p id="dlg-p" class="muted center"></p>
+    <label class="field" id="dlg-f" hidden><span>Password</span><input id="dlg-in" type="password" autocomplete="current-password"></label>
+    <div class="form-msg" id="dlg-err" role="alert"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-primary" id="dlg-ok" type="button">OK</button>
+      <button class="btn btn-ghost" id="dlg-cancel" type="button">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="fx-layer" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="color:#fff;padding:2rem;font-family:sans-serif">Math Arcade needs JavaScript to run.</p></noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
