@@ -1,0 +1,85 @@
+/* Fonts are bundled (no network needed, works offline and inside the Android app). */
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('../assets/fonts/press-start-2p-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Jersey 25'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('../assets/fonts/jersey-25-latin-400-normal.woff2') format('woff2'); }
+
+:root {
+  --font-px: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  --font-body: 'Jersey 25', ui-monospace, 'Courier New', monospace;
+}
+
+/* Theme tokens. Any element with data-theme="x" gets that palette (used for the swatches too). */
+:root, [data-theme="green"] {
+  color-scheme: dark;
+  --bg: #121A24; --bg-2: #1B2633; --bg-3: #243245; --line: #2F4259;
+  --primary: #19C37D; --primary-2: #6EE7B7; --on-primary: #052E1C; --shade: #0B5F40;
+  --text: #EAF2FA; --muted: #94A8BD;
+  --good: #2ED47A; --bad: #FF5C6C; --warn: #FFC53D; --on-bad: #1D0409;
+  --good-t: rgba(46, 212, 122, .20); --bad-t: rgba(255, 92, 108, .20);
+  --grid: rgba(25, 195, 125, .09); --glow: rgba(25, 195, 125, .22);
+}
+[data-theme="blue"] {
+  color-scheme: dark;
+  --bg: #0B1226; --bg-2: #131D3B; --bg-3: #1B2A55; --line: #2C4080;
+  --primary: #4C8DFF; --primary-2: #9DC1FF; --on-primary: #06142E; --shade: #1B3F99;
+  --text: #E8EEFF; --muted: #93A3D1;
+  --good: #3DDC97; --bad: #FF5C7A; --warn: #FFC53D; --on-bad: #1D0409;
+  --good-t: rgba(61, 220, 151, .20); --bad-t: rgba(255, 92, 122, .20);
+  --grid: rgba(76, 141, 255, .10); --glow: rgba(76, 141, 255, .24);
+}
+[data-theme="red"] {
+  color-scheme: dark;
+  --bg: #1A0A10; --bg-2: #27111B; --bg-3: #371827; --line: #55263A;
+  --primary: #FF4D6D; --primary-2: #FF9DB0; --on-primary: #2A0610; --shade: #99203A;
+  --text: #FFEFF2; --muted: #CE95A3;
+  --good: #3DDC97; --bad: #FF8A1F; --warn: #FFD23F; --on-bad: #241000;
+  --good-t: rgba(61, 220, 151, .20); --bad-t: rgba(255, 138, 31, .22);
+  --grid: rgba(255, 77, 109, .10); --glow: rgba(255, 77, 109, .22);
+}
+[data-theme="yellow"] {
+  color-scheme: dark;
+  --bg: #17140A; --bg-2: #231E0E; --bg-3: #332B13; --line: #54461E;
+  --primary: #FFC53D; --primary-2: #FFE08A; --on-primary: #2B2000; --shade: #8A6400;
+  --text: #FFF8E6; --muted: #C2B084;
+  --good: #3DDC97; --bad: #FF5C6C; --warn: #FF9F1C; --on-bad: #1D0409;
+  --good-t: rgba(61, 220, 151, .20); --bad-t: rgba(255, 92, 108, .20);
+  --grid: rgba(255, 197, 61, .09); --glow: rgba(255, 197, 61, .20);
+}
+[data-theme="purple"] {
+  color-scheme: dark;
+  --bg: #170B26; --bg-2: #221238; --bg-3: #301A4F; --line: #4B2C78;
+  --primary: #B26BFF; --primary-2: #D8B4FF; --on-primary: #1E0838; --shade: #6B2FB3;
+  --text: #F3EAFF; --muted: #AA92CE;
+  --good: #3DDC97; --bad: #FF5C7A; --warn: #FFC53D; --on-bad: #1D0409;
+  --good-t: rgba(61, 220, 151, .20); --bad-t: rgba(255, 92, 122, .20);
+  --grid: rgba(178, 107, 255, .10); --glow: rgba(178, 107, 255, .24);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #EEF1F8; --bg-2: #FFFFFF; --bg-3: #E4E9F4; --line: #BFC9DE;
+  --primary: #3B5BDB; --primary-2: #2B44B5; --on-primary: #FFFFFF; --shade: #22318F;
+  --text: #151A2D; --muted: #566079;
+  --good: #17884D; --bad: #D6264A; --warn: #A85F00; --on-bad: #FFFFFF;
+  --good-t: rgba(23, 136, 77, .16); --bad-t: rgba(214, 38, 74, .14);
+  --grid: rgba(59, 91, 219, .10); --glow: rgba(59, 91, 219, .16);
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0B0B0C; --bg-2: #151517; --bg-3: #202024; --line: #3A3A41;
+  --primary: #F2F2F2; --primary-2: #FFFFFF; --on-primary: #0B0B0C; --shade: #6B6B73;
+  --text: #F2F2F2; --muted: #9B9BA5;
+  --good: #5FE3A1; --bad: #FF6B6B; --warn: #FFD166; --on-bad: #1D0409;
+  --good-t: rgba(95, 227, 161, .18); --bad-t: rgba(255, 107, 107, .18);
+  --grid: rgba(255, 255, 255, .06); --glow: rgba(255, 255, 255, .10);
+}
+/* Color-safe: blue/orange feedback (readable with the common types of color blindness). */
+[data-theme="colorblind"] {
+  color-scheme: dark;
+  --bg: #0F1419; --bg-2: #19212A; --bg-3: #232E3A; --line: #3A4857;
+  --primary: #CC79A7; --primary-2: #F0B6D3; --on-primary: #240A18; --shade: #7A3F5F;
+  --text: #F4F6F8; --muted: #9FADBB;
+  --good: #56B4E9; --bad: #E69F00; --warn: #F0E442; --on-bad: #1D1200;
+  --good-t: rgba(86, 180, 233, .22); --bad-t: rgba(230, 159, 0, .22);
+  --grid: rgba(204, 121, 167, .10); --glow: rgba(204, 121, 167, .20);
+}
