@@ -18,12 +18,11 @@ export class Router {
     $$('[data-back]').forEach((b) => b.addEventListener('click', () => this.back()));
 
     // Keep one extra history entry so the hardware/gesture Back button comes to us first.
-    history.replaceState({ base: true }, '');
-    history.pushState({ app: true }, '');
+    try { history.replaceState({ base: true }, ''); history.pushState({ app: true }, ''); } catch { /* sandboxed frame */ }
     window.addEventListener('popstate', () => {
       if (this.current === 'home' || !this.current) { history.back(); return; }
       this.back();
-      history.pushState({ app: true }, '');
+      try { history.pushState({ app: true }, ''); } catch { /* ignore */ }
     });
   }
 

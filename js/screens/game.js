@@ -11,7 +11,7 @@ export function initGame() {
   const root = $('[data-screen="game"]');
   const E = {
     problem: $('#g-problem'), card: $('#g-card'), verdict: $('#g-verdict'), answers: $('#g-answers'), btns: $$('.answer', $('#g-answers')),
-    score: $('#g-score'), scoreLabel: $('#g-score-label'), hearts: $('#g-hearts'), clock: $('#g-clock'), fill: $('#g-clock-fill'), clockText: $('#g-clock-text'),
+    score: $('#g-score'), scoreLabel: $('#g-score-label'), hearts: $('#g-hearts'), clock: $('#g-clock'), cells: $('#g-cells'), clockText: $('#g-clock-text'),
     lv: $('#g-lv'), lvFill: $('#g-lvfill'), combo: $('#g-combo'), banner: $('#g-banner'), cat: $('#g-cat'), count: $('#g-count'),
     pause: $('#g-pause'), result: $('#g-result'),
   };
@@ -33,9 +33,9 @@ export function initGame() {
   }
 
   function leave() {
-    finalizeZen();
     stopLoop();
     clearTimers();
+    clearTimeout(blinkT); clearTimeout(backT);
     runId++;
     closeNow(E.pause); closeNow(E.result);
     E.count.hidden = true;
@@ -57,7 +57,8 @@ export function initGame() {
     E.problem.textContent = '';
     E.btns.forEach((b) => { b.disabled = true; b.className = 'answer'; b.textContent = ''; });
     E.cat.hidden = kind !== 'zen';
-    if (kind === 'zen') setCat('sleep');
+    if (kind === 'zen') { setCat('idle'); catLoop(); }
+    if (kind !== 'zen') buildCells();
     const pb = $('#g-pausebtn');
     pb.innerHTML = icon(kind === 'zen' ? 'back' : 'pause');
     pb.setAttribute('aria-label', kind === 'zen' ? 'Back' : 'Pause');
@@ -109,11 +110,28 @@ export function initGame() {
     raf = requestAnimationFrame(loop);
   }
 
+  // Timer: a row of segments (20 for Blitz = the 40s cap, 12 for Daily) that switch off one by one;
+  // the segment being consumed shrinks smoothly so the drain never looks jumpy.
+  let cellEls = [], cellCount = 20, cellFull = -1, cellPartial = null;
+  function buildCells() {
+    cellCount = cfg.kind === 'daily' ? 12 : 20;
+    E.cells.textContent = '';
+    cellEls = [];
+    for (let i = 0; i < cellCount; i++) { const c = document.createElement('i'); E.cells.append(c); cellEls.push(c); }
+    cellFull = -1; cellPartial = null;
+  }
+
   function renderClock() {
     if (cfg.kind === 'zen') return;
     const t = eng.timeLeft;
     const total = cfg.kind === 'blitz' ? RULES.blitz.maxTime : RULES.daily.qTime;
-    E.fill.style.transform = `scaleX(${Math.max(0, Math.min(1, t / total))})`;
+    const x = Math.max(0, Math.min(1, t / total)) * cellCount;
+    const full = Math.min(cellCount, Math.floor(x));
+    if (full !== cellFull) { cellEls.forEach((c, i) => c.classList.toggle('on', i < full)); cellFull = full; }
+    const part = full < cellCount ? cellEls[full] : null;
+    if (cellPartial && cellPartial !== part) cellPartial.style.removeProperty('--f');
+    if (part) part.style.setProperty('--f', (x - full).toFixed(2));
+    cellPartial = part;
     const sec = Math.ceil(t);
     E.clockText.textContent = cfg.kind === 'blitz' ? clock(t) : `${sec}s`;
     const low = cfg.kind === 'blitz' ? 10 : 6, crit = cfg.kind === 'blitz' ? 5 : 3;
@@ -226,10 +244,28 @@ export function initGame() {
   }
 
   // ---------- cat (zen) ----------
+  let catState = 'idle', lastPoke = 0, blinkT = 0, backT = 0;
+  function drawCat(face) {
+    E.cat.dataset.state = catState;
+    E.cat.innerHTML = catSVG(face) + (face === 'sleep' ? '<span class="zzz">z z</span>' : '');
+  }
   function setCat(state, back = 0) {
-    clearTimeout(catTimer);
-    E.cat.innerHTML = catSVG(state) + (state === 'sleep' ? '<span class="zzz">z z</span>' : '');
-    if (back) catTimer = setTimeout(() => setCat('sleep'), back);
+    clearTimeout(backT);
+    catState = state; lastPoke = Date.now();
+    drawCat(state);
+    if (back) backT = setTimeout(() => { catState = 'idle'; drawCat('idle'); }, back);
+  }
+  // blinks now and then, and dozes off if you leave it alone for a while
+  function catLoop() {
+    clearTimeout(blinkT);
+    blinkT = setTimeout(() => {
+      if (!cfg || cfg.kind !== 'zen' || !running) return;
+      if (catState === 'idle') {
+        if (Date.now() - lastPoke > 18000) { catState = 'sleep'; drawCat('sleep'); }
+        else { drawCat('blink'); setTimeout(() => { if (catState === 'idle') drawCat('idle'); }, 160); }
+      }
+      catLoop();
+    }, 2200 + Math.random() * 3000);
   }
   E.cat.onclick = () => {
     if (cfg && cfg.kind === 'zen') { setCat('happy', 1400); audio.sfx('coin'); const p = fx.at(E.cat); fx.burst(p.x, p.y - 20, { n: 8, kind: 'accent' }); }
@@ -249,10 +285,7 @@ export function initGame() {
     if (pending) { const f = pending; pending = null; f(); }
   }
   const advance = (fn) => { if (paused) pending = fn; else fn(); };
-  function quit() {
-    finalizeZen();
-    leaveToModes();
-  }
+  function quit() { leaveToModes(); }
   function leaveToModes() {
     stopLoop(); clearTimers(); runId++;
     router.go(cfg.kind === 'daily' ? 'home' : 'modes', {}, { back: true });
@@ -260,7 +293,7 @@ export function initGame() {
 
   $('#g-pausebtn').onclick = () => { if (cfg.kind === 'zen') quit(); else pause(); };
   $('#g-resume').onclick = resume;
-  $('#g-restart').onclick = () => { finalizeZen(); start(); };
+  $('#g-restart').onclick = () => start();
   $('#g-quit').onclick = quit;
   $('#g-r-again').onclick = () => start();
   $('#g-r-menu').onclick = () => leaveToModes();
@@ -298,19 +331,6 @@ export function initGame() {
   });
 
   // ---------- results ----------
-  function finalizeZen() {
-    if (!eng || cfg.kind !== 'zen' || committed || !running) return;
-    committed = true;
-    const s = eng.summary();
-    if (!s.answered) return;
-    store.update((p) => {
-      p.totals.zenSolved += s.correct; p.totals.correct += s.correct; p.totals.wrong += s.wrong;
-      p.totals.bestStreak = Math.max(p.totals.bestStreak, s.bestStreak);
-      p.totals.seconds += Math.round((performance.now() - startedAt) / 1000);
-    });
-    pushCloud();
-  }
-
   function pushCloud(mode, score, isBest) {
     if (!cloud.user) return;
     (async () => {

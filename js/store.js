@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS = {
 export const newProfile = () => ({
   v: 2,
   best: { mix: 0, add: 0, sub: 0, mul: 0, div: 0 },
-  totals: { correct: 0, wrong: 0, blitzGames: 0, zenSolved: 0, duelGames: 0, duelWins0: 0, duelWins1: 0, bestStreak: 0, bestLevel: 0, seconds: 0 },
+  totals: { correct: 0, wrong: 0, blitzGames: 0, duelGames: 0, duelWins0: 0, duelWins1: 0, bestStreak: 0, bestLevel: 0, seconds: 0 },
   days: {}, // 'YYYY-MM-DD' -> { score, ms, grid }
   updated: 0,
 });

@@ -10,7 +10,7 @@ const PRECACHE = [
   'js/engine/duel.js', 'js/engine/problems.js', 'js/engine/rng.js', 'js/engine/run.js',
   'js/screens/auth.js', 'js/screens/duel.js', 'js/screens/game.js', 'js/screens/home.js', 'js/screens/leaderboard.js',
   'js/screens/modes.js', 'js/screens/settings.js', 'js/screens/stats.js',
-  'assets/fonts/jersey-25-latin-400-normal.woff2', 'assets/fonts/press-start-2p-latin-400-normal.woff2',
+  'assets/fonts/chakra-petch-latin-500-normal.woff2', 'assets/fonts/chakra-petch-latin-700-normal.woff2', 'assets/fonts/press-start-2p-latin-400-normal.woff2',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-512.png',
 ];
 

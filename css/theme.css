@@ -1,12 +1,14 @@
 /* Fonts are bundled (no network needed, works offline and inside the Android app). */
 @font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('../assets/fonts/press-start-2p-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Jersey 25'; font-style: normal; font-weight: 400; font-display: swap;
-  src: url('../assets/fonts/jersey-25-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 500; font-display: swap;
+  src: url('../assets/fonts/chakra-petch-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('../assets/fonts/chakra-petch-latin-700-normal.woff2') format('woff2'); }
 
 :root {
   --font-px: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
-  --font-body: 'Jersey 25', ui-monospace, 'Courier New', monospace;
+  --font-body: 'Chakra Petch', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Theme tokens. Any element with data-theme="x" gets that palette (used for the swatches too). */
@@ -66,12 +68,12 @@
 }
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0B0B0C; --bg-2: #151517; --bg-3: #202024; --line: #3A3A41;
-  --primary: #F2F2F2; --primary-2: #FFFFFF; --on-primary: #0B0B0C; --shade: #6B6B73;
-  --text: #F2F2F2; --muted: #9B9BA5;
-  --good: #5FE3A1; --bad: #FF6B6B; --warn: #FFD166; --on-bad: #1D0409;
-  --good-t: rgba(95, 227, 161, .18); --bad-t: rgba(255, 107, 107, .18);
-  --grid: rgba(255, 255, 255, .06); --glow: rgba(255, 255, 255, .10);
+  --bg: #0F0F11; --bg-2: #19191C; --bg-3: #252529; --line: #3B3B42;
+  --primary: #D9D9DE; --primary-2: #F1F1F4; --on-primary: #101012; --shade: #5C5C65;
+  --text: #EDEDF0; --muted: #9A9AA4;
+  --good: #7FD8A8; --bad: #F08A8A; --warn: #E2C37B; --on-bad: #1D0A0A;
+  --good-t: rgba(127, 216, 168, .18); --bad-t: rgba(240, 138, 138, .18);
+  --grid: rgba(255, 255, 255, .04); --glow: rgba(255, 255, 255, .07);
 }
 /* Color-safe: blue/orange feedback (readable with the common types of color blindness). */
 [data-theme="colorblind"] {
