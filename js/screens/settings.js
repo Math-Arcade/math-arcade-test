@@ -68,6 +68,35 @@ export function initSettings() {
       const b = h('button', 'btn btn-primary', 'SIGN IN / SIGN UP');
       b.type = 'button'; b.onclick = () => router.go('auth', { mode: 'signin' });
       box.append(b);
+    } else if (cloud.user.guest) {
+      const p = h('p'); p.append('Playing as ', Object.assign(h('b'), { textContent: cloud.user.name }));
+      box.append(p);
+
+      const field = h('label', 'field');
+      field.append(h('span', 'Username'));
+      const row = h('div', 'acct-name-row');
+      const input = Object.assign(h('input', 'text'), { type: 'text', value: cloud.user.name, maxLength: 16, autocomplete: 'nickname', autocapitalize: 'off' });
+      const save = h('button', 'btn btn-primary btn-sm', 'CHANGE');
+      save.type = 'button';
+      const msg = h('div', 'form-msg');
+      save.onclick = async () => {
+        save.disabled = true; msg.textContent = '';
+        try {
+          const name = await cloud.changeGuestName(input.value);
+          input.value = name;
+          msg.textContent = 'Username changed.'; msg.classList.add('ok');
+          toast(`You are now ${name}`);
+        } catch (e) {
+          msg.classList.remove('ok'); msg.textContent = friendlyError(e);
+        } finally { save.disabled = false; }
+      };
+      row.append(input, save);
+      field.append(row, msg);
+      box.append(field, h('p', 'muted', 'Guest usernames are checked against the online database and must be unique.'));
+
+      const signin = h('button', 'btn', 'SIGN IN / SIGN UP'); signin.type = 'button';
+      signin.onclick = () => router.go('auth', { mode: 'signin' });
+      box.append(signin);
     } else {
       const p = h('p'); p.append('Signed in as ', Object.assign(h('b'), { textContent: cloud.user.name }));
       box.append(p);
