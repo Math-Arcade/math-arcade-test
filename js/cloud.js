@@ -9,11 +9,15 @@ const listeners = new Set();
 const fail = (code) => Object.assign(new Error(code), { code });
 const withTimeout = (p, ms = 9000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(fail('timeout')), ms))]);
 const nameKey = (name) => name.trim().toLowerCase().replace(/[.#$/[\]\s]/g, '_');
+const guestKey = (uid) => `ma2.guestName.${uid}`;
+const readGuestName = (uid) => { try { return localStorage.getItem(guestKey(uid)); } catch { return null; } };
+const writeGuestName = (uid, name) => { try { localStorage.setItem(guestKey(uid), name); } catch {} };
+const guestName = () => `guest#${Math.floor(100 + Math.random() * 900)}`;
 
 export function validateName(raw) {
   const name = (raw || '').trim().replace(/\s+/g, ' ');
   if (name.length < 3 || name.length > 16) throw fail('name-length');
-  if (!/^[A-Za-z0-9 _.-]+$/.test(name)) throw fail('name-chars');
+  if (!/^[A-Za-z0-9 _.#-]+$/.test(name)) throw fail('name-chars');
   return name;
 }
 
@@ -35,8 +39,24 @@ export const cloud = {
         ]), 15000);
         const app = appM.initializeApp(FIREBASE_CONFIG);
         F = { authM, dbM, auth: authM.getAuth(app), db: dbM.getDatabase(app) };
-        authM.onAuthStateChanged(F.auth, (u) => {
-          this.user = u ? { uid: u.uid, name: u.displayName || (u.email || 'Player').split('@')[0] } : null;
+        authM.onAuthStateChanged(F.auth, async (u) => {
+          if (!u) {
+            try { await withTimeout(authM.signInAnonymously(F.auth)); }
+            catch (e) { console.warn('Guest sign-in unavailable:', e); this.user = null; this._emit(); }
+            return;
+          }
+
+          if (u.isAnonymous) {
+            try {
+              const name = await this.ensureGuestName(u);
+              this.user = { uid: u.uid, name, guest: true };
+            } catch (e) {
+              console.warn('Guest username unavailable:', e);
+              this.user = { uid: u.uid, name: 'Guest', guest: true };
+            }
+          } else {
+            this.user = { uid: u.uid, name: u.displayName || (u.email || 'Player').split('@')[0], guest: false };
+          }
           this._emit();
         });
         this.ready = true;
@@ -52,6 +72,59 @@ export const cloud = {
 
   async need() {
     if (!F && !(await this.init())) throw fail('offline');
+  },
+
+  async reserveUsername(name, uid) {
+    const { dbM, db } = F;
+    const key = nameKey(name);
+    const r = dbM.ref(db, `usernames/${key}`);
+    const tx = await withTimeout(dbM.runTransaction(r, (current) => current === null ? uid : undefined));
+    if (!tx.committed) throw fail('name-taken');
+    return key;
+  },
+
+  async ensureGuestName(u) {
+    const saved = readGuestName(u.uid);
+    if (saved) {
+      const key = nameKey(saved);
+      const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `usernames/${key}`)));
+      if (snap.exists() && snap.val() === u.uid) return saved;
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const candidate = guestName();
+      try {
+        await this.reserveUsername(candidate, u.uid);
+        await F.authM.updateProfile(u, { displayName: candidate });
+        writeGuestName(u.uid, candidate);
+        return candidate;
+      } catch (e) {
+        if ((e && e.code) !== 'name-taken') throw e;
+      }
+    }
+    throw fail('name-taken');
+  },
+
+  async changeGuestName(rawName) {
+    await this.need();
+    const u = F.auth.currentUser;
+    if (!u || !u.isAnonymous) throw fail('not-guest');
+    const name = validateName(rawName);
+    const oldName = this.user?.name || u.displayName || readGuestName(u.uid);
+    if (name.toLowerCase() === String(oldName || '').toLowerCase()) return name;
+
+    const newKey = await this.reserveUsername(name, u.uid);
+    try {
+      await withTimeout(F.authM.updateProfile(u, { displayName: name }));
+      writeGuestName(u.uid, name);
+      if (oldName) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${nameKey(oldName)}`)));
+      this.user = { uid: u.uid, name, guest: true };
+      this._emit();
+      return name;
+    } catch (e) {
+      await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${newKey}`))).catch(() => {});
+      throw e;
+    }
   },
 
   async signUp(rawName, email, password) {
@@ -150,7 +223,8 @@ export function friendlyError(e) {
     'auth/requires-recent-login': 'Please sign in again, then retry.',
     'name-taken': 'That player name is already taken.',
     'name-length': 'Player name must be 3 to 16 characters.',
-    'name-chars': 'Use letters, numbers, spaces, . _ or - only.',
+    'name-chars': 'Use letters, numbers, spaces, #, . _ or - only.',
+    'not-guest': 'Only guest usernames can be changed here.',
   };
   if (map[c]) return map[c];
   if (/PERMISSION_DENIED/i.test(String(e && e.message))) return 'The online service is not ready for this yet.';
