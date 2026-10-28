@@ -1,5 +1,5 @@
 import { app } from '../app.js';
-import { $, h, fmt } from '../util.js';
+import { $, h, fmt, icon } from '../util.js';
 import { friendlyError } from '../cloud.js';
 import { buildOpChips, setChecked } from './modes.js';
 
@@ -29,14 +29,12 @@ export function initLeaderboard() {
     rows.forEach((r, i) => {
       const row = h('div', `lb-row${i < 3 ? ' top' : ''}${r.uid === myId ? ' me' : ''}`);
       row.setAttribute('role', 'listitem');
-      row.append(h('span', 'lb-rank', `#${i + 1}`), h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
+      const pic = h('span', 'lb-pic'); // everyone gets the same default avatar
+      pic.innerHTML = icon('user');
+      row.append(h('span', 'lb-rank', `#${i + 1}`), pic, h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
       list.append(row);
     });
-    if (!cloud.user) {
-      const b = h('button', 'btn btn-primary', 'SIGN IN TO COMPETE');
-      b.type = 'button'; b.onclick = () => router.go('auth', { mode: 'signin' });
-      foot.append(b);
-    } else if (!rows.some((r) => r.uid === myId)) {
+    if (cloud.user && !rows.some((r) => r.uid === myId)) {
       const mine = store.profile.best[mode];
       foot.append(h('div', 'muted center', mine ? `Your best: ${fmt(mine)} (play Blitz to rank up)` : 'Play Blitz to get on the board!'));
     }
@@ -56,7 +54,6 @@ export function initLeaderboard() {
     } catch (e) {
       if (t !== token) return;
       message(friendlyError(e), 'RETRY', () => load(true));
-      if (!cloud.user) { const b = h('button', 'btn btn-primary', 'SIGN IN'); b.type = 'button'; b.onclick = () => router.go('auth', { mode: 'signin' }); foot.append(b); }
     }
   }
 

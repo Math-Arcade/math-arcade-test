@@ -82,7 +82,7 @@ export function initSettings() {
       save.onclick = async () => {
         save.disabled = true; msg.textContent = '';
         try {
-          const name = await cloud.changeGuestName(input.value);
+          const name = await cloud.changeName(input.value);
           input.value = name;
           msg.textContent = 'Username changed.'; msg.classList.add('ok');
           toast(`You are now ${name}`);

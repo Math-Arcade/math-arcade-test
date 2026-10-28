@@ -11,7 +11,8 @@ import { initModes } from './screens/modes.js';
 import { initGame } from './screens/game.js';
 import { initDuel } from './screens/duel.js';
 import { initLeaderboard } from './screens/leaderboard.js';
-import { initStats } from './screens/stats.js';
+import { initProfile } from './screens/profile.js';
+import { initStore } from './screens/store.js';
 import { initSettings } from './screens/settings.js';
 import { initAuth } from './screens/auth.js';
 
@@ -76,7 +77,8 @@ async function boot() {
   router.register('game', initGame());
   router.register('duel', initDuel());
   router.register('leaderboard', initLeaderboard());
-  router.register('stats', initStats());
+  router.register('profile', initProfile());
+  router.register('store', initStore());
   router.register('settings', initSettings());
   router.register('auth', initAuth());
 

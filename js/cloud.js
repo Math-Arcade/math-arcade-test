@@ -105,28 +105,35 @@ export const cloud = {
     throw fail('name-taken');
   },
 
-  async changeGuestName(rawName) {
+  changeGuestName(rawName) { return this.changeName(rawName); },
+
+  // Rename the signed-in player (guest or registered). Names stay unique (case-insensitive).
+  async changeName(rawName) {
     await this.need();
     const u = F.auth.currentUser;
-    if (!u || !u.isAnonymous) throw fail('not-guest');
+    if (!u) throw fail('not-signed-in');
+    const guest = !!u.isAnonymous;
     const name = validateName(rawName);
-    const oldName = this.user?.name || u.displayName || readGuestName(u.uid);
-    if (name.toLowerCase() === String(oldName || '').toLowerCase()) return name;
+    const oldName = this.user?.name || u.displayName || (guest ? readGuestName(u.uid) : '');
+    if (name === oldName) return name;
 
-    const newKey = await this.reserveUsername(name, u.uid);
+    // Same name, different letter case: the claim already belongs to this player, only the display changes.
+    const sameClaim = String(oldName || '').toLowerCase() === name.toLowerCase();
+    const newKey = sameClaim ? null : await this.reserveUsername(name, u.uid);
     try {
       await withTimeout(F.authM.updateProfile(u, { displayName: name }));
-      writeGuestName(u.uid, name);
-      if (oldName) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${nameKey(oldName)}`)));
+      if (guest) writeGuestName(u.uid, name);
+      if (!sameClaim && oldName) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${nameKey(oldName)}`)));
       await this.updateLeaderboardName(u.uid, name);
-      this.user = { uid: u.uid, name, guest: true };
+      this.user = { uid: u.uid, name, guest };
       this._emit();
       return name;
     } catch (e) {
-      await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${newKey}`))).catch(() => {});
+      if (newKey) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${newKey}`))).catch(() => {});
       throw e;
     }
   },
+
 
   async signUp(rawName, email, password) {
     await this.need();

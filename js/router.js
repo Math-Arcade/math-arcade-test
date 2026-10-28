@@ -3,7 +3,7 @@
 import { $, $$ } from './util.js';
 import { app } from './app.js';
 
-const PARENT = { modes: 'home', settings: 'home', leaderboard: 'home', stats: 'home', auth: 'settings', game: 'modes', duel: 'modes' };
+const PARENT = { modes: 'home', settings: 'home', leaderboard: 'home', profile: 'home', store: 'home', auth: 'settings', game: 'modes', duel: 'modes' };
 const DURATION = 220;
 
 export class Router {

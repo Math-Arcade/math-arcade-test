@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   theme: 'green', sfx: true, sfxVol: 0.8, music: 'none', musicVol: 0.5, haptics: true,
   grid: true, crt: true, particles: true, mute: false,
   reduceMotion: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches, op: 'mix', duelTarget: 10, p1: 'Player 1', p2: 'Player 2',
+  avatar: '', localName: '', // profile picture (small data URL) and the offline guest name
 };
 
 export const newProfile = () => ({

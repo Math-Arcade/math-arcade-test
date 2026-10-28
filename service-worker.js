@@ -1,15 +1,15 @@
 // Offline support. Bump VERSION on every release so the precache is rebuilt.
-const VERSION = 'ma-2.1.0';
+const VERSION = 'ma-2.2.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
 const PRECACHE = [
   './', 'index.html', 'privacy.html', 'manifest.json',
   'css/theme.css', 'css/app.css',
-  'js/main.js', 'js/app.js', 'js/audio.js', 'js/cat.js', 'js/cloud.js', 'js/config.js', 'js/fx.js', 'js/router.js', 'js/store.js', 'js/util.js',
+  'js/main.js', 'js/app.js', 'js/audio.js', 'js/avatar.js', 'js/cat.js', 'js/cloud.js', 'js/config.js', 'js/fx.js', 'js/router.js', 'js/store.js', 'js/util.js',
   'js/engine/duel.js', 'js/engine/problems.js', 'js/engine/rng.js', 'js/engine/run.js',
   'js/screens/auth.js', 'js/screens/duel.js', 'js/screens/game.js', 'js/screens/home.js', 'js/screens/leaderboard.js',
-  'js/screens/modes.js', 'js/screens/settings.js', 'js/screens/stats.js',
+  'js/screens/modes.js', 'js/screens/profile.js', 'js/screens/settings.js', 'js/screens/store.js',
   'assets/fonts/chakra-petch-latin-500-normal.woff2', 'assets/fonts/chakra-petch-latin-700-normal.woff2', 'assets/fonts/press-start-2p-latin-400-normal.woff2',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-512.png',
 ];

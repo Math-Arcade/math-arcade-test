@@ -25,3 +25,10 @@ export async function get(r) {
 }
 export async function set(r, v) { setAt(r.path, v); }
 export async function update(r, updates) { for (const [p, v] of Object.entries(updates)) setAt((r.path ? r.path + '/' : '') + p, v); }
+export async function runTransaction(r, fn) {
+  const cur = getAt(r.path), next = fn(cur === undefined ? null : cur);
+  if (next === undefined) return { committed: false };
+  setAt(r.path, next);
+  return { committed: true };
+}
+export async function remove(r) { setAt(r.path, null); }
