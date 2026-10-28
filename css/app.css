@@ -277,6 +277,7 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .lb-name { font-size: 1.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-score { font-family: var(--font-px); font-size: .82rem; color: var(--primary-2); }
 .lb-msg { text-align: center; color: var(--muted); padding: 2.2rem 1rem; font-size: 1.35rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+.lb-refresh { flex: 0 0 auto; }
 .lb-foot { padding-top: .6rem; }
 .lb-foot .btn { width: 100%; }
 .skel { height: 3.2rem; border-radius: 10px; background: var(--bg-2); border: 2px solid var(--line); animation: pulse .9s steps(2) infinite alternate; }

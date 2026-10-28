@@ -6,10 +6,15 @@ import { buildOpChips, setChecked } from './modes.js';
 export function initLeaderboard() {
   const { store, cloud, router } = app;
   const ops = $('#lb-ops'), list = $('#lb-list'), foot = $('#lb-foot');
+  const refresh = h('button', 'btn btn-ghost lb-refresh', 'REFRESH');
+  refresh.type = 'button';
+  refresh.setAttribute('aria-label', 'Refresh leaderboard');
+  refresh.onclick = () => load(true);
   let mode = 'mix', token = 0;
   const cache = {};
 
-  buildOpChips(ops, mode, (m) => { mode = m; setChecked(ops, 'data-op', m); load(); });
+  buildOpChips(ops, mode, (m) => { mode = m; setChecked(ops, 'data-op', m); load(true); });
+  ops.append(refresh);
 
   function message(text, actionText, action) {
     list.textContent = '';
@@ -59,5 +64,5 @@ export function initLeaderboard() {
   }
 
   cloud.onChange(() => { Object.keys(cache).forEach((k) => delete cache[k]); });
-  return { enter: () => load(), leave: () => { token++; } };
+  return { enter: () => load(true), leave: () => { token++; } };
 }

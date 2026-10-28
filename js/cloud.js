@@ -118,6 +118,7 @@ export const cloud = {
       await withTimeout(F.authM.updateProfile(u, { displayName: name }));
       writeGuestName(u.uid, name);
       if (oldName) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${nameKey(oldName)}`)));
+      await this.updateLeaderboardName(u.uid, name);
       this.user = { uid: u.uid, name, guest: true };
       this._emit();
       return name;
@@ -184,6 +185,16 @@ export const cloud = {
   async pushProfile(profile) {
     if (!this.user) return;
     await withTimeout(F.dbM.set(F.dbM.ref(F.db, `users/${this.user.uid}/profile`), profile));
+  },
+
+  async updateLeaderboardName(uid, name) {
+    const updates = {};
+    await Promise.all(MODES.map(async (mode) => {
+      const r = F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`);
+      const snap = await withTimeout(F.dbM.get(r));
+      if (snap.exists()) updates[`leaderboard/${mode}/${uid}/name`] = name;
+    }));
+    if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
   },
 
   async submitScore(mode, score) {
