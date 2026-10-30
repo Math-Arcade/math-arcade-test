@@ -1,4 +1,4 @@
-// Profile-picture helper: crop/resize an uploaded image (kept on this device only).
+// Profile-picture helpers: crop/resize an uploaded image, and make the tiny thumbnail shown in Ranks.
 
 const loadImage = (url) => new Promise((res, rej) => {
   const i = new Image();
@@ -26,3 +26,17 @@ export async function fileToAvatar(file, size = 128) {
   finally { URL.revokeObjectURL(url); }
 }
 
+
+// Avatar data URL -> ~64px JPEG small enough (< 8000 chars) to store with a leaderboard entry.
+export async function thumbFrom(dataUrl, size = 64) {
+  if (!dataUrl) return '';
+  const img = await loadImage(dataUrl);
+  for (const q of [0.7, 0.5, 0.35]) {
+    const out = squareJpeg(img, size, q);
+    if (out.length <= 7500) return out;
+  }
+  return '';
+}
+
+// Only ever render JPEG data URLs of sane size that came from the leaderboard.
+export const safePic = (v) => (typeof v === 'string' && v.length <= 8000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v) ? v : '');

@@ -2,6 +2,7 @@
 // If the SDK can't load (offline, blocked) the game simply runs as a local guest.
 
 import { FIREBASE_CONFIG, FIREBASE_SDK, MODES } from './config.js';
+import { safePic } from './avatar.js';
 
 let F = null;
 let initPromise = null;
@@ -24,6 +25,7 @@ export function validateName(raw) {
 export const cloud = {
   ready: false,
   user: null, // { uid, name } or null
+  pic: '', // small JPEG data URL shown next to this player's leaderboard score
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   _emit() { listeners.forEach((fn) => fn(this.user)); },
@@ -204,12 +206,31 @@ export const cloud = {
     if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
   },
 
+  // Add / change / remove (pic = '') the picture on every existing leaderboard entry of this player.
+  async updateLeaderboardPic(pic) {
+    if (!this.user) return;
+    await this.need();
+    const uid = this.user.uid, updates = {};
+    await Promise.all(MODES.map(async (mode) => {
+      const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`)));
+      if (snap.exists()) updates[`leaderboard/${mode}/${uid}/pic`] = pic || null;
+    }));
+    if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
+  },
+
   async submitScore(mode, score) {
     if (!this.user || !score) return;
     const r = F.dbM.ref(F.db, `leaderboard/${mode}/${this.user.uid}`);
     const snap = await withTimeout(F.dbM.get(r));
     if (!snap.exists() || (snap.val().score || 0) < score) {
-      await withTimeout(F.dbM.set(r, { name: this.user.name, score }));
+      const entry = { name: this.user.name, score };
+      try {
+        await withTimeout(F.dbM.set(r, this.pic ? { ...entry, pic: this.pic } : entry));
+      } catch (e) {
+        // Database rules without the "pic" field (not deployed yet) must never block saving a score.
+        if (!this.pic) throw e;
+        await withTimeout(F.dbM.set(r, entry));
+      }
     }
   },
 
@@ -218,7 +239,7 @@ export const cloud = {
     const q = F.dbM.query(F.dbM.ref(F.db, `leaderboard/${mode}`), F.dbM.orderByChild('score'), F.dbM.limitToLast(n));
     const snap = await withTimeout(F.dbM.get(q));
     const rows = [];
-    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0 }); });
+    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic) }); });
     return rows.sort((a, b) => b.score - a.score);
   },
 };

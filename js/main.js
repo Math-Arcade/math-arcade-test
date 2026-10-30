@@ -6,6 +6,7 @@ import { Router } from './router.js';
 import { cloud } from './cloud.js';
 import { MODES } from './config.js';
 import { sleep } from './util.js';
+import { thumbFrom } from './avatar.js';
 import { initHome } from './screens/home.js';
 import { initModes } from './screens/modes.js';
 import { initGame } from './screens/game.js';
@@ -50,10 +51,24 @@ function registerServiceWorker() {
   navigator.serviceWorker.register('service-worker.js').catch((e) => console.warn('SW registration failed', e));
 }
 
+// Keep the leaderboard thumbnail in step with the profile picture.
+let picSeq = 0;
+async function syncPic() {
+  const seq = ++picSeq;
+  try {
+    const pic = await thumbFrom(store.settings.avatar);
+    if (seq !== picSeq) return;
+    cloud.pic = pic;
+    if (cloud.user) await cloud.updateLeaderboardPic(pic);
+  } catch (e) { console.warn('Picture sync failed', e); }
+}
+
 // When a player signs in: merge cloud + local progress, then push the result back.
 function wireCloudSync() {
+  store.on('settings', (k) => { if (k === 'avatar') syncPic(); });
   cloud.onChange(async (user) => {
     if (!user) return;
+    await syncPic();
     try {
       const merged = store.mergeRemote(await cloud.pullProfile());
       await cloud.pushProfile(merged);

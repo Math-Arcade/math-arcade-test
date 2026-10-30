@@ -29,8 +29,9 @@ export function initLeaderboard() {
     rows.forEach((r, i) => {
       const row = h('div', `lb-row${i < 3 ? ' top' : ''}${r.uid === myId ? ' me' : ''}`);
       row.setAttribute('role', 'listitem');
-      const pic = h('span', 'lb-pic'); // everyone gets the same default avatar
-      pic.innerHTML = icon('user');
+      const pic = h('span', 'lb-pic');
+      if (r.pic) { const im = document.createElement('img'); im.src = r.pic; im.alt = ''; pic.append(im); }
+      else pic.innerHTML = icon('user'); // default avatar for players without a photo
       row.append(h('span', 'lb-rank', `#${i + 1}`), pic, h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
       list.append(row);
     });
