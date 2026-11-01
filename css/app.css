@@ -438,13 +438,20 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .lb-pic .ico { width: 1.5rem; height: 1.5rem; color: var(--muted); }
 .lb-row.me .lb-pic { border-color: var(--primary); }
 
-/* ===== another player's profile: drawn with their own theme ===== */
-.screen.player { background: radial-gradient(120% 80% at 50% 0%, var(--bg-2), var(--bg) 62%); color: var(--text); }
-.screen.player::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+/* ===== another player's profile: the same screen, read-only, drawn with their own theme ===== */
+.screen.profile[data-other] { background: radial-gradient(70% 38% at 50% 105%, var(--glow), transparent 70%), radial-gradient(120% 80% at 50% 0%, var(--bg-2), var(--bg) 62%); color: var(--text); }
+.screen.profile[data-other]::before { content: ''; position: absolute; inset: -80px; pointer-events: none; z-index: 0; will-change: transform;
   background-image: linear-gradient(var(--grid) 2px, transparent 2px), linear-gradient(90deg, var(--grid) 2px, transparent 2px);
-  background-size: 40px 40px; }
-.screen.player > * { position: relative; z-index: 1; }
-.screen.player .pf-avatar-btn { cursor: default; }
-#pl-body { display: flex; flex-direction: column; gap: .7rem; }
+  background-size: 40px 40px; animation: grid-move 5s linear infinite;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 4%, #000 30%, #000 70%, transparent 98%);
+  mask-image: linear-gradient(to bottom, transparent 4%, #000 30%, #000 70%, transparent 98%); }
+.no-grid .screen.profile[data-other]::before { display: none; }
+.screen.profile[data-other] > * { position: relative; z-index: 1; }
+.screen.profile > .pf-symbols { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; display: none; }
+.screen.profile[data-other] > .pf-symbols { display: block; position: absolute; }
+.screen.profile.is-other .pf-badge, .screen.profile.is-other #pf-edit, .screen.profile.is-other #pf-form,
+.screen.profile.is-other #pf-msg, .screen.profile.is-other .pf-actions { display: none; }
+.screen.profile.is-other .pf-avatar-btn { cursor: default; }
+.screen.profile.is-other .pf-avatar-btn:active { transform: none; box-shadow: 0 3px 0 var(--line); }
 .lb-row.tap { cursor: pointer; }
 .lb-row.tap:active { transform: translateY(2px); }

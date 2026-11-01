@@ -1,12 +1,12 @@
 // Offline support. Bump VERSION on every release so the precache is rebuilt.
-const VERSION = 'ma-2.3.0';
+const VERSION = 'ma-2.3.1';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
 const PRECACHE = [
   './', 'index.html', 'privacy.html', 'manifest.json',
   'css/theme.css', 'css/app.css',
-  'js/main.js', 'js/app.js', 'js/audio.js', 'js/avatar.js', 'js/public.js', 'js/screens/player.js', 'js/cat.js', 'js/cloud.js', 'js/config.js', 'js/fx.js', 'js/router.js', 'js/store.js', 'js/util.js',
+  'js/main.js', 'js/app.js', 'js/audio.js', 'js/avatar.js', 'js/public.js', 'js/cat.js', 'js/cloud.js', 'js/config.js', 'js/fx.js', 'js/router.js', 'js/store.js', 'js/util.js',
   'js/engine/duel.js', 'js/engine/problems.js', 'js/engine/rng.js', 'js/engine/run.js',
   'js/screens/auth.js', 'js/screens/duel.js', 'js/screens/game.js', 'js/screens/home.js', 'js/screens/leaderboard.js',
   'js/screens/modes.js', 'js/screens/profile.js', 'js/screens/settings.js', 'js/screens/store.js',

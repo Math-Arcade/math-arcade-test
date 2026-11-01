@@ -198,6 +198,7 @@
 
   <!-- PROFILE -->
   <section class="screen profile" data-screen="profile" hidden>
+    <div class="bg-symbols pf-symbols" id="pf-symbols" aria-hidden="true"></div>
     <header class="bar">
       <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
       <h2>PROFILE</h2><span class="bar-spacer"></span>
@@ -231,26 +232,6 @@
         <input type="file" id="pf-file" accept="image/*" hidden>
       </div>
       <div id="st-body"></div>
-    </div>
-  </section>
-
-  <!-- PLAYER (another player's profile, shown in their theme) -->
-  <section class="screen player" data-screen="player" hidden>
-    <header class="bar">
-      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
-      <h2>PLAYER</h2><span class="bar-spacer"></span>
-    </header>
-    <div class="scroll">
-      <div class="panel pf-head">
-        <div class="pf-top">
-          <span class="pf-avatar-btn">
-            <img id="pl-img" alt="" hidden>
-            <svg class="ico pf-avatar" id="pl-ph"><use href="#i-user"></use></svg>
-          </span>
-          <div class="pf-info"><b id="pl-name"></b><small class="muted" id="pl-sub"></small></div>
-        </div>
-      </div>
-      <div id="pl-body"></div>
     </div>
   </section>
 

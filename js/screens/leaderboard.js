@@ -34,7 +34,7 @@ export function initLeaderboard() {
       else pic.innerHTML = icon('user'); // default avatar for players without a photo
       row.append(h('span', 'lb-rank', `#${i + 1}`), pic, h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
       row.classList.add('tap'); row.tabIndex = 0;
-      const open = () => (r.uid === myId ? router.go('profile') : router.go('player', { uid: r.uid, name: r.name, pic: r.pic, score: r.score, mode }));
+      const open = () => (r.uid === myId ? router.go('profile') : router.go('profile', { uid: r.uid, name: r.name, pic: r.pic, score: r.score, mode }));
       row.onclick = open;
       row.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
       list.append(row);

@@ -86,3 +86,17 @@ export function fitProblem(el) {
 }
 
 export function trim(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
+
+// Floating math symbols for a background layer.
+export function fillSymbols(box) {
+  const glyphs = ['+', '\u2212', '\u00d7', '\u00f7', '=', '%', '7', '9', '3', '\u00b2'];
+  for (let i = 0; i < 11; i++) {
+    const s = document.createElement('span');
+    s.textContent = glyphs[i % glyphs.length];
+    s.style.left = `${Math.random() * 92}%`;
+    s.style.fontSize = `${1.6 + Math.random() * 2.6}rem`;
+    s.style.animationDuration = `${22 + Math.random() * 26}s`;
+    s.style.animationDelay = `${-Math.random() * 40}s`;
+    box.append(s);
+  }
+}

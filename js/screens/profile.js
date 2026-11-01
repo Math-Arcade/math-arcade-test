@@ -1,9 +1,9 @@
 import { app } from '../app.js';
-import { $, h, fmt, toast } from '../util.js';
+import { $, h, fmt, toast, fillSymbols } from '../util.js';
 import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
-import { ownStats } from '../public.js';
+import { ownStats, THEMES } from '../public.js';
 
 // Name shown for the player: online name if signed in, else the local name, else "Guest".
 export const displayName = (cloud, store) => (cloud.user && cloud.user.name) || store.settings.localName || 'Guest';
@@ -49,6 +49,9 @@ export function renderStats(body, s) {
 
 export function initProfile() {
   const { store, cloud, router } = app;
+  const screen = document.querySelector('section[data-screen="profile"]');
+  let other = null; // set while looking at another player's (read-only) profile
+  let token = 0, symbolsReady = false;
   const body = $('#st-body');
   const pfName = $('#pf-name'), pfSub = $('#pf-sub'), pfBtn = $('#pf-account');
   const img = $('#pf-img'), ph = $('#pf-ph'), file = $('#pf-file'), remove = $('#pf-remove');
@@ -77,7 +80,7 @@ export function initProfile() {
   };
 
   // ---- picture ----
-  $('#pf-avatar').onclick = () => file.click();
+  $('#pf-avatar').onclick = () => { if (!other) file.click(); };
   file.onchange = async () => {
     const f = file.files && file.files[0];
     file.value = '';
@@ -90,6 +93,7 @@ export function initProfile() {
   pfBtn.onclick = () => router.go(cloud.user ? 'settings' : 'auth', { mode: 'signin' });
 
   function render() {
+    if (other) return;
     pfName.textContent = displayName(cloud, store);
     pfSub.textContent = !cloud.user ? 'Not signed in' : cloud.user.guest ? 'Guest account' : 'Signed in';
     pfBtn.textContent = cloud.user ? 'SETTINGS' : 'SIGN IN';
@@ -112,5 +116,56 @@ export function initProfile() {
 
   cloud.onChange(render);
   store.on('settings', (k) => { if (k === 'avatar' || k === 'localName') render(); });
-  return { enter: () => { openForm(false); render(); } };
+  // ---- viewing someone else: same screen, their stats and theme, nothing editable ----
+  const setThemeColor = () => {
+    const bg = getComputedStyle(screen).getPropertyValue('--bg').trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && bg) meta.content = bg;
+  };
+  const showAvatar = (pic) => { img.hidden = !pic; ph.style.display = pic ? 'none' : ''; if (pic) img.src = pic; };
+
+  function reset() {
+    token++; other = null;
+    screen.classList.remove('is-other');
+    screen.removeAttribute('data-other'); screen.removeAttribute('data-theme');
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && bg) meta.content = bg;
+  }
+
+  async function enterOther(params) {
+    const mine = ++token;
+    other = params;
+    if (!symbolsReady) { fillSymbols($('#pf-symbols')); symbolsReady = true; }
+    openForm(false);
+    screen.classList.add('is-other'); screen.dataset.other = '';
+    screen.removeAttribute('data-theme'); // the viewer's own theme until theirs has loaded
+    pfName.textContent = params.name || '?';
+    pfSub.textContent = params.score ? `Best score: ${fmt(params.score)}` : '';
+    showAvatar(params.pic || '');
+    body.textContent = ''; body.append(h('div', 'lb-msg', 'Loading…'));
+    try {
+      const p = await cloud.fetchPublicProfile(params.uid);
+      if (mine !== token) return;
+      body.textContent = '';
+      if (!p) { body.append(h('div', 'lb-msg', "This player hasn't shared a profile yet.")); return; }
+      if (THEMES.includes(p.theme)) screen.dataset.theme = p.theme;
+      pfName.textContent = p.name;
+      showAvatar(p.pic || params.pic || '');
+      renderStats(body, p.stats);
+      requestAnimationFrame(setThemeColor);
+    } catch (e) {
+      if (mine !== token) return;
+      body.textContent = ''; body.append(h('div', 'lb-msg', "Couldn't load this profile. Check your connection and try again."));
+    }
+  }
+
+  return {
+    enter(params = {}) {
+      if (params.uid && !(cloud.user && cloud.user.uid === params.uid)) { enterOther(params); return; }
+      reset(); openForm(false); render();
+    },
+    leave() { reset(); },
+    parent: () => (other ? 'leaderboard' : 'home'),
+  };
 }

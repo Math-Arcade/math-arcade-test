@@ -1,4 +1,4 @@
-export const VERSION = '2.3.0';
+export const VERSION = '2.3.1';
 
 // Firebase web config. These values are public by design; what protects your data is
 // database.rules.json (deploy it!) plus, ideally, App Check and an API-key restriction.

@@ -5,7 +5,7 @@ import { fx } from './fx.js';
 import { Router } from './router.js';
 import { cloud } from './cloud.js';
 import { MODES } from './config.js';
-import { sleep } from './util.js';
+import { sleep, fillSymbols } from './util.js';
 import { thumbFrom } from './avatar.js';
 import { buildPublic } from './public.js';
 import { initHome } from './screens/home.js';
@@ -14,7 +14,6 @@ import { initGame } from './screens/game.js';
 import { initDuel } from './screens/duel.js';
 import { initLeaderboard } from './screens/leaderboard.js';
 import { initProfile } from './screens/profile.js';
-import { initPlayer } from './screens/player.js';
 import { initStore } from './screens/store.js';
 import { initSettings } from './screens/settings.js';
 import { initAuth } from './screens/auth.js';
@@ -32,19 +31,7 @@ function applySettings() {
   });
 }
 
-function backgroundSymbols() {
-  const box = document.getElementById('bg-symbols');
-  const glyphs = ['+', '\u2212', '\u00d7', '\u00f7', '=', '%', '7', '9', '3', '\u00b2'];
-  for (let i = 0; i < 11; i++) {
-    const s = document.createElement('span');
-    s.textContent = glyphs[i % glyphs.length];
-    s.style.left = `${Math.random() * 92}%`;
-    s.style.fontSize = `${1.6 + Math.random() * 2.6}rem`;
-    s.style.animationDuration = `${22 + Math.random() * 26}s`;
-    s.style.animationDelay = `${-Math.random() * 40}s`;
-    box.append(s);
-  }
-}
+function backgroundSymbols() { fillSymbols(document.getElementById('bg-symbols')); }
 
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
@@ -107,7 +94,6 @@ async function boot() {
   router.register('duel', initDuel());
   router.register('leaderboard', initLeaderboard());
   router.register('profile', initProfile());
-  router.register('player', initPlayer());
   router.register('store', initStore());
   router.register('settings', initSettings());
   router.register('auth', initAuth());

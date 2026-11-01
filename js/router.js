@@ -3,7 +3,7 @@
 import { $, $$ } from './util.js';
 import { app } from './app.js';
 
-const PARENT = { modes: 'home', settings: 'home', leaderboard: 'home', profile: 'home', store: 'home', player: 'leaderboard', auth: 'settings', game: 'modes', duel: 'modes' };
+const PARENT = { modes: 'home', settings: 'home', leaderboard: 'home', profile: 'home', store: 'home', auth: 'settings', game: 'modes', duel: 'modes' };
 const DURATION = 220;
 
 export class Router {
@@ -59,7 +59,7 @@ export class Router {
 
   back() {
     if (this.guard && this.guard(this.current)) return;
-    const parent = PARENT[this.current];
+    const parent = this.hooks[this.current]?.parent?.() || PARENT[this.current];
     if (parent) this.go(parent, {}, { back: true });
   }
 }
