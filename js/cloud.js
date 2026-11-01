@@ -11,6 +11,7 @@ const listeners = new Set();
 const fail = (code) => Object.assign(new Error(code), { code });
 const withTimeout = (p, ms = 9000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(fail('timeout')), ms))]);
 const nameKey = (name) => name.trim().toLowerCase().replace(/[.#$/[\]\s]/g, '_');
+const cleanName = (n) => { const s = String(n || '').trim().slice(0, 16); return s.length >= 3 ? s : 'Player'; };
 const guestKey = (uid) => `ma2.guestName.${uid}`;
 const readGuestName = (uid) => { try { return localStorage.getItem(guestKey(uid)); } catch { return null; } };
 const writeGuestName = (uid, name) => { try { localStorage.setItem(guestKey(uid), name); } catch {} };
@@ -177,13 +178,156 @@ export const cloud = {
     const u = auth.currentUser;
     if (!u) throw fail('not-signed-in');
     await withTimeout(authM.reauthenticateWithCredential(u, authM.EmailAuthProvider.credential(u.email, password)));
-    const updates = { [`users/${u.uid}`]: null, [`publicProfiles/${u.uid}`]: null };
+    const updates = { [`users/${u.uid}`]: null, [`publicProfiles/${u.uid}`]: null, [`friends/${u.uid}`]: null, [`friendRequests/${u.uid}`]: null, [`friendSent/${u.uid}`]: null, [`dailyResults/${u.uid}`]: null };
+    try {
+      const read = async (p) => { const s = await withTimeout(dbM.get(dbM.ref(db, p))); return s.exists() ? Object.keys(s.val()) : []; };
+      const [fr, inc, sent] = await Promise.all([read(`friends/${u.uid}`), read(`friendRequests/${u.uid}`), read(`friendSent/${u.uid}`)]);
+      fr.forEach((x) => { updates[`friends/${x}/${u.uid}`] = null; });
+      inc.forEach((x) => { updates[`friendSent/${x}/${u.uid}`] = null; });
+      sent.forEach((x) => { updates[`friendRequests/${x}/${u.uid}`] = null; });
+    } catch (e) { console.warn('Could not tidy friend data', e); }
     MODES.forEach((m) => { updates[`leaderboard/${m}/${u.uid}`] = null; });
     if (u.displayName) updates[`usernames/${nameKey(u.displayName)}`] = null;
     await withTimeout(dbM.update(dbM.ref(db), updates));
     await withTimeout(authM.deleteUser(u));
     this.user = null;
     this._emit();
+  },
+
+  // ---------- friends ----------
+  // friends/{me}/{them} = their name · friendRequests/{to}/{from} = {name, ts} · friendSent/{from}/{to} = {name, ts}
+  _me() {
+    if (!this.user) throw fail('not-signed-in');
+    return this.user;
+  },
+
+  async friendsState() {
+    const me = this._me(); await this.need();
+    const { dbM, db } = F;
+    const get = async (p) => { const s = await withTimeout(dbM.get(dbM.ref(db, p))); return s.exists() ? s.val() : {}; };
+    const [f, inc, sent] = await Promise.all([get(`friends/${me.uid}`), get(`friendRequests/${me.uid}`), get(`friendSent/${me.uid}`)]);
+    const name = (v) => String((v && v.name) || v || '?').slice(0, 16);
+    return {
+      friends: Object.entries(f).map(([uid, v]) => ({ uid, name: name(v) })),
+      incoming: Object.entries(inc).map(([uid, v]) => ({ uid, name: name(v), ts: Number(v && v.ts) || 0 })).sort((a, b) => b.ts - a.ts),
+      sent: Object.entries(sent).map(([uid, v]) => ({ uid, name: name(v), ts: Number(v && v.ts) || 0 })).sort((a, b) => b.ts - a.ts),
+    };
+  },
+
+  async incomingCount() {
+    if (!this.user) return 0;
+    await this.need();
+    const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `friendRequests/${this.user.uid}`)));
+    return snap.exists() ? Object.keys(snap.val()).length : 0;
+  },
+
+  // 'self' | 'friends' | 'incoming' | 'sent' | 'none'
+  async relationWith(uid) {
+    const me = this._me(); await this.need();
+    if (uid === me.uid) return 'self';
+    const { dbM, db } = F;
+    const has = async (p) => (await withTimeout(dbM.get(dbM.ref(db, p)))).exists();
+    const [f, inc, sent] = await Promise.all([has(`friends/${me.uid}/${uid}`), has(`friendRequests/${me.uid}/${uid}`), has(`friendSent/${me.uid}/${uid}`)]);
+    return f ? 'friends' : inc ? 'incoming' : sent ? 'sent' : 'none';
+  },
+
+  // Names that start with the typed text (the usernames node maps lower-cased name -> uid).
+  async searchPlayers(text) {
+    const me = this._me(); await this.need();
+    const key = nameKey(String(text || '')).slice(0, 16);
+    if (key.length < 2) return [];
+    const { dbM, db } = F;
+    const q = dbM.query(dbM.ref(db, 'usernames'), dbM.orderByKey(), dbM.startAt(key), dbM.endAt(`${key}\uf8ff`), dbM.limitToFirst(10));
+    const snap = await withTimeout(dbM.get(q));
+    const out = [];
+    snap.forEach((c) => { if (c.val() && c.val() !== me.uid) out.push({ uid: String(c.val()), name: c.key }); });
+    return out;
+  },
+
+  async sendFriendRequest(toUid, toName) {
+    const me = this._me(); await this.need();
+    const { dbM, db } = F;
+    if (toUid === me.uid) throw fail('friend-self');
+    const get = async (p) => withTimeout(dbM.get(dbM.ref(db, p)));
+    if ((await get(`friends/${me.uid}/${toUid}`)).exists()) return 'friends';
+    const inc = await get(`friendRequests/${me.uid}/${toUid}`);
+    if (inc.exists()) { await this.acceptFriendRequest(toUid, (inc.val() && inc.val().name) || toName); return 'friends'; } // they asked first
+    const ts = Date.now();
+    await withTimeout(dbM.update(dbM.ref(db), {
+      [`friendRequests/${toUid}/${me.uid}`]: { name: me.name, ts },
+      [`friendSent/${me.uid}/${toUid}`]: { name: cleanName(toName), ts },
+    }));
+    return 'sent';
+  },
+
+  async cancelFriendRequest(toUid) {
+    const me = this._me(); await this.need();
+    await withTimeout(F.dbM.update(F.dbM.ref(F.db), { [`friendRequests/${toUid}/${me.uid}`]: null, [`friendSent/${me.uid}/${toUid}`]: null }));
+  },
+
+  async acceptFriendRequest(fromUid, fromName) {
+    const me = this._me(); await this.need();
+    await withTimeout(F.dbM.update(F.dbM.ref(F.db), {
+      [`friends/${me.uid}/${fromUid}`]: cleanName(fromName),
+      [`friends/${fromUid}/${me.uid}`]: cleanName(me.name),
+      [`friendRequests/${me.uid}/${fromUid}`]: null,
+      [`friendSent/${fromUid}/${me.uid}`]: null,
+    }));
+  },
+
+  async declineFriendRequest(fromUid) {
+    const me = this._me(); await this.need();
+    await withTimeout(F.dbM.update(F.dbM.ref(F.db), { [`friendRequests/${me.uid}/${fromUid}`]: null, [`friendSent/${fromUid}/${me.uid}`]: null }));
+  },
+
+  async removeFriend(uid) {
+    const me = this._me(); await this.need();
+    await withTimeout(F.dbM.update(F.dbM.ref(F.db), { [`friends/${me.uid}/${uid}`]: null, [`friends/${uid}/${me.uid}`]: null }));
+  },
+
+  async _friendUids() {
+    const me = this._me(); await this.need();
+    const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `friends/${me.uid}`)));
+    return snap.exists() ? Object.keys(snap.val()) : [];
+  },
+
+  // Leaderboard limited to you + your friends: one small read per friend.
+  async friendsLeaderboard(mode, n = 50) {
+    const me = this._me();
+    const friends = await this._friendUids();
+    const { dbM, db } = F;
+    const rows = (await Promise.all([me.uid, ...friends].map(async (uid) => {
+      try {
+        const snap = await withTimeout(dbM.get(dbM.ref(db, `leaderboard/${mode}/${uid}`)));
+        if (!snap.exists()) return null;
+        const v = snap.val();
+        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic) };
+      } catch { return null; }
+    }))).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
+    return { rows, friendCount: friends.length };
+  },
+
+  // Daily Challenge results are readable by you and your friends only (see database rules).
+  async publishDaily(day, d) {
+    const me = this._me(); await this.need();
+    const grid = String(d.grid || '').replace(/[^01]/g, '').slice(0, 50);
+    const data = { name: me.name, score: Math.max(0, Math.round(d.score) || 0), total: Math.max(1, grid.length || 10), ms: Math.max(0, Math.round(d.ms) || 0), grid };
+    if (!grid) delete data.grid;
+    await withTimeout(F.dbM.set(F.dbM.ref(F.db, `dailyResults/${me.uid}/${day}`), data));
+  },
+
+  async friendsDaily(day) {
+    const friends = await this._friendUids();
+    const { dbM, db } = F;
+    const rows = (await Promise.all(friends.map(async (uid) => {
+      try {
+        const snap = await withTimeout(dbM.get(dbM.ref(db, `dailyResults/${uid}/${day}`)));
+        if (!snap.exists()) return null;
+        const v = snap.val();
+        return { uid, name: String(v.name || '?').slice(0, 16), score: Number(v.score) || 0, total: Number(v.total) || 10, ms: Number(v.ms) || 0, grid: /^[01]{1,50}$/.test(v.grid || '') ? v.grid : '' };
+      } catch { return null; }
+    }))).filter(Boolean);
+    return { rows, friendCount: friends.length };
   },
 
   async publishProfile(data) {

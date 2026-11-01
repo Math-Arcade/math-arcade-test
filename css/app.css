@@ -455,3 +455,47 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .screen.profile.is-other .pf-avatar-btn:active { transform: none; box-shadow: 0 3px 0 var(--line); }
 .lb-row.tap { cursor: pointer; }
 .lb-row.tap:active { transform: translateY(2px); }
+
+/* ===== friends ===== */
+.topbar-right { display: flex; gap: .6rem; }
+.icon-btn { position: relative; }
+.badge { position: absolute; top: -.45rem; right: -.45rem; min-width: 1.3rem; height: 1.3rem; padding: 0 .3rem; display: grid; place-items: center;
+  font: normal .6rem/1 var(--font-px); color: var(--on-bad); background: var(--bad); border: 2px solid var(--bg); border-radius: 999px; }
+.badge[hidden] { display: none; }
+.badge-in { position: static; display: inline-grid; margin-left: .4rem; vertical-align: middle; border-color: transparent; }
+.fr-tabs { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: .5rem; margin-bottom: 1rem; }
+.fr-tab { font-family: var(--font-px); font-size: .56rem; letter-spacing: .05em; padding: .85rem .2rem; background: var(--bg-2); color: var(--muted);
+  border: 2px solid var(--line); border-radius: 12px; box-shadow: 0 3px 0 var(--line); }
+.fr-tab.on { background: var(--primary); color: var(--on-primary); border-color: var(--primary); box-shadow: 0 3px 0 var(--shade); }
+.fr-tab:active { transform: translateY(2px); }
+#fr-body { display: flex; flex-direction: column; gap: .6rem; }
+.fr-row { display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; background: var(--bg-2); border: 2px solid var(--line); border-radius: 14px; }
+.fr-main { display: flex; align-items: center; gap: .7rem; flex: 1; min-width: 0; text-align: left; }
+.fr-name { font-size: 1.35rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fr-acts { display: flex; gap: .45rem; flex: none; }
+.fr-acts .btn { width: auto; }
+.fr-acts .icon-btn { width: 2.6rem; height: 2.6rem; }
+.fr-label { font-family: var(--font-px); font-size: .5rem; color: var(--muted); letter-spacing: .06em; }
+.fr-search { width: 100%; padding: .8rem 1rem; font-size: 1.3rem; background: var(--bg); color: var(--text); border: 2px solid var(--line); border-radius: 12px; }
+.fr-search:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--glow); }
+.pf-friend { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+.pf-friend[hidden] { display: none; }
+.pf-fbtns { display: flex; gap: .5rem; }
+.pf-fbtns .btn { width: auto; }
+.screen.profile:not(.is-other) .pf-friend { display: none; }
+
+/* ===== ranks scope toggle + "friends today" on the Daily result ===== */
+.lb-scope { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .8rem; }
+.ft { width: 100%; display: flex; flex-direction: column; gap: .45rem; }
+.ft .section-label { margin: 0; text-align: left; }
+.ft-list { display: flex; flex-direction: column; gap: .4rem; }
+.ft-row { display: grid; grid-template-columns: 1.9rem 1fr auto auto; align-items: center; gap: .5rem; padding: .4rem .6rem;
+  background: var(--bg); border: 2px solid var(--line); border-radius: 10px; font-size: 1.2rem; }
+.ft-row.me { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
+.ft-rank { font-family: var(--font-px); font-size: .55rem; color: var(--muted); }
+.ft-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ft-sq { display: flex; gap: 2px; }
+.ft-sq i { width: .45rem; height: .9rem; border-radius: 2px; background: var(--bad-t); border: 1px solid var(--bad); }
+.ft-sq i.ok { background: var(--good-t); border-color: var(--good); }
+.ft-score { font-family: var(--font-px); font-size: .7rem; color: var(--primary-2); }
+.ft-note { color: var(--muted); font-size: 1.05rem; text-align: center; }

@@ -29,11 +29,18 @@ export function initHome() {
   $('#h-store').onclick = () => router.go('store');
   $('#h-settings').onclick = () => router.go('settings');
   $('#h-player').onclick = () => router.go('profile');
+  $('#h-friends').onclick = () => router.go('friends');
+
+  // Red badge on the friends button = number of requests waiting for you.
+  const fbadge = $('#h-fbadge');
+  const setBadge = (n) => { fbadge.hidden = !n; fbadge.textContent = n > 9 ? '9+' : String(n); };
+  const checkRequests = async () => { try { setBadge(cloud.user ? await cloud.incomingCount() : 0); } catch { /* offline */ } };
+  document.addEventListener('friends:count', (e) => setBadge(e.detail || 0));
   mute.onclick = () => { store.set('mute', !store.settings.mute); render(); };
 
   store.on('profile', render);
   store.on('settings', (k) => { if (['mute', 'avatar', 'localName'].includes(k)) render(); });
-  cloud.onChange(render);
+  cloud.onChange(() => { render(); checkRequests(); });
   render();
-  return { enter: render };
+  return { enter() { render(); checkRequests(); } };
 }

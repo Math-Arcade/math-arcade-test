@@ -13,12 +13,20 @@ export const ref = (db, path = '') => ({ path });
 export const query = (r, ...cons) => ({ path: r.path, cons });
 export const orderByChild = (k) => ({ t: 'o', k });
 export const limitToLast = (n) => ({ t: 'l', n });
+export const orderByKey = () => ({ t: 'k' });
+export const startAt = (v) => ({ t: 's', v });
+export const endAt = (v) => ({ t: 'e', v });
+export const limitToFirst = (n) => ({ t: 'f', n });
 export async function get(r) {
   let val = getAt(r.path);
   if (r.cons) {
     const o = r.cons.find((c) => c.t === 'o'), l = r.cons.find((c) => c.t === 'l');
-    let e = Object.entries(val || {}).sort((a, b) => a[1][o.k] - b[1][o.k]);
+    const byKey = r.cons.find((c) => c.t === 'k'), s = r.cons.find((c) => c.t === 's'), en = r.cons.find((c) => c.t === 'e'), f = r.cons.find((c) => c.t === 'f');
+    let e = Object.entries(val || {});
+    if (byKey) e = e.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).filter(([k]) => (!s || k >= s.v) && (!en || k <= en.v));
+    else if (o) e = e.sort((a, b) => a[1][o.k] - b[1][o.k]);
     if (l) e = e.slice(-l.n);
+    if (f) e = e.slice(0, f.n);
     val = Object.fromEntries(e);
   }
   return snap(val, parts(r.path).at(-1));

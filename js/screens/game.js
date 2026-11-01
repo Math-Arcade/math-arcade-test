@@ -341,6 +341,40 @@ export function initGame() {
     })();
   }
 
+  function publishDailyResult() {
+    if (!cloud.user || cfg.kind !== 'daily') return;
+    const d = store.profile.days[cfg.date];
+    if (d) cloud.publishDaily(cfg.date, d).catch((e) => console.warn('Daily sync failed', e));
+  }
+
+  // "Friends today" on the Daily result: you and the friends who have played, best first.
+  let friendsToken = 0;
+  async function showFriendsToday() {
+    const box = $('#g-r-friends'), list = $('#g-r-flist'), t = ++friendsToken;
+    list.textContent = '';
+    const mine = store.today;
+    if (cfg.kind !== 'daily' || !cloud.user || !mine) { box.hidden = true; return; }
+    box.hidden = false; list.append(h('div', 'ft-note', 'Loading…'));
+    try {
+      const { rows, friendCount } = await cloud.friendsDaily(cfg.date);
+      if (t !== friendsToken) return;
+      list.textContent = '';
+      if (!friendCount) { box.hidden = true; return; }
+      const me = { me: true, name: 'You', score: mine.score, total: (mine.grid || '').length || 10, ms: mine.ms, grid: mine.grid || '' };
+      const all = [me, ...rows].sort((a, b) => b.score - a.score || a.ms - b.ms);
+      all.slice(0, 5).forEach((r, i) => {
+        const row = h('div', `ft-row${r.me ? ' me' : ''}`);
+        const sq = h('span', 'ft-sq');
+        r.grid.split('').forEach((c) => sq.append(h('i', c === '1' ? 'ok' : '')));
+        row.append(h('span', 'ft-rank', `#${i + 1}`), h('span', 'ft-name', r.name), sq, h('span', 'ft-score', `${r.score}/${r.total}`));
+        list.append(row);
+      });
+      if (all.length > 5) list.append(h('div', 'ft-note', `+${all.length - 5} more`));
+      const waiting = friendCount - rows.length;
+      if (waiting > 0) list.append(h('div', 'ft-note', rows.length ? `${waiting} friend${waiting === 1 ? '' : 's'} haven't played yet` : 'None of your friends have played yet'));
+    } catch (e) { if (t === friendsToken) box.hidden = true; }
+  }
+
   function endRun(reason) {
     stopLoop();
     const s = eng.summary();
@@ -357,6 +391,7 @@ export function initGame() {
       if (kind === 'daily' && scored) p.days[cfg.date] = { score: s.correct, ms: Math.round(s.avgMs * s.answered), grid: s.history.map((x) => (x ? 1 : 0)).join('') };
     });
     pushCloud(mode, s.score, newBest);
+    publishDailyResult();
     showResult({ ...s, newBest, prevBest });
   }
 
@@ -391,6 +426,7 @@ export function initGame() {
       $('#g-r-share').className = 'btn';
     }
     openSheet(E.result);
+    showFriendsToday();
     if (quiet) return;
     if (s.newBest) { audio.sfx('best'); audio.buzz('win'); fx.confetti(); }
     else if (kind === 'daily' && s.correct >= 8) { audio.sfx('win'); audio.buzz('win'); fx.confetti(60); }

@@ -5,7 +5,7 @@ import { fx } from './fx.js';
 import { Router } from './router.js';
 import { cloud } from './cloud.js';
 import { MODES } from './config.js';
-import { sleep, fillSymbols } from './util.js';
+import { sleep, fillSymbols, utcDay } from './util.js';
 import { thumbFrom } from './avatar.js';
 import { buildPublic } from './public.js';
 import { initHome } from './screens/home.js';
@@ -14,6 +14,7 @@ import { initGame } from './screens/game.js';
 import { initDuel } from './screens/duel.js';
 import { initLeaderboard } from './screens/leaderboard.js';
 import { initProfile } from './screens/profile.js';
+import { initFriends } from './screens/friends.js';
 import { initStore } from './screens/store.js';
 import { initSettings } from './screens/settings.js';
 import { initAuth } from './screens/auth.js';
@@ -75,6 +76,8 @@ function wireCloudSync() {
       for (const m of MODES) if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]);
     } catch (e) { console.warn('Cloud sync failed', e); }
     publishSoon(300);
+    const today = store.today; // a Daily played before signing in (or offline) still reaches friends
+    if (today) cloud.publishDaily(utcDay(), today).catch((e) => console.warn('Daily sync failed', e));
   });
 }
 
@@ -94,6 +97,7 @@ async function boot() {
   router.register('duel', initDuel());
   router.register('leaderboard', initLeaderboard());
   router.register('profile', initProfile());
+  router.register('friends', initFriends());
   router.register('store', initStore());
   router.register('settings', initSettings());
   router.register('auth', initAuth());

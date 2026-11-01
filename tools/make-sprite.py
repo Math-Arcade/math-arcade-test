@@ -48,7 +48,7 @@ def symbol(name, rows):
     return f'<symbol id="i-{name}" viewBox="0 0 {w} {h}"><path d="{"".join(d)}"/></symbol>'
 
 ICONS_DIR = pathlib.Path(__file__).resolve().parent / 'icons'
-ICONS.setdefault('store', None); ICONS.setdefault('edit', None)
+ICONS.setdefault('store', None); ICONS.setdefault('edit', None); ICONS.setdefault('friends', None)
 sprite = ('<!-- SPRITE:START -->\n<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false" shape-rendering="crispEdges">'
           + ''.join(svg_symbol(n, ICONS_DIR / f'{n}.svg') if (ICONS_DIR / f'{n}.svg').exists() else symbol(n, r) for n, r in ICONS.items()) + '</svg>\n<!-- SPRITE:END -->')
 p = pathlib.Path(__file__).resolve().parent.parent / 'index.html'

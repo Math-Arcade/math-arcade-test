@@ -1,5 +1,6 @@
 import { app } from '../app.js';
 import { $, h, fmt, toast, fillSymbols } from '../util.js';
+import { confirmDialog } from '../router.js';
 import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
@@ -126,11 +127,47 @@ export function initProfile() {
 
   function reset() {
     token++; other = null;
+    fbox.hidden = true;
     screen.classList.remove('is-other');
     screen.removeAttribute('data-other'); screen.removeAttribute('data-theme');
     const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta && bg) meta.content = bg;
+  }
+
+  // ---- friend actions shown on someone else's profile ----
+  const fbox = $('#pf-friend'), fstat = $('#pf-fstat'), fbtns = $('#pf-fbtns');
+  async function loadRelation(mine) {
+    fbox.hidden = true;
+    if (!cloud.user || !other) return;
+    let rel;
+    try { rel = await cloud.relationWith(other.uid); } catch { return; }
+    if (mine !== token || !other) return;
+    const uid = other.uid, name = pfName.textContent;
+    const go = async (fn, ok) => {
+      fbtns.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+      try { await fn(); if (ok) toast(ok); } catch (e) { toast(friendlyError(e)); }
+      if (mine === token) loadRelation(mine);
+    };
+    const btn = (label, cls, fn, ok) => { const b = h('button', `btn btn-sm ${cls}`, label); b.type = 'button'; b.onclick = () => go(fn, ok); return b; };
+    fbtns.textContent = '';
+    if (rel === 'friends') {
+      fstat.textContent = 'You are friends';
+      fbtns.append(btn('REMOVE', '', async () => {
+        const r = await confirmDialog({ title: 'Remove friend?', text: `${name} will be removed from your friends.`, ok: 'REMOVE', danger: true });
+        if (r && r.ok) await cloud.removeFriend(uid);
+      }));
+    } else if (rel === 'incoming') {
+      fstat.textContent = 'Wants to be friends';
+      fbtns.append(btn('ACCEPT', 'btn-primary', () => cloud.acceptFriendRequest(uid, name), `You and ${name} are friends`), btn('DECLINE', '', () => cloud.declineFriendRequest(uid)));
+    } else if (rel === 'sent') {
+      fstat.textContent = 'Request sent';
+      fbtns.append(btn('CANCEL', '', () => cloud.cancelFriendRequest(uid)));
+    } else if (rel === 'none') {
+      fstat.textContent = '';
+      fbtns.append(btn('ADD FRIEND', 'btn-primary', () => cloud.sendFriendRequest(uid, name), 'Request sent'));
+    } else return;
+    fbox.hidden = false;
   }
 
   async function enterOther(params) {
@@ -143,7 +180,9 @@ export function initProfile() {
     pfName.textContent = params.name || '?';
     pfSub.textContent = params.score ? `Best score: ${fmt(params.score)}` : '';
     showAvatar(params.pic || '');
+    fbox.hidden = true;
     body.textContent = ''; body.append(h('div', 'lb-msg', 'Loading…'));
+    loadRelation(mine);
     try {
       const p = await cloud.fetchPublicProfile(params.uid);
       if (mine !== token) return;
@@ -153,6 +192,7 @@ export function initProfile() {
       pfName.textContent = p.name;
       showAvatar(p.pic || params.pic || '');
       renderStats(body, p.stats);
+      loadRelation(mine);
       requestAnimationFrame(setThemeColor);
     } catch (e) {
       if (mine !== token) return;
@@ -166,6 +206,6 @@ export function initProfile() {
       reset(); openForm(false); render();
     },
     leave() { reset(); },
-    parent: () => (other ? 'leaderboard' : 'home'),
+    parent: () => (other ? (other.from === 'friends' ? 'friends' : 'leaderboard') : 'home'),
   };
 }

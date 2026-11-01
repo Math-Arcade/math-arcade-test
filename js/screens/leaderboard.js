@@ -8,8 +8,18 @@ export function initLeaderboard() {
   const ops = $('#lb-ops'), list = $('#lb-list'), foot = $('#lb-foot');
   const refresh = $('#lb-refresh');
   refresh.onclick = () => load(true);
-  let mode = 'mix', token = 0;
+  let mode = 'mix', token = 0, scope = 'global';
   const cache = {};
+
+  const scopeBtns = Array.from(document.querySelectorAll('#lb-scope [data-scope]'));
+  scopeBtns.forEach((b) => {
+    b.onclick = () => {
+      if (scope === b.dataset.scope) return;
+      scope = b.dataset.scope;
+      scopeBtns.forEach((x) => { const on = x.dataset.scope === scope; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
+      load(true);
+    };
+  });
 
   buildOpChips(ops, mode, (m) => { mode = m; setChecked(ops, 'data-op', m); load(true); });
 
@@ -50,11 +60,16 @@ export function initLeaderboard() {
     list.textContent = '';
     foot.textContent = '';
     for (let i = 0; i < 7; i++) list.append(h('div', 'skel'));
-    const c = cache[mode];
+    const key = `${scope}:${mode}`, c = cache[key];
     try {
-      const rows = !force && c && Date.now() - c.t < 60000 ? c.rows : await cloud.leaderboard(mode);
+      if (scope === 'friends' && !cloud.user) { message('Friends need an internet connection. Try again in a moment.', 'RETRY', () => load(true)); return; }
+      let rows, noFriends = false;
+      if (!force && c && Date.now() - c.t < 60000) ({ rows, noFriends } = c);
+      else if (scope === 'friends') { const r = await cloud.friendsLeaderboard(mode); rows = r.rows; noFriends = !r.friendCount; }
+      else rows = await cloud.leaderboard(mode);
       if (t !== token) return;
-      cache[mode] = { rows, t: Date.now() };
+      cache[key] = { rows, noFriends, t: Date.now() };
+      if (noFriends) { message('You have no friends yet. Add some to compete with them!', 'FIND FRIENDS', () => router.go('friends', { tab: 'add' })); return; }
       render(rows);
     } catch (e) {
       if (t !== token) return;
