@@ -234,6 +234,26 @@
     </div>
   </section>
 
+  <!-- PLAYER (another player's profile, shown in their theme) -->
+  <section class="screen player" data-screen="player" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
+      <h2>PLAYER</h2><span class="bar-spacer"></span>
+    </header>
+    <div class="scroll">
+      <div class="panel pf-head">
+        <div class="pf-top">
+          <span class="pf-avatar-btn">
+            <img id="pl-img" alt="" hidden>
+            <svg class="ico pf-avatar" id="pl-ph"><use href="#i-user"></use></svg>
+          </span>
+          <div class="pf-info"><b id="pl-name"></b><small class="muted" id="pl-sub"></small></div>
+        </div>
+      </div>
+      <div id="pl-body"></div>
+    </div>
+  </section>
+
   <!-- STORE (empty for now) -->
   <section class="screen store" data-screen="store" hidden>
     <header class="bar">

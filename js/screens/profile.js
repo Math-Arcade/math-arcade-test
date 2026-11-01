@@ -3,9 +3,49 @@ import { $, h, fmt, toast } from '../util.js';
 import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
+import { ownStats } from '../public.js';
 
 // Name shown for the player: online name if signed in, else the local name, else "Guest".
 export const displayName = (cloud, store) => (cloud.user && cloud.user.name) || store.settings.localName || 'Guest';
+
+function statCard(k, v) {
+  const c = h('div', 'stat');
+  c.append(h('span', 'k', k), h('span', 'v', v));
+  return c;
+}
+const dur = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)}h ${Math.floor((sec % 3600) / 60)}m` : `${Math.max(0, Math.floor(sec / 60))}m`);
+
+// Stat cards + best-score bars. `s` is the shape returned by ownStats() / stored in a public profile.
+export function renderStats(body, s) {
+  const answered = s.correct + s.wrong;
+  const grid = h('div', 'stat-cards');
+  grid.append(
+    statCard('Blitz games', fmt(s.blitzGames)),
+    statCard('Correct answers', fmt(s.correct)),
+    statCard('Accuracy', answered ? `${Math.round((s.correct / answered) * 100)}%` : '-'),
+    statCard('Best streak', fmt(s.bestStreak)),
+    statCard('Highest level', s.bestLevel ? String(s.bestLevel) : '-'),
+    statCard('Daily streak', `${s.dailyStreak} day${s.dailyStreak === 1 ? '' : 's'}`),
+    statCard('Dailies played', fmt(s.dailies)),
+    statCard('Play time', dur(s.seconds)),
+  );
+  body.append(grid);
+
+  const bests = h('div', 'panel');
+  bests.append(h('h3', '', 'BLITZ BEST SCORES'));
+  const max = Math.max(1, ...MODES.map((m) => s.best[m]));
+  MODES.forEach((m) => {
+    const r = h('div', 'best-row');
+    r.setAttribute('aria-label', `${MODE_NAME[m]} ${s.best[m]}`);
+    const sign = h('span', `s${m === 'mix' ? ' mix' : ''}`, MODE_SIGN[m]);
+    const bg = h('div', 'bar-bg'), i = h('i');
+    i.style.width = `${Math.round((s.best[m] / max) * 100)}%`;
+    bg.append(i);
+    r.append(sign, bg, h('span', 'n', fmt(s.best[m])));
+    bests.append(r);
+  });
+  body.append(bests);
+}
 
 export function initProfile() {
   const { store, cloud, router } = app;
@@ -49,13 +89,6 @@ export function initProfile() {
 
   pfBtn.onclick = () => router.go(cloud.user ? 'settings' : 'auth', { mode: 'signin' });
 
-  function card(k, v) {
-    const c = h('div', 'stat');
-    c.append(h('span', 'k', k), h('span', 'v', v));
-    return c;
-  }
-  const dur = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)}h ${Math.floor((sec % 3600) / 60)}m` : `${Math.max(0, Math.floor(sec / 60))}m`);
-
   function render() {
     pfName.textContent = displayName(cloud, store);
     pfSub.textContent = !cloud.user ? 'Not signed in' : cloud.user.guest ? 'Guest account' : 'Signed in';
@@ -65,41 +98,14 @@ export function initProfile() {
     if (av) img.src = av;
     remove.hidden = !av;
 
-    const { totals: t, best, days } = store.profile;
-    const answered = t.correct + t.wrong;
     body.textContent = '';
-    const grid = h('div', 'stat-cards');
-    grid.append(
-      card('Blitz games', fmt(t.blitzGames)),
-      card('Correct answers', fmt(t.correct)),
-      card('Accuracy', answered ? `${Math.round((t.correct / answered) * 100)}%` : '-'),
-      card('Best streak', fmt(t.bestStreak)),
-      card('Highest level', t.bestLevel ? String(t.bestLevel) : '-'),
-      card('Daily streak', `${store.streak} day${store.streak === 1 ? '' : 's'}`),
-      card('Dailies played', fmt(Object.keys(days).length)),
-      card('Play time', dur(t.seconds)),
-    );
-    body.append(grid);
+    renderStats(body, ownStats(store));
 
-    const bests = h('div', 'panel');
-    bests.append(h('h3', '', 'BLITZ BEST SCORES'));
-    const max = Math.max(1, ...MODES.map((m) => best[m]));
-    MODES.forEach((m) => {
-      const r = h('div', 'best-row');
-      r.setAttribute('aria-label', `${MODE_NAME[m]} ${best[m]}`);
-      const s = h('span', `s${m === 'mix' ? ' mix' : ''}`, MODE_SIGN[m]);
-      const bg = h('div', 'bar-bg'), i = h('i');
-      i.style.width = `${Math.round((best[m] / max) * 100)}%`;
-      bg.append(i);
-      r.append(s, bg, h('span', 'n', fmt(best[m])));
-      bests.append(r);
-    });
-    body.append(bests);
-
+    const { totals: t } = store.profile;
     const duel = h('div', 'panel');
     duel.append(h('h3', '', 'DUEL RECORD'));
     const row = h('div', 'stat-cards');
-    row.append(card(`${store.settings.p1} wins`, fmt(t.duelWins0)), card(`${store.settings.p2} wins`, fmt(t.duelWins1)));
+    row.append(statCard(`${store.settings.p1} wins`, fmt(t.duelWins0)), statCard(`${store.settings.p2} wins`, fmt(t.duelWins1)));
     duel.append(row, h('div', 'muted', `${fmt(t.duelGames)} duel${t.duelGames === 1 ? '' : 's'} played`));
     body.append(duel);
   }

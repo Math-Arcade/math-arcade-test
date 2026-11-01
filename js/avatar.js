@@ -28,15 +28,15 @@ export async function fileToAvatar(file, size = 128) {
 
 
 // Avatar data URL -> ~64px JPEG small enough (< 8000 chars) to store with a leaderboard entry.
-export async function thumbFrom(dataUrl, size = 64) {
+export async function thumbFrom(dataUrl, size = 64, max = 7500) {
   if (!dataUrl) return '';
   const img = await loadImage(dataUrl);
   for (const q of [0.7, 0.5, 0.35]) {
     const out = squareJpeg(img, size, q);
-    if (out.length <= 7500) return out;
+    if (out.length <= max) return out;
   }
   return '';
 }
 
 // Only ever render JPEG data URLs of sane size that came from the leaderboard.
-export const safePic = (v) => (typeof v === 'string' && v.length <= 8000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v) ? v : '');
+export const safePic = (v, max = 8000) => (typeof v === 'string' && v.length <= max && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v) ? v : '');

@@ -3,6 +3,7 @@
 
 import { FIREBASE_CONFIG, FIREBASE_SDK, MODES } from './config.js';
 import { safePic } from './avatar.js';
+import { cleanPublic } from './public.js';
 
 let F = null;
 let initPromise = null;
@@ -176,13 +177,25 @@ export const cloud = {
     const u = auth.currentUser;
     if (!u) throw fail('not-signed-in');
     await withTimeout(authM.reauthenticateWithCredential(u, authM.EmailAuthProvider.credential(u.email, password)));
-    const updates = { [`users/${u.uid}`]: null };
+    const updates = { [`users/${u.uid}`]: null, [`publicProfiles/${u.uid}`]: null };
     MODES.forEach((m) => { updates[`leaderboard/${m}/${u.uid}`] = null; });
     if (u.displayName) updates[`usernames/${nameKey(u.displayName)}`] = null;
     await withTimeout(dbM.update(dbM.ref(db), updates));
     await withTimeout(authM.deleteUser(u));
     this.user = null;
     this._emit();
+  },
+
+  async publishProfile(data) {
+    if (!this.user) return;
+    await this.need();
+    await withTimeout(F.dbM.set(F.dbM.ref(F.db, `publicProfiles/${this.user.uid}`), data));
+  },
+
+  async fetchPublicProfile(uid) {
+    await this.need();
+    const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `publicProfiles/${uid}`)));
+    return snap.exists() ? cleanPublic(snap.val()) : null;
   },
 
   async pullProfile() {

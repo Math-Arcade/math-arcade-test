@@ -107,6 +107,18 @@ with sync_playwright() as p:
     back(pg, 'profile'); pg.wait_for_timeout(450)
     pg.locator('#h-ranks').tap(); pg.wait_for_timeout(1000)
     check(pg.locator('.lb-row.me .lb-pic img').count() == 1, 'ranks shows the player picture in their row')
+    pg.wait_for_timeout(2200)
+    check(fb(pg, "(S.db.publicProfiles && S.db.publicProfiles.u1 && S.db.publicProfiles.u1.name) || ''") == 'Tester' and fb(pg, "(S.db.publicProfiles.u1.pic || '').startsWith('data:image/jpeg;base64,')"), 'public profile is published with name and picture')
+    pg.evaluate("""() => { const S = window.__fbmock;
+      S.db.leaderboard.mix.u9 = { name: 'Nova', score: 99 };
+      S.db.publicProfiles.u9 = { name: 'Nova', theme: 'purple', stats: { blitzGames: 12, correct: 80, wrong: 20, bestStreak: 7, bestLevel: 3, seconds: 600, dailies: 4, dailyStreak: 2, best: { mix: 99, add: 0, sub: 0, mul: 0, div: 0 } } }; }""")
+    pg.locator('#refresh, #lb-refresh').first.tap(); pg.wait_for_timeout(900)
+    pg.locator('.lb-row', has_text='Nova').tap(); pg.wait_for_timeout(900)
+    check(view(pg) == 'player' and pg.locator('section[data-screen=player]').get_attribute('data-theme') == 'purple', "another player's profile opens in their theme")
+    check(pg.inner_text('#pl-name') == 'Nova' and '80%' in pg.inner_text('#pl-body'), "other player's name and stats are shown")
+    back(pg, 'player'); pg.wait_for_timeout(500)
+    check(pg.locator('section[data-screen=player]').get_attribute('data-theme') is None, "player theme does not leak after leaving")
+    pg.evaluate("() => { const S = window.__fbmock; delete S.db.leaderboard.mix.u9; delete S.db.publicProfiles.u9; }")
     back(pg, 'leaderboard'); pg.wait_for_timeout(450)
     pg.locator('#h-player').tap(); pg.wait_for_timeout(450)
     pg.locator('#pf-edit').tap(); pg.fill('#pf-input', 'ab'); pg.locator('#pf-save').tap(); pg.wait_for_timeout(300)

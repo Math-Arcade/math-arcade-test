@@ -7,12 +7,14 @@ import { cloud } from './cloud.js';
 import { MODES } from './config.js';
 import { sleep } from './util.js';
 import { thumbFrom } from './avatar.js';
+import { buildPublic } from './public.js';
 import { initHome } from './screens/home.js';
 import { initModes } from './screens/modes.js';
 import { initGame } from './screens/game.js';
 import { initDuel } from './screens/duel.js';
 import { initLeaderboard } from './screens/leaderboard.js';
 import { initProfile } from './screens/profile.js';
+import { initPlayer } from './screens/player.js';
 import { initStore } from './screens/store.js';
 import { initSettings } from './screens/settings.js';
 import { initAuth } from './screens/auth.js';
@@ -63,9 +65,20 @@ async function syncPic() {
   } catch (e) { console.warn('Picture sync failed', e); }
 }
 
+// Publish the public profile (name, theme, picture, stats) so other players can open it from Ranks.
+let pubTimer = 0;
+function publishSoon(delay = 1500) {
+  clearTimeout(pubTimer);
+  pubTimer = setTimeout(async () => {
+    if (!cloud.user) return;
+    try { await cloud.publishProfile(await buildPublic(store, cloud)); } catch (e) { console.warn('Public profile sync failed', e); }
+  }, delay);
+}
+
 // When a player signs in: merge cloud + local progress, then push the result back.
 function wireCloudSync() {
-  store.on('settings', (k) => { if (k === 'avatar') syncPic(); });
+  store.on('settings', (k) => { if (k === 'avatar') syncPic(); if (k === 'avatar' || k === 'theme') publishSoon(); });
+  store.on('profile', () => publishSoon(4000));
   cloud.onChange(async (user) => {
     if (!user) return;
     await syncPic();
@@ -74,6 +87,7 @@ function wireCloudSync() {
       await cloud.pushProfile(merged);
       for (const m of MODES) if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]);
     } catch (e) { console.warn('Cloud sync failed', e); }
+    publishSoon(300);
   });
 }
 
@@ -93,6 +107,7 @@ async function boot() {
   router.register('duel', initDuel());
   router.register('leaderboard', initLeaderboard());
   router.register('profile', initProfile());
+  router.register('player', initPlayer());
   router.register('store', initStore());
   router.register('settings', initSettings());
   router.register('auth', initAuth());
