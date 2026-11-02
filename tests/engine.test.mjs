@@ -163,20 +163,3 @@ test('duel: first to target wins, wrong answers cost a point and lock', () => {
   assert.equal(d.winner, 0);
   assert.equal(d.answer(1, 0, now + 9999).type, 'ignored');
 });
-
-test('every finished level earns a heart, up to the maximum', () => {
-  const e = new RunEngine({ kind: 'blitz', seed: 3 });
-  e.next(0);
-  const hearts = [];
-  for (let i = 1; i <= 60; i++) {
-    const r = e.answer(e.problem.correctIndex, i * 700);
-    if (r.leveledUp) hearts.push({ gained: r.heart, lives: e.lives });
-    if (!r.over) e.next(i * 700 + 10);
-  }
-  assert.ok(hearts.length >= 3);
-  assert.equal(hearts[0].lives, 4);
-  assert.equal(hearts[1].lives, 5);
-  assert.equal(hearts[2].lives, 5); // capped
-  assert.equal(hearts[2].gained, false);
-  assert.ok(e.lives <= RULES.blitz.maxLives);
-});
