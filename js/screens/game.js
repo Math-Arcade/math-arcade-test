@@ -54,7 +54,7 @@ export function initGame() {
     running = false; paused = false; locked = true; committed = false; lastSecond = -1; pending = null; comboShown = 1;
     closeNow(E.pause); closeNow(E.result);
     E.card.classList.remove('ok', 'bad'); E.verdict.innerHTML = ''; E.banner.hidden = true;
-    E.cue.classList.remove('show'); E.card.classList.remove('cueing'); fireLvl = 0; E.fire.dataset.lvl = '0'; E.fire.style.setProperty('--lvl', '0'); E.heat.classList.remove('on'); recordShown = false; runBest = kind === 'blitz' ? store.profile.best[mode] : 0;
+    E.cue.classList.remove('show'); E.card.classList.remove('cueing'); E.hearts.classList.remove('gain', 'hit'); livesShown = 3; fireLvl = 0; E.fire.dataset.lvl = '0'; E.fire.style.setProperty('--lvl', '0'); E.heat.classList.remove('on'); recordShown = false; runBest = kind === 'blitz' ? store.profile.best[mode] : 0;
     E.problem.textContent = '';
     E.btns.forEach((b) => { b.disabled = true; b.className = 'answer'; b.textContent = ''; });
     E.cat.hidden = kind !== 'zen';
@@ -142,12 +142,23 @@ export function initGame() {
     lastSecond = sec;
   }
 
+  let livesShown = 3;
+  function pulseHearts(kind) {
+    E.hearts.classList.remove('gain', 'hit'); void E.hearts.offsetWidth; E.hearts.classList.add(kind);
+    const id = runId;
+    later(() => { if (id === runId) E.hearts.classList.remove(kind); }, 1000);
+  }
+
   function renderHud() {
     const k = cfg.kind;
     if (k === 'blitz') {
       E.score.textContent = fmt(eng.score);
       E.hearts.innerHTML = '';
-      for (let i = 0; i < RULES.blitz.lives; i++) E.hearts.insertAdjacentHTML('beforeend', icon(i < eng.lives ? 'heart' : 'heart-o', i < eng.lives ? '' : 'lost'));
+      if (eng.lives > RULES.blitz.lives) E.hearts.insertAdjacentHTML('beforeend', `<span class="hx">${eng.lives}x</span>${icon('heart')}`); // 4x + heart
+      else for (let i = 0; i < RULES.blitz.lives; i++) E.hearts.insertAdjacentHTML('beforeend', icon(i < eng.lives ? 'heart' : 'heart-o', i < eng.lives ? '' : 'lost'));
+      E.hearts.setAttribute('aria-label', `${eng.lives} lives`);
+      if (eng.lives > livesShown) pulseHearts('gain');
+      livesShown = eng.lives;
       const lvl = eng.levelFor();
       E.lv.textContent = `LV ${lvl}`;
       E.lvFill.style.width = `${Math.round(eng.levelProgress * 100)}%`;
@@ -263,10 +274,11 @@ export function initGame() {
         audio.sfx('level'); audio.buzz('level');
       }
       if (cfg.kind === 'blitz') {
+        const hx = r.heart ? ' · +1 HEART' : eng.lives >= RULES.blitz.maxLives ? ' · MAX HEARTS' : '';
         if (runBest > 0 && !recordShown && eng.score > runBest) {
           recordShown = true;
-          cue('NEW RECORD', r.leveledUp ? `LEVEL ${eng.levelFor()}` : `PREVIOUS BEST ${fmt(runBest)}`, 'gold');
-        } else if (r.leveledUp) cue('NEW LEVEL', `LEVEL ${eng.levelFor()}`, 'good');
+          cue('NEW RECORD', r.leveledUp ? `LEVEL ${eng.levelFor()}${hx}` : `PREVIOUS BEST ${fmt(runBest)}`, 'gold');
+        } else if (r.leveledUp) cue('NEW LEVEL', `LEVEL ${eng.levelFor()}${hx}`, 'good');
         else if (r.multiplier > prevMult) cue(`${r.multiplier}x`, r.multiplier >= 5 ? 'MAX COMBO' : 'COMBO', 'gold');
       }
       if (cfg.kind === 'zen') setCat('happy', 1100);
@@ -285,8 +297,8 @@ export function initGame() {
     }
     renderHud();
     if (cfg.kind === 'blitz' && !r.correct) {
-      const hearts = E.hearts.querySelectorAll('.ico');
-      const lost = hearts[eng.lives]; if (lost) lost.classList.add('hit');
+      const lost = E.hearts.querySelectorAll('.ico')[eng.lives];
+      if (lost) lost.classList.add('hit'); else pulseHearts('hit'); // from 4+ hearts there is no empty slot to shake
     }
     const id = runId;
     later(() => { if (id === runId) advance(() => (r.over ? endRun(r.over) : next())); }, r.correct ? 430 : 1050);

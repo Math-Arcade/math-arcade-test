@@ -537,3 +537,10 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .heat.on { animation: heat .6s ease-out both; }
 @keyframes heat { 0% { opacity: 0; } 18% { opacity: var(--heat, .35); } 100% { opacity: 0; } }
 .reduce-motion .fire { display: none; }
+
+/* ===== hearts: more than 3 collapse to "4x" + heart; gaining one pulses ===== */
+.hearts { align-items: center; }
+.hearts .hx { font-family: var(--font-px); font-size: .8rem; color: var(--bad); margin-right: .25rem; }
+.hearts.gain { animation: heart-gain .95s ease-out; }
+.hearts.hit { animation: pop-in .4s ease-out; }
+@keyframes heart-gain { 0% { transform: scale(1); filter: none; } 22% { transform: scale(1.45); filter: drop-shadow(0 0 10px var(--bad)); } 60% { transform: scale(1.1); } 100% { transform: scale(1); filter: none; } }
