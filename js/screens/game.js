@@ -12,7 +12,7 @@ export function initGame() {
   const E = {
     problem: $('#g-problem'), card: $('#g-card'), verdict: $('#g-verdict'), answers: $('#g-answers'), btns: $$('.answer', $('#g-answers')),
     score: $('#g-score'), scoreLabel: $('#g-score-label'), hearts: $('#g-hearts'), clock: $('#g-clock'), cells: $('#g-cells'), clockText: $('#g-clock-text'),
-    lv: $('#g-lv'), lvFill: $('#g-lvfill'), combo: $('#g-combo'), banner: $('#g-banner'), cat: $('#g-cat'), count: $('#g-count'),
+    cue: $('#g-cue'), fire: $('#g-fire'), heat: $('#g-heat'), lv: $('#g-lv'), lvFill: $('#g-lvfill'), combo: $('#g-combo'), banner: $('#g-banner'), cat: $('#g-cat'), count: $('#g-count'),
     pause: $('#g-pause'), result: $('#g-result'),
   };
 
@@ -54,6 +54,7 @@ export function initGame() {
     running = false; paused = false; locked = true; committed = false; lastSecond = -1; pending = null; comboShown = 1;
     closeNow(E.pause); closeNow(E.result);
     E.card.classList.remove('ok', 'bad'); E.verdict.innerHTML = ''; E.banner.hidden = true;
+    E.cue.classList.remove('show'); E.card.classList.remove('cueing'); fireLvl = 0; E.fire.dataset.lvl = '0'; E.fire.style.setProperty('--lvl', '0'); E.heat.classList.remove('on'); recordShown = false; runBest = kind === 'blitz' ? store.profile.best[mode] : 0;
     E.problem.textContent = '';
     E.btns.forEach((b) => { b.disabled = true; b.className = 'answer'; b.textContent = ''; });
     E.cat.hidden = kind !== 'zen';
@@ -158,6 +159,56 @@ export function initGame() {
     }
   }
 
+  // A big see-through message over the problem card. tone: 'gold' | 'good' | 'bad'
+  let recordShown = false, runBest = 0;
+  function cue(main, sub = '', tone = 'gold') {
+    const c = E.cue;
+    c.className = 'cue';
+    c.querySelector('b').textContent = main;
+    c.querySelector('small').textContent = sub;
+    c.dataset.size = main.length > 4 ? 'long' : 'short';
+    c.classList.add(tone);
+    void c.offsetWidth;
+    c.classList.add('show');
+    E.card.classList.add('cueing');
+    const id = runId;
+    later(() => { if (id === runId) { c.classList.remove('show'); E.card.classList.remove('cueing'); } }, 1000);
+  }
+
+  // Streak fire: flames on both screen edges that grow every 5 in a row, with a quick warm tint on each step up.
+  let fireLvl = 0, flamesBuilt = false;
+  const fireLevel = (streak) => (streak >= 5 ? Math.min(5, 1 + Math.floor((streak - 5) / 5)) : 0);
+  function buildFlames() {
+    if (flamesBuilt) return;
+    flamesBuilt = true;
+    E.fire.querySelectorAll('.fire-side').forEach((side) => {
+      for (let i = 0; i < 13; i++) {
+        const f = document.createElement('i');
+        f.className = 'fl';
+        f.style.setProperty('--i', String(i));
+        f.style.setProperty('--d', `${(0.28 + Math.random() * 0.3).toFixed(2)}s`);
+        f.style.setProperty('--dl', `-${(Math.random() * 0.6).toFixed(2)}s`);
+        f.style.setProperty('--sw', `${((side.classList.contains('l') ? 1 : -1) * (2 + Math.random() * 6)).toFixed(1)}px`);
+        side.append(f);
+      }
+    });
+  }
+  function setFire(streak) {
+    const lvl = store.settings.particles && cfg.kind === 'blitz' ? fireLevel(streak) : 0;
+    if (lvl === fireLvl) return;
+    const up = lvl > fireLvl;
+    fireLvl = lvl;
+    if (lvl) buildFlames();
+    E.fire.dataset.lvl = String(lvl);
+    E.fire.style.setProperty('--lvl', String(lvl));
+    if (up) {
+      const h = E.heat;
+      h.style.setProperty('--heat', String((0.24 + lvl * 0.06).toFixed(2)));
+      h.classList.remove('on'); void h.offsetWidth; h.classList.add('on');
+      later(() => h.classList.remove('on'), 700);
+    }
+  }
+
   let comboShown = 1;
   function setCombo() {
     const m = eng.multiplier;
@@ -184,7 +235,9 @@ export function initGame() {
     if (!running || paused || locked || !eng.problem) return;
     locked = true;
     const p = eng.problem;
+    const prevMult = eng.multiplier;
     const r = eng.answer(i, performance.now());
+    setFire(eng.streak);
     const mark = (b, cls, ic) => { b.className = `answer ${cls}`; b.insertAdjacentHTML('beforeend', icon(ic, 'mark')); };
     E.btns.forEach((b, k) => {
       b.disabled = true;
@@ -206,14 +259,28 @@ export function initGame() {
         if (r.timeBonus) { const c = fx.at(E.clock); fx.floatText(`+${trim(r.timeBonus)}s`, c.x + 40, c.y + 26, 'time'); }
       }
       if (r.leveledUp && cfg.kind !== 'daily') {
-        banner(cfg.kind === 'zen' ? 'LEVEL UP!' : `LEVEL ${eng.levelFor()}`);
+        if (cfg.kind !== 'blitz') banner(cfg.kind === 'zen' ? 'LEVEL UP!' : `LEVEL ${eng.levelFor()}`);
         audio.sfx('level'); audio.buzz('level');
+      }
+      if (cfg.kind === 'blitz') {
+        if (runBest > 0 && !recordShown && eng.score > runBest) {
+          recordShown = true;
+          cue('NEW RECORD', r.leveledUp ? `LEVEL ${eng.levelFor()}` : `PREVIOUS BEST ${fmt(runBest)}`, 'gold');
+        } else if (r.leveledUp) cue('NEW LEVEL', `LEVEL ${eng.levelFor()}`, 'good');
+        else if (r.multiplier > prevMult) cue(`${r.multiplier}x`, r.multiplier >= 5 ? 'MAX COMBO' : 'COMBO', 'gold');
       }
       if (cfg.kind === 'zen') setCat('happy', 1100);
     } else {
       audio.sfx('wrong'); audio.buzz('wrong');
       fx.shake(E.card); fx.flash('bad');
-      if (cfg.kind === 'blitz') fx.floatText(r.timedOut ? 'TIME!' : 'MISS', pos.x, pos.y - 34, 'bad');
+      if (cfg.kind === 'blitz') {
+        fx.floatText(r.timedOut ? 'TIME!' : 'MISS', pos.x, pos.y - 34, 'bad');
+        if (!r.over) {
+          const last = eng.lives === 1;
+          if (prevMult >= 2) cue('1x', last ? 'STREAK LOST · LAST LIFE' : 'STREAK LOST', 'bad');
+          else if (last) cue('LAST LIFE', '', 'bad');
+        }
+      }
       if (cfg.kind === 'zen') setCat('sad', 1200);
     }
     renderHud();
@@ -377,6 +444,7 @@ export function initGame() {
 
   function endRun(reason) {
     stopLoop();
+    setFire(0);
     const s = eng.summary();
     const { kind, mode } = cfg;
     const prevBest = store.profile.best[mode];

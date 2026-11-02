@@ -499,3 +499,41 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .ft-sq i.ok { background: var(--good-t); border-color: var(--good); }
 .ft-score { font-family: var(--font-px); font-size: .7rem; color: var(--primary-2); }
 .ft-note { color: var(--muted); font-size: 1.05rem; text-align: center; }
+
+/* ===== Blitz cues: a see-through message over the problem card (under the CRT lines) ===== */
+.cue { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: .6rem; padding: 0 .6rem;
+  text-align: center; pointer-events: none; opacity: 0; --cue: var(--warn); }
+.cue.gold, .cue.warn { --cue: var(--warn); } .cue.good { --cue: var(--good); } .cue.bad { --cue: var(--bad); }
+.cue b { font-family: var(--font-px); font-weight: 400; font-size: clamp(3rem, 19vw, 4.8rem); line-height: 1; letter-spacing: .03em; color: var(--cue);
+  text-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 24px var(--cue); }
+.cue[data-size="long"] b { font-size: clamp(1.8rem, 9.5vw, 2.7rem); line-height: 1.15; }
+.cue small { font-family: var(--font-px); font-size: .62rem; letter-spacing: .14em; color: var(--text); text-shadow: 0 2px 0 var(--bg); }
+.cue small:empty { display: none; }
+.cue.show { animation: cue-pop .95s ease-out both; }
+@keyframes cue-pop { 0% { opacity: 0; transform: scale(.5); } 13% { opacity: .85; transform: scale(1.14); } 25% { transform: scale(1); opacity: .8; } 46% { opacity: .7; } 100% { opacity: 0; transform: scale(1.06); } }
+/* while the solved equation is still on the card, step it back so the cue reads clearly */
+.pcard.cueing.ok .problem, .pcard.cueing.bad .problem { opacity: .22; transition: opacity .12s; }
+.reduce-motion .cue.show { animation: none; opacity: .6; }
+
+/* ===== streak fire: flames on both edges that grow with the streak, plus a quick warm tint ===== */
+.fire { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; --lvl: 0; }
+.fire-side { position: absolute; bottom: 0; width: calc(1rem + var(--lvl) * .4rem); height: calc(9% + var(--lvl) * 9%); opacity: 0;
+  transition: opacity .45s ease, height .6s ease, width .6s ease; }
+.fire-side.l { left: -.55rem; --edge: to right; }
+.fire-side.r { right: -.55rem; --edge: to left; }
+.fire-side { -webkit-mask-image: linear-gradient(var(--edge), #000 35%, transparent), linear-gradient(to top, #000 62%, transparent); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(var(--edge), #000 35%, transparent), linear-gradient(to top, #000 62%, transparent); mask-composite: intersect; }
+.fire[data-lvl]:not([data-lvl="0"]) .fire-side { opacity: .9; }
+.fire-side::before { content: ''; position: absolute; inset: 0; opacity: .5;
+  background: linear-gradient(to right, rgba(255, 96, 24, .6), rgba(255, 96, 24, 0)); -webkit-mask-image: linear-gradient(to top, #000 40%, transparent); mask-image: linear-gradient(to top, #000 40%, transparent); }
+.fire-side.r::before { background: linear-gradient(to left, rgba(255, 96, 24, .6), rgba(255, 96, 24, 0)); }
+.fl { position: absolute; left: 0; width: 100%; height: 26%; bottom: calc(var(--i) * 6%); transform-origin: 50% 100%; mix-blend-mode: screen; filter: blur(.8px);
+  border-radius: 55% 55% 48% 48% / 72% 72% 28% 28%;
+  background: radial-gradient(ellipse at 50% 88%, #ffe58a 0 8%, #ffae2a 28%, #ff5a1a 55%, rgba(255, 40, 20, 0) 80%);
+  animation: flicker var(--d) ease-in-out infinite alternate; animation-delay: var(--dl); }
+@keyframes flicker { 0% { transform: scale(.7, .75) translateX(0); } 50% { transform: scale(1.1, 1.2) translateX(var(--sw)); } 100% { transform: scale(.85, .9) translateX(0); } }
+.fire[data-lvl="1"] .fl:nth-child(n+5), .fire[data-lvl="2"] .fl:nth-child(n+7), .fire[data-lvl="3"] .fl:nth-child(n+9), .fire[data-lvl="4"] .fl:nth-child(n+11) { display: none; }
+.heat { position: absolute; inset: 0; opacity: 0; background: #ff5a14; mix-blend-mode: color; }
+.heat.on { animation: heat .6s ease-out both; }
+@keyframes heat { 0% { opacity: 0; } 18% { opacity: var(--heat, .35); } 100% { opacity: 0; } }
+.reduce-motion .fire { display: none; }
