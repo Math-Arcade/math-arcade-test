@@ -1,5 +1,5 @@
 import { app } from '../app.js';
-import { $, $$, h, icon, toast } from '../util.js';
+import { $, $$, h, icon, toast, lvlBadge } from '../util.js';
 import { friendlyError } from '../cloud.js';
 
 const count = (n) => document.dispatchEvent(new CustomEvent('friends:count', { detail: n }));
@@ -16,13 +16,16 @@ export function initFriends() {
     const row = h('div', 'fr-row');
     const main = h('button', 'fr-main'); main.type = 'button';
     const pic = h('span', 'lb-pic'); pic.innerHTML = icon('user');
+    const av = h('span', 'lb-av'); av.append(pic);
     const nm = h('span', 'fr-name', p.name);
-    main.append(pic, nm);
-    main.onclick = () => router.go('profile', { uid: p.uid, name: p.name, from: 'friends' });
+    let badge = null;
+    main.append(av, nm);
+    main.onclick = () => router.go('profile', { uid: p.uid, name: p.name, lvl: info.get(p.uid)?.level, from: 'friends' });
     row.append(main, actions || h('span'));
     const paint = (i) => {
       if (!i) return;
       if (i.name) nm.textContent = i.name;
+      if (i.level) { if (!badge) { badge = lvlBadge(i.level); av.append(badge); } else badge.textContent = String(i.level); }
       if (i.pic) { pic.textContent = ''; const im = document.createElement('img'); im.src = i.pic; im.alt = ''; pic.append(im); }
     };
     if (info.has(p.uid)) paint(info.get(p.uid));
@@ -139,7 +142,7 @@ export function initFriends() {
   cloud.onChange(() => { if (router.current === 'friends') refresh(); });
 
   return {
-    enter(p = {}) { if (p.tab) tab = p.tab; results = []; state = null; render(); refresh(); },
+    enter(p = {}) { tab = p.tab || 'list'; info.clear(); results = []; state = null; render(); refresh(); },
     leave() { clearTimeout(searchTimer); token++; },
   };
 }

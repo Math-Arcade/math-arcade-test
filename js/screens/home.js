@@ -14,6 +14,10 @@ export function initHome() {
     const av = store.settings.avatar;
     $('#h-img').hidden = !av; $('#h-ph').style.display = av ? 'none' : '';
     if (av) $('#h-img').src = av;
+    const lv = store.level;
+    $('#h-lv').textContent = lv.maxed ? 'MAX' : `LV ${lv.level}`;
+    $('#h-xpfill').style.width = `${Math.round(lv.pct * 100)}%`;
+    $('#h-xp').setAttribute('aria-label', lv.maxed ? 'Max level 100' : `Level ${lv.level}, ${lv.into} of ${lv.need} XP`);
     mute.innerHTML = icon(store.settings.mute ? 'mute' : 'vol');
     mute.setAttribute('aria-pressed', String(store.settings.mute));
     const today = store.today, n = store.streak;
@@ -29,6 +33,7 @@ export function initHome() {
   $('#h-store').onclick = () => router.go('store');
   $('#h-settings').onclick = () => router.go('settings');
   $('#h-player').onclick = () => router.go('profile');
+  $('#h-xp').onclick = () => router.go('profile');
   $('#h-friends').onclick = () => router.go('friends');
 
   // Red badge on the friends button = number of requests waiting for you.

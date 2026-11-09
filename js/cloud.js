@@ -11,6 +11,7 @@ const listeners = new Set();
 const fail = (code) => Object.assign(new Error(code), { code });
 const withTimeout = (p, ms = 9000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(fail('timeout')), ms))]);
 const nameKey = (name) => name.trim().toLowerCase().replace(/[.#$/[\]\s]/g, '_');
+const cleanLvl = (v) => Math.max(1, Math.min(100, Math.floor(Number(v) || 1)));
 const cleanName = (n) => { const s = String(n || '').trim().slice(0, 16); return s.length >= 3 ? s : 'Player'; };
 const guestKey = (uid) => `ma2.guestName.${uid}`;
 const readGuestName = (uid) => { try { return localStorage.getItem(guestKey(uid)); } catch { return null; } };
@@ -28,6 +29,7 @@ export const cloud = {
   ready: false,
   user: null, // { uid, name } or null
   pic: '', // small JPEG data URL shown next to this player's leaderboard score
+  lvl: 1, // account level shown on the leaderboard
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   _emit() { listeners.forEach((fn) => fn(this.user)); },
@@ -301,7 +303,7 @@ export const cloud = {
         const snap = await withTimeout(dbM.get(dbM.ref(db, `leaderboard/${mode}/${uid}`)));
         if (!snap.exists()) return null;
         const v = snap.val();
-        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic) };
+        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl) };
       } catch { return null; }
     }))).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
     return { rows, friendCount: friends.length };
@@ -333,7 +335,13 @@ export const cloud = {
   async publishProfile(data) {
     if (!this.user) return;
     await this.need();
-    await withTimeout(F.dbM.set(F.dbM.ref(F.db, `publicProfiles/${this.user.uid}`), data));
+    const r = F.dbM.ref(F.db, `publicProfiles/${this.user.uid}`);
+    try { await withTimeout(F.dbM.set(r, data)); }
+    catch (e) { // rules without the newer "xp" field must not stop the rest of the profile from publishing
+      if (data.xp === undefined) throw e;
+      const { xp, ...rest } = data;
+      await withTimeout(F.dbM.set(r, rest));
+    }
   },
 
   async fetchPublicProfile(uid) {
@@ -375,17 +383,32 @@ export const cloud = {
     if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
   },
 
+  // Keep the level on every existing leaderboard entry of this player up to date.
+  async updateLeaderboardLevel(lvl) {
+    if (!this.user) return;
+    await this.need();
+    const uid = this.user.uid, updates = {};
+    await Promise.all(MODES.map(async (mode) => {
+      const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`)));
+      if (snap.exists()) updates[`leaderboard/${mode}/${uid}/lvl`] = lvl > 1 ? lvl : null;
+    }));
+    if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
+  },
+
   async submitScore(mode, score) {
     if (!this.user || !score) return;
     const r = F.dbM.ref(F.db, `leaderboard/${mode}/${this.user.uid}`);
     const snap = await withTimeout(F.dbM.get(r));
     if (!snap.exists() || (snap.val().score || 0) < score) {
       const entry = { name: this.user.name, score };
+      const extras = {};
+      if (this.pic) extras.pic = this.pic;
+      if (this.lvl > 1) extras.lvl = this.lvl;
       try {
-        await withTimeout(F.dbM.set(r, this.pic ? { ...entry, pic: this.pic } : entry));
+        await withTimeout(F.dbM.set(r, { ...entry, ...extras }));
       } catch (e) {
-        // Database rules without the "pic" field (not deployed yet) must never block saving a score.
-        if (!this.pic) throw e;
+        // Database rules without the newer fields (not deployed yet) must never block saving a score.
+        if (!Object.keys(extras).length) throw e;
         await withTimeout(F.dbM.set(r, entry));
       }
     }
@@ -396,7 +419,7 @@ export const cloud = {
     const q = F.dbM.query(F.dbM.ref(F.db, `leaderboard/${mode}`), F.dbM.orderByChild('score'), F.dbM.limitToLast(n));
     const snap = await withTimeout(F.dbM.get(q));
     const rows = [];
-    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic) }); });
+    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl) }); });
     return rows.sort((a, b) => b.score - a.score);
   },
 };

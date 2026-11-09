@@ -530,3 +530,22 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .reduce-motion .cue-tint.on { animation: none; opacity: .22; }
 
 .row small.sub { display: block; margin-top: .15rem; color: var(--muted); font-size: 1.05rem; }
+
+/* ===== account level: bar under the profile button, badge on avatars, progression card ===== */
+.h-prof { display: flex; flex-direction: column; gap: .4rem; max-width: 62%; min-width: 0; }
+.h-prof .chip { max-width: 100%; }
+.xpbar { display: flex; align-items: center; gap: .45rem; padding: 0 .35rem; cursor: pointer; }
+.xp-lv { font-family: var(--font-px); font-weight: 400; font-size: .5rem; letter-spacing: .06em; color: var(--primary-2); white-space: nowrap; }
+.xp-track { position: relative; flex: 1; height: .5rem; background: var(--bg); border: 2px solid var(--line); border-radius: 999px; overflow: hidden; }
+.xp-track > i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--primary); border-radius: 999px; transition: width .5s ease; }
+.xp-track.big { flex: none; height: .85rem; }
+.lb-av { position: relative; width: 2.6rem; height: 2.6rem; }
+.lb-av .lb-pic { width: 100%; height: 100%; }
+.lvl-badge { position: absolute; left: -.45rem; bottom: -.45rem; z-index: 1; min-width: 1.3rem; height: 1.3rem; padding: 0 .25rem; display: grid; place-items: center;
+  font: normal .5rem/1 var(--font-px); color: var(--on-primary); background: var(--primary); border: 2px solid var(--bg-2); border-radius: 7px; }
+#pf-lvbadge { left: -.5rem; bottom: -.5rem; min-width: 1.6rem; height: 1.6rem; font-size: .58rem; }
+#pf-lvbadge[hidden] { display: none; }
+.pf-level { gap: .45rem; margin-bottom: .7rem; }
+.pf-level[hidden] { display: none; }
+.pfl-top { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
+.pfl-top b { font-family: var(--font-px); font-weight: 400; font-size: .85rem; color: var(--primary-2); letter-spacing: .04em; }

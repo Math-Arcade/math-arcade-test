@@ -156,6 +156,15 @@ with sync_playwright() as p:
     pg.locator('#h-player').tap(); pg.wait_for_timeout(500)
     check('DUEL' not in pg.inner_text('#st-body').upper() and 'Blitz games' in pg.inner_text('#st-body'), 'profile no longer shows duel stats')
     back(pg, 'profile'); pg.wait_for_timeout(500)
+    # ---- account level ----
+    check(pg.inner_text('#h-lv') == 'LV 1', 'home shows the level bar, starting at LV 1')
+    pg.evaluate("window.__store.addXp(300)"); pg.wait_for_timeout(600)
+    check(pg.inner_text('#h-lv') == 'LV 3' and not pg.evaluate("document.querySelector('#h-xpfill').style.width") in ('', '0%'), 'earning XP moves the home bar and level')
+    pg.wait_for_timeout(5200)
+    check(fb(pg, "S.db.leaderboard.mix.u1.lvl") == 3 and fb(pg, "S.db.publicProfiles.u1.xp") == 300, 'level and XP reach the leaderboard and the public profile')
+    pg.locator('#h-player').tap(); pg.wait_for_timeout(600)
+    check(pg.inner_text('#pfl-lv') == 'LEVEL 3' and pg.inner_text('#pf-lvbadge') == '3' and 'XP to level 4' in pg.inner_text('#pfl-note'), 'profile shows the level progression')
+    back(pg, 'profile'); pg.wait_for_timeout(500)
     # ---- friends ----
     pg.evaluate("""() => { const S = window.__fbmock; const st = (g) => ({ blitzGames: g, correct: 50, wrong: 10, bestStreak: 5, bestLevel: 2, seconds: 300, dailies: 2, dailyStreak: 1, best: { mix: 50, add: 0, sub: 0, mul: 0, div: 0 } });
       S.db.usernames = Object.assign(S.db.usernames || {}, { nova: 'u9', ruby: 'u8', zed: 'u7' });
@@ -210,12 +219,13 @@ with sync_playwright() as p:
     check('Zed' in pg.inner_text('#g-r-friends'), 'reopening the finished Daily also shows friends today')
     pg.locator('#g-r-menu').tap(); pg.wait_for_timeout(600)
     # ---- ranks: global / friends ----
-    pg.evaluate("() => { const S = window.__fbmock; S.db.leaderboard.mix.u7 = { name: 'Zed', score: 555 }; S.db.leaderboard.mix.u9 = { name: 'Stranger', score: 999 }; }")
+    pg.evaluate("() => { const S = window.__fbmock; S.db.leaderboard.mix.u7 = { name: 'Zed', score: 555, lvl: 4 }; S.db.publicProfiles.u7.xp = 1000; S.db.leaderboard.mix.u9 = { name: 'Stranger', score: 999 }; }")
     pg.locator('#h-ranks').tap(); pg.wait_for_timeout(1000)
     check('Stranger' in pg.inner_text('#lb-list'), 'global ranks show everyone')
     pg.locator('#lb-scope [data-scope=friends]').tap(); pg.wait_for_timeout(1000)
     lb = pg.inner_text('#lb-list')
     check('Zed' in lb and 'Tester2' in lb and 'Stranger' not in lb, 'friends ranks show only you and your friends')
+    check(pg.locator('.lb-row', has_text='Zed').locator('.lvl-badge').inner_text() == '4' and pg.locator('.lb-row.me .lvl-badge').inner_text() == '3', 'ranks show a level badge on every avatar')
     pg.evaluate("() => { window.__fbmock.db.friends = {}; }")
     pg.locator('#lb-scope [data-scope=global]').tap(); pg.wait_for_timeout(500)
     pg.locator('#lb-scope [data-scope=friends]').tap(); pg.wait_for_timeout(1000)
@@ -224,6 +234,9 @@ with sync_playwright() as p:
     check(view(pg) == 'friends', 'FIND FRIENDS opens the friends screen')
     back(pg, 'friends'); pg.wait_for_timeout(500)
     pg.evaluate("() => { const S = window.__fbmock; delete S.db.leaderboard.mix.u7; delete S.db.leaderboard.mix.u9; delete S.db.dailyResults.u9; S.db.friends = { u1: { u7: 'Zed' }, u7: { u1: 'Tester2' } }; }")
+    pg.locator('#h-friends').tap(); pg.wait_for_timeout(1200)
+    check(pg.locator('.fr-row', has_text='Zed').locator('.lvl-badge').inner_text() == '4', 'friends list shows each friend\'s level')
+    back(pg, 'friends'); pg.wait_for_timeout(500)
     pg.locator('#h-settings').tap(); pg.wait_for_timeout(450); pg.get_by_role('button', name='DELETE ACCOUNT').tap(); pg.wait_for_timeout(450)
     pg.fill('#dlg-in', 'nope'); pg.locator('#dlg-ok').tap(); pg.wait_for_timeout(600)
     check('Wrong password' in pg.inner_text('#dlg-err'), 'delete account: wrong password is rejected and the dialog stays open')

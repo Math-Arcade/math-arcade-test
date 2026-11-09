@@ -100,3 +100,10 @@ export function fillSymbols(box) {
     box.append(s);
   }
 }
+
+// Small level badge for the corner of a profile picture.
+export function lvlBadge(n) {
+  const b = document.createElement('i');
+  b.className = 'lvl-badge'; b.textContent = String(n); b.setAttribute('aria-label', `Level ${n}`);
+  return b;
+}

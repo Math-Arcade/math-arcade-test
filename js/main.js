@@ -8,6 +8,7 @@ import { MODES } from './config.js';
 import { sleep, fillSymbols, utcDay } from './util.js';
 import { thumbFrom } from './avatar.js';
 import { buildPublic } from './public.js';
+import { levelInfo } from './engine/level.js';
 import { initHome } from './screens/home.js';
 import { initModes } from './screens/modes.js';
 import { initGame } from './screens/game.js';
@@ -53,6 +54,15 @@ async function syncPic() {
   } catch (e) { console.warn('Picture sync failed', e); }
 }
 
+// Keep the level on the leaderboard in step with your XP.
+let lvlTimer = 0;
+function syncLevel(now = false) {
+  const lvl = levelInfo(store.profile.xp).level;
+  cloud.lvl = lvl; // used for new leaderboard entries straight away
+  clearTimeout(lvlTimer);
+  lvlTimer = setTimeout(() => { if (cloud.user) cloud.updateLeaderboardLevel(lvl).catch((e) => console.warn('Level sync failed', e)); }, now ? 0 : 2500);
+}
+
 // Publish the public profile (name, theme, picture, stats) so other players can open it from Ranks.
 let pubTimer = 0;
 function publishSoon(delay = 1500) {
@@ -66,7 +76,9 @@ function publishSoon(delay = 1500) {
 // When a player signs in: merge cloud + local progress, then push the result back.
 function wireCloudSync() {
   store.on('settings', (k) => { if (k === 'avatar') syncPic(); if (k === 'avatar' || k === 'theme') publishSoon(); });
-  store.on('profile', () => publishSoon(4000));
+  store.on('profile', () => { publishSoon(4000); syncLevel(); });
+  cloud.lvl = levelInfo(store.profile.xp).level;
+  if (new URLSearchParams(location.search).has('debug')) window.__store = store;
   cloud.onChange(async (user) => {
     if (!user) return;
     await syncPic();
@@ -75,7 +87,7 @@ function wireCloudSync() {
       await cloud.pushProfile(merged);
       for (const m of MODES) if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]);
     } catch (e) { console.warn('Cloud sync failed', e); }
-    publishSoon(300);
+    publishSoon(300); syncLevel(true);
     const today = store.today; // a Daily played before signing in (or offline) still reaches friends
     if (today) cloud.publishDaily(utcDay(), today).catch((e) => console.warn('Daily sync failed', e));
   });

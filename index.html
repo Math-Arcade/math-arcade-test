@@ -34,7 +34,10 @@
   <!-- HOME -->
   <section class="screen home" data-screen="home" hidden>
     <div class="topbar">
-      <button class="chip" id="h-player" type="button"><img class="chip-img" id="h-img" alt="" hidden><svg class="ico" id="h-ph"><use href="#i-user"></use></svg><span id="h-name">Guest</span></button>
+      <div class="h-prof">
+        <button class="chip" id="h-player" type="button"><img class="chip-img" id="h-img" alt="" hidden><svg class="ico" id="h-ph"><use href="#i-user"></use></svg><span id="h-name">Guest</span></button>
+        <div class="xpbar" id="h-xp" role="img" aria-label="Level 1"><b class="xp-lv" id="h-lv">LV 1</b><span class="xp-track"><i id="h-xpfill"></i></span></div>
+      </div>
       <div class="topbar-right">
         <button class="icon-btn" id="h-friends" type="button" aria-label="Friends"><svg class="ico"><use href="#i-friends"></use></svg><i class="badge" id="h-fbadge" hidden>0</i></button>
         <button class="icon-btn" id="h-mute" type="button" aria-label="Toggle sound"><svg class="ico"><use href="#i-vol"></use></svg></button>
@@ -222,6 +225,7 @@
           <button class="pf-avatar-btn" id="pf-avatar" type="button" aria-label="Change profile picture">
             <img id="pf-img" alt="" hidden>
             <svg class="ico pf-avatar" id="pf-ph"><use href="#i-user"></use></svg>
+            <i class="lvl-badge" id="pf-lvbadge" aria-label="Level 1">1</i>
             <span class="pf-badge" aria-hidden="true"><svg class="ico"><use href="#i-edit"></use></svg></span>
           </button>
           <div class="pf-info">
@@ -247,6 +251,11 @@
           <button class="link" id="pf-remove" type="button" hidden>Remove photo</button>
         </div>
         <input type="file" id="pf-file" accept="image/*" hidden>
+      </div>
+      <div class="panel pf-level" id="pf-level">
+        <div class="pfl-top"><b id="pfl-lv">LEVEL 1</b><small class="muted" id="pfl-xp"></small></div>
+        <div class="xp-track big"><i id="pfl-fill"></i></div>
+        <small class="muted" id="pfl-note"></small>
       </div>
       <div id="st-body"></div>
     </div>

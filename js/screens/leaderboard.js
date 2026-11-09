@@ -1,5 +1,5 @@
 import { app } from '../app.js';
-import { $, h, fmt, icon } from '../util.js';
+import { $, h, fmt, icon, lvlBadge } from '../util.js';
 import { friendlyError } from '../cloud.js';
 import { buildOpChips, setChecked } from './modes.js';
 
@@ -42,9 +42,11 @@ export function initLeaderboard() {
       const pic = h('span', 'lb-pic');
       if (r.pic) { const im = document.createElement('img'); im.src = r.pic; im.alt = ''; pic.append(im); }
       else pic.innerHTML = icon('user'); // default avatar for players without a photo
-      row.append(h('span', 'lb-rank', `#${i + 1}`), pic, h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
+      const av = h('span', 'lb-av');
+      av.append(pic, lvlBadge(r.uid === myId ? store.level.level : r.lvl || 1)); // level badge, bottom-left
+      row.append(h('span', 'lb-rank', `#${i + 1}`), av, h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
       row.classList.add('tap'); row.tabIndex = 0;
-      const open = () => (r.uid === myId ? router.go('profile') : router.go('profile', { uid: r.uid, name: r.name, pic: r.pic, score: r.score, mode }));
+      const open = () => (r.uid === myId ? router.go('profile') : router.go('profile', { uid: r.uid, name: r.name, pic: r.pic, score: r.score, lvl: r.lvl, mode }));
       row.onclick = open;
       row.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
       list.append(row);

@@ -5,6 +5,7 @@ import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
 import { ownStats, THEMES } from '../public.js';
+import { levelInfo } from '../engine/level.js';
 
 // Name shown for the player: online name if signed in, else the local name, else "Guest".
 export const displayName = (cloud, store) => (cloud.user && cloud.user.name) || store.settings.localName || 'Guest';
@@ -58,6 +59,17 @@ export function initProfile() {
   const img = $('#pf-img'), ph = $('#pf-ph'), file = $('#pf-file'), remove = $('#pf-remove');
   const form = $('#pf-form'), input = $('#pf-input'), save = $('#pf-save'), msg = $('#pf-msg'), editBtn = $('#pf-edit');
 
+  // ---- level card (yours, or the player you are looking at) ----
+  const lvPanel = $('#pf-level'), lvBadge = $('#pf-lvbadge');
+  function paintLevel(info) {
+    $('#pfl-lv').textContent = info.maxed ? 'MAX LEVEL' : `LEVEL ${info.level}`;
+    $('#pfl-xp').textContent = info.maxed ? `${fmt(info.xp)} XP` : `${fmt(info.into)} / ${fmt(info.need)} XP`;
+    $('#pfl-fill').style.width = `${Math.round(info.pct * 100)}%`;
+    $('#pfl-note').textContent = info.maxed ? 'Top of the ladder. Nothing higher to reach!' : `${fmt(info.toNext)} XP to level ${info.level + 1}`;
+    lvBadge.textContent = String(info.level); lvBadge.setAttribute('aria-label', `Level ${info.level}`);
+    lvBadge.hidden = false; lvPanel.hidden = false;
+  }
+
   // ---- name ----
   const setMsg = (t, ok = false) => { msg.textContent = t; msg.classList.toggle('ok', ok); };
   const openForm = (on) => {
@@ -103,6 +115,7 @@ export function initProfile() {
     if (av) img.src = av;
     remove.hidden = !av;
 
+    paintLevel(store.level);
     body.textContent = '';
     renderStats(body, ownStats(store));
 
@@ -110,6 +123,7 @@ export function initProfile() {
 
   cloud.onChange(render);
   store.on('settings', (k) => { if (k === 'avatar' || k === 'localName') render(); });
+  store.on('profile', () => { if (!other && router.current === 'profile') render(); });
   // ---- viewing someone else: same screen, their stats and theme, nothing editable ----
   const setThemeColor = () => {
     const bg = getComputedStyle(screen).getPropertyValue('--bg').trim();
@@ -120,7 +134,7 @@ export function initProfile() {
 
   function reset() {
     token++; other = null;
-    fbox.hidden = true;
+    fbox.hidden = true; lvPanel.hidden = false; lvBadge.hidden = false;
     screen.classList.remove('is-other');
     screen.removeAttribute('data-other'); screen.removeAttribute('data-theme');
     const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
@@ -174,6 +188,7 @@ export function initProfile() {
     pfSub.textContent = params.score ? `Best score: ${fmt(params.score)}` : '';
     showAvatar(params.pic || '');
     fbox.hidden = true;
+    lvPanel.hidden = true; lvBadge.hidden = !params.lvl; if (params.lvl) lvBadge.textContent = String(params.lvl);
     body.textContent = ''; body.append(h('div', 'lb-msg', 'Loading…'));
     loadRelation(mine);
     try {
@@ -184,6 +199,7 @@ export function initProfile() {
       if (THEMES.includes(p.theme)) screen.dataset.theme = p.theme;
       pfName.textContent = p.name;
       showAvatar(p.pic || params.pic || '');
+      paintLevel(levelInfo(p.xp));
       renderStats(body, p.stats);
       loadRelation(mine);
       requestAnimationFrame(setThemeColor);
