@@ -22,9 +22,9 @@ import { initAuth } from './screens/auth.js';
 function applySettings() {
   const s = store.settings, root = document.documentElement;
   root.dataset.theme = s.theme;
-  root.classList.toggle('no-grid', !s.grid);
-  root.classList.toggle('crt', s.crt);
-  root.classList.toggle('reduce-motion', s.reduceMotion);
+  root.classList.toggle('no-grid', !s.effects);
+  root.classList.toggle('crt', s.effects);
+  root.classList.toggle('reduce-motion', !s.effects);
   requestAnimationFrame(() => {
     const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -84,7 +84,7 @@ function wireCloudSync() {
 async function boot() {
   Object.assign(app, { store, audio, fx, cloud });
   applySettings();
-  store.on('settings', (k) => { if (['theme', 'grid', 'crt', 'reduceMotion'].includes(k)) applySettings(); });
+  store.on('settings', (k) => { if (['theme', 'effects'].includes(k)) applySettings(); });
   audio.init(store);
   fx.init(store);
   backgroundSymbols();

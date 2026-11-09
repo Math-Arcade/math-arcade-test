@@ -4,7 +4,7 @@
 import { ProblemStream, MAX_LEVEL } from './problems.js';
 
 export const RULES = {
-  blitz: { time: 30, maxTime: 40, lives: 3, levelEvery: 10, levelBonus: 5, bonus: [2.5, 2.5, 2.5, 2, 2, 2, 1.5, 1.5, 1.5, 1], fastBonus: 0.5 },
+  blitz: { time: 30, maxTime: 40, lives: 3, maxLives: 5, levelEvery: 10, levelBonus: 5, bonus: [2.5, 2.5, 2.5, 2, 2, 2, 1.5, 1.5, 1.5, 1], fastBonus: 0.5 },
   daily: { questions: 10, qTime: 12, levels: [2, 2, 3, 3, 4, 5, 5, 6, 7, 7] },
   zen: { levelEvery: 8, maxLevel: 8 },
   fastMs: 2000,
@@ -73,7 +73,7 @@ export class RunEngine {
     this.totalMs += ms;
     const res = {
       correct, index, correctIndex: p.correctIndex, ms,
-      points: 0, timeBonus: 0, fast: false, leveledUp: false,
+      points: 0, timeBonus: 0, fast: false, leveledUp: false, heart: false,
       multiplier: this.multiplier, over: null, timedOut: index < 0,
     };
 
@@ -90,6 +90,7 @@ export class RunEngine {
         if (this.levelFor() > this.level) {
           res.leveledUp = true;
           res.timeBonus += RULES.blitz.levelBonus;
+          if (this.lives < RULES.blitz.maxLives) { this.lives++; res.heart = true; } // every finished level earns a heart
         }
         this.timeLeft = Math.min(RULES.blitz.maxTime, this.timeLeft + res.timeBonus);
       } else if (this.levelFor() > this.level) {

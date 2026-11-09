@@ -39,7 +39,7 @@ function frame(t) {
 }
 
 function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
-const on = () => store.settings.particles && !store.settings.reduceMotion;
+const on = () => store.settings.effects;
 
 export const fx = {
   init(s) {
@@ -88,14 +88,14 @@ export const fx = {
   at(el) { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; },
 
   shake(el) {
-    if (store.settings.reduceMotion) return;
+    if (!store.settings.effects) return;
     el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
     setTimeout(() => el.classList.remove('shake'), 450);
   },
 
   flash(kind = 'bad') {
     const f = document.getElementById('flash');
-    if (!f || store.settings.reduceMotion) return;
+    if (!f || !store.settings.effects) return;
     f.className = '';
     void f.offsetWidth;
     f.className = `on ${kind}`;

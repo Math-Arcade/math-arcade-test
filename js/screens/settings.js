@@ -18,8 +18,7 @@ export function initSettings() {
     el.oninput = () => store.set(key, parseFloat(el.value));
     if (preview) el.onchange = () => audio.sfx(preview);
   };
-  bindSwitch('#s-sfx', 'sfx'); bindSwitch('#s-haptics', 'haptics'); bindSwitch('#s-grid', 'grid');
-  bindSwitch('#s-crt', 'crt'); bindSwitch('#s-particles', 'particles'); bindSwitch('#s-motion', 'reduceMotion');
+  bindSwitch('#s-sfx', 'sfx'); bindSwitch('#s-haptics', 'haptics'); bindSwitch('#s-effects', 'effects');
   bindRange('#s-sfxvol', 'sfxVol', 'coin'); bindRange('#s-musicvol', 'musicVol');
   $('#s-version').textContent = `v${VERSION}`;
 
@@ -40,14 +39,6 @@ export function initSettings() {
     b.onclick = () => { store.set('theme', id); paint(); };
     themes.append(b);
   });
-
-  // duel names
-  for (const [id, key, def] of [['#s-p1', 'p1', 'Player 1'], ['#s-p2', 'p2', 'Player 2']]) {
-    const el = $(id);
-    el.value = store.settings[key];
-    el.oninput = () => store.set(key, el.value.trim().slice(0, 12) || def);
-    el.onblur = () => { el.value = store.settings[key]; };
-  }
 
   $('#s-reset').onclick = async () => {
     const r = await confirmDialog({ title: 'RESET STATS?', text: 'This clears scores and stats on this device. Your online account is not deleted.', ok: 'RESET', danger: true });

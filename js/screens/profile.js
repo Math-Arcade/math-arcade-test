@@ -106,13 +106,6 @@ export function initProfile() {
     body.textContent = '';
     renderStats(body, ownStats(store));
 
-    const { totals: t } = store.profile;
-    const duel = h('div', 'panel');
-    duel.append(h('h3', '', 'DUEL RECORD'));
-    const row = h('div', 'stat-cards');
-    row.append(statCard(`${store.settings.p1} wins`, fmt(t.duelWins0)), statCard(`${store.settings.p2} wins`, fmt(t.duelWins1)));
-    duel.append(row, h('div', 'muted', `${fmt(t.duelGames)} duel${t.duelGames === 1 ? '' : 's'} played`));
-    body.append(duel);
   }
 
   cloud.onChange(render);

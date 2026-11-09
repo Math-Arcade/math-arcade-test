@@ -12,7 +12,7 @@ export function initGame() {
   const E = {
     problem: $('#g-problem'), card: $('#g-card'), verdict: $('#g-verdict'), answers: $('#g-answers'), btns: $$('.answer', $('#g-answers')),
     score: $('#g-score'), scoreLabel: $('#g-score-label'), hearts: $('#g-hearts'), clock: $('#g-clock'), cells: $('#g-cells'), clockText: $('#g-clock-text'),
-    lv: $('#g-lv'), lvFill: $('#g-lvfill'), combo: $('#g-combo'), banner: $('#g-banner'), cat: $('#g-cat'), count: $('#g-count'),
+    cue: $('#g-cue'), tint: $('#g-tint'), lv: $('#g-lv'), lvFill: $('#g-lvfill'), combo: $('#g-combo'), banner: $('#g-banner'), cat: $('#g-cat'), count: $('#g-count'),
     pause: $('#g-pause'), result: $('#g-result'),
   };
 
@@ -54,6 +54,7 @@ export function initGame() {
     running = false; paused = false; locked = true; committed = false; lastSecond = -1; pending = null; comboShown = 1;
     closeNow(E.pause); closeNow(E.result);
     E.card.classList.remove('ok', 'bad'); E.verdict.innerHTML = ''; E.banner.hidden = true;
+    E.cue.classList.remove('show'); E.card.classList.remove('cueing'); E.hearts.classList.remove('gain', 'hit'); livesShown = 3; E.tint.classList.remove('on'); recordShown = false; runBest = kind === 'blitz' ? store.profile.best[mode] : 0;
     E.problem.textContent = '';
     E.btns.forEach((b) => { b.disabled = true; b.className = 'answer'; b.textContent = ''; });
     E.cat.hidden = kind !== 'zen';
@@ -141,12 +142,23 @@ export function initGame() {
     lastSecond = sec;
   }
 
+  let livesShown = 3;
+  function pulseHearts(kind) {
+    E.hearts.classList.remove('gain', 'hit'); void E.hearts.offsetWidth; E.hearts.classList.add(kind);
+    const id = runId;
+    later(() => { if (id === runId) E.hearts.classList.remove(kind); }, 1000);
+  }
+
   function renderHud() {
     const k = cfg.kind;
     if (k === 'blitz') {
       E.score.textContent = fmt(eng.score);
       E.hearts.innerHTML = '';
-      for (let i = 0; i < RULES.blitz.lives; i++) E.hearts.insertAdjacentHTML('beforeend', icon(i < eng.lives ? 'heart' : 'heart-o', i < eng.lives ? '' : 'lost'));
+      if (eng.lives > RULES.blitz.lives) E.hearts.insertAdjacentHTML('beforeend', `<span class="hx">${eng.lives}x</span>${icon('heart')}`); // 4x + heart
+      else for (let i = 0; i < RULES.blitz.lives; i++) E.hearts.insertAdjacentHTML('beforeend', icon(i < eng.lives ? 'heart' : 'heart-o', i < eng.lives ? '' : 'lost'));
+      E.hearts.setAttribute('aria-label', `${eng.lives} lives`);
+      if (eng.lives > livesShown) pulseHearts('gain');
+      livesShown = eng.lives;
       const lvl = eng.levelFor();
       E.lv.textContent = `LV ${lvl}`;
       E.lvFill.style.width = `${Math.round(eng.levelProgress * 100)}%`;
@@ -156,6 +168,24 @@ export function initGame() {
     } else {
       E.score.textContent = fmt(eng.correct);
     }
+  }
+
+  // A big see-through message over the problem card. tone: 'gold' | 'good' | 'bad'
+  let recordShown = false, runBest = 0;
+  function cue(main, sub = '', tone = 'gold') {
+    if (!store.settings.effects) return; // visual effects switched off
+    const c = E.cue;
+    c.className = 'cue';
+    c.querySelector('b').textContent = main;
+    c.querySelector('small').textContent = sub;
+    c.dataset.size = main.length > 4 ? 'long' : 'short';
+    c.classList.add(tone);
+    void c.offsetWidth;
+    c.classList.add('show');
+    E.tint.className = `cue-tint ${tone}`; void E.tint.offsetWidth; E.tint.classList.add('on');
+    E.card.classList.add('cueing');
+    const id = runId;
+    later(() => { if (id === runId) { c.classList.remove('show'); E.tint.classList.remove('on'); E.card.classList.remove('cueing'); } }, 1000);
   }
 
   let comboShown = 1;
@@ -184,6 +214,7 @@ export function initGame() {
     if (!running || paused || locked || !eng.problem) return;
     locked = true;
     const p = eng.problem;
+    const prevMult = eng.multiplier;
     const r = eng.answer(i, performance.now());
     const mark = (b, cls, ic) => { b.className = `answer ${cls}`; b.insertAdjacentHTML('beforeend', icon(ic, 'mark')); };
     E.btns.forEach((b, k) => {
@@ -206,20 +237,35 @@ export function initGame() {
         if (r.timeBonus) { const c = fx.at(E.clock); fx.floatText(`+${trim(r.timeBonus)}s`, c.x + 40, c.y + 26, 'time'); }
       }
       if (r.leveledUp && cfg.kind !== 'daily') {
-        banner(cfg.kind === 'zen' ? 'LEVEL UP!' : `LEVEL ${eng.levelFor()}`);
+        if (cfg.kind !== 'blitz') banner(cfg.kind === 'zen' ? 'LEVEL UP!' : `LEVEL ${eng.levelFor()}`);
         audio.sfx('level'); audio.buzz('level');
+      }
+      if (cfg.kind === 'blitz') {
+        const hx = r.heart ? ' · +1 HEART' : eng.lives >= RULES.blitz.maxLives ? ' · MAX HEARTS' : '';
+        if (runBest > 0 && !recordShown && eng.score > runBest) {
+          recordShown = true;
+          cue('NEW RECORD', r.leveledUp ? `LEVEL ${eng.levelFor()}${hx}` : `PREVIOUS BEST ${fmt(runBest)}`, 'gold');
+        } else if (r.leveledUp) cue('NEW LEVEL', `LEVEL ${eng.levelFor()}${hx}`, 'good');
+        else if (r.multiplier > prevMult) cue(`${r.multiplier}x`, r.multiplier >= 5 ? 'MAX COMBO' : 'COMBO', 'gold');
       }
       if (cfg.kind === 'zen') setCat('happy', 1100);
     } else {
       audio.sfx('wrong'); audio.buzz('wrong');
       fx.shake(E.card); fx.flash('bad');
-      if (cfg.kind === 'blitz') fx.floatText(r.timedOut ? 'TIME!' : 'MISS', pos.x, pos.y - 34, 'bad');
+      if (cfg.kind === 'blitz') {
+        fx.floatText(r.timedOut ? 'TIME!' : 'MISS', pos.x, pos.y - 34, 'bad');
+        if (!r.over) {
+          const last = eng.lives === 1;
+          if (prevMult >= 2) cue('1x', last ? 'STREAK LOST · LAST LIFE' : 'STREAK LOST', 'bad');
+          else if (last) cue('LAST LIFE', '', 'bad');
+        }
+      }
       if (cfg.kind === 'zen') setCat('sad', 1200);
     }
     renderHud();
     if (cfg.kind === 'blitz' && !r.correct) {
-      const hearts = E.hearts.querySelectorAll('.ico');
-      const lost = hearts[eng.lives]; if (lost) lost.classList.add('hit');
+      const lost = E.hearts.querySelectorAll('.ico')[eng.lives];
+      if (lost) lost.classList.add('hit'); else pulseHearts('hit'); // from 4+ hearts there is no empty slot to shake
     }
     const id = runId;
     later(() => { if (id === runId) advance(() => (r.over ? endRun(r.over) : next())); }, r.correct ? 430 : 1050);

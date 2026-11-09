@@ -33,7 +33,7 @@ export class Router {
     const from = this.current && this.nodes[this.current];
     const to = this.nodes[name];
     if (!to) throw new Error(`Unknown screen: ${name}`);
-    const quick = this.store.settings.reduceMotion;
+    const quick = !this.store.settings.effects;
     this.busy = true;
     if (this.current && app.fx) app.fx.clear();
     if (this.current) this.hooks[this.current]?.leave?.();

@@ -499,3 +499,34 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .ft-sq i.ok { background: var(--good-t); border-color: var(--good); }
 .ft-score { font-family: var(--font-px); font-size: .7rem; color: var(--primary-2); }
 .ft-note { color: var(--muted); font-size: 1.05rem; text-align: center; }
+
+/* ===== Blitz cues: a see-through message over the problem card (under the CRT lines) ===== */
+.cue { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: .6rem; padding: 0 .6rem;
+  text-align: center; pointer-events: none; opacity: 0; --cue: var(--warn); }
+.cue.gold, .cue.warn { --cue: var(--warn); } .cue.good { --cue: var(--good); } .cue.bad { --cue: var(--bad); }
+.cue b { font-family: var(--font-px); font-weight: 400; font-size: clamp(3rem, 19vw, 4.8rem); line-height: 1; letter-spacing: .03em; color: var(--cue);
+  text-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 0 24px var(--cue); }
+.cue[data-size="long"] b { font-size: clamp(1.8rem, 9.5vw, 2.7rem); line-height: 1.15; }
+.cue small { font-family: var(--font-px); font-size: .62rem; letter-spacing: .14em; color: var(--text); text-shadow: 0 2px 0 var(--bg); }
+.cue small:empty { display: none; }
+.cue.show { animation: cue-pop .95s ease-out both; }
+@keyframes cue-pop { 0% { opacity: 0; transform: scale(.5); } 13% { opacity: .85; transform: scale(1.14); } 25% { transform: scale(1); opacity: .8; } 46% { opacity: .7; } 100% { opacity: 0; transform: scale(1.06); } }
+/* while the solved equation is still on the card, step it back so the cue reads clearly */
+.pcard.cueing.ok .problem, .pcard.cueing.bad .problem { opacity: .22; transition: opacity .12s; }
+.reduce-motion .cue.show { animation: none; opacity: .6; }
+
+/* ===== hearts: more than 3 collapse to "4x" + heart; gaining one pulses ===== */
+.hearts { align-items: center; }
+.hearts .hx { font-family: var(--font-px); font-size: .8rem; color: var(--bad); margin-right: .25rem; }
+.hearts.gain { animation: heart-gain .95s ease-out; }
+.hearts.hit { animation: pop-in .4s ease-out; }
+@keyframes heart-gain { 0% { transform: scale(1); filter: none; } 22% { transform: scale(1.45); filter: drop-shadow(0 0 10px var(--bad)); } 60% { transform: scale(1.1); } 100% { transform: scale(1); filter: none; } }
+
+/* ===== cue tint: the whole problem card flashes the cue's color for a split second (under the CRT lines) ===== */
+.cue-tint { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; background: var(--warn); }
+.cue-tint.good { background: var(--good); } .cue-tint.bad { background: var(--bad); } .cue-tint.gold { background: var(--warn); }
+.cue-tint.on { animation: cue-tint .55s ease-out both; }
+@keyframes cue-tint { 0% { opacity: .5; } 100% { opacity: 0; } }
+.reduce-motion .cue-tint.on { animation: none; opacity: .22; }
+
+.row small.sub { display: block; margin-top: .15rem; color: var(--muted); font-size: 1.05rem; }

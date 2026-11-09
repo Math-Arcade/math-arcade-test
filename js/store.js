@@ -9,8 +9,8 @@ const PKEY = 'ma2.profile';
 
 export const DEFAULT_SETTINGS = {
   theme: 'green', sfx: true, sfxVol: 0.8, music: 'none', musicVol: 0.5, haptics: true,
-  grid: true, crt: true, particles: true, mute: false,
-  reduceMotion: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches, op: 'mix', duelTarget: 10, p1: 'Player 1', p2: 'Player 2',
+  // one switch for particles, CRT lines, background grid, motion and on-screen cues (off if the device asks for less motion)
+  effects: !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches), mute: false, op: 'mix', duelTarget: 10, p1: 'Player 1', p2: 'Player 2',
   avatar: '', localName: '', // profile picture (small data URL) and the offline guest name
 };
 
@@ -48,6 +48,8 @@ class Store {
     this.listeners = {};
     const saved = read(SKEY);
     this.settings = { ...DEFAULT_SETTINGS, ...(saved || this.legacySettings()) };
+    if (saved && saved.effects === undefined) this.settings.effects = !saved.reduceMotion; // older saves had four separate switches
+    for (const k of ['grid', 'crt', 'particles', 'reduceMotion']) delete this.settings[k];
     if (!['green', 'blue', 'red', 'yellow', 'purple', 'light', 'dark', 'colorblind'].includes(this.settings.theme)) this.settings.theme = 'green';
     if (!saved) write(SKEY, this.settings);
     this.profile = mergeProfiles(read(PKEY), null);
@@ -62,7 +64,7 @@ class Store {
       const music = ({ campFire: 'campfire', wildLife: 'wildlife' })[g('selectedNoise')] || g('selectedNoise') || 'none';
       return {
         theme, music, sfx: g('soundEffectsToggle') === 'true',
-        grid: g('backGroundGridT') !== 'false', particles: g('particalsT') !== 'false',
+        effects: g('backGroundGridT') !== 'false' || g('particalsT') !== 'false',
         p1: g('playerOneName') || 'Player 1', p2: g('playerTwoName') || 'Player 2',
         duelTarget: [5, 10, 15, 20].includes(+g('limit')) ? +g('limit') : 10,
       };
