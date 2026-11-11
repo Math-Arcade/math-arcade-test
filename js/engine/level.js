@@ -1,6 +1,6 @@
 // Account level: 1..100. Every level costs more XP than the one before it.
 export const MAX_LEVEL = 100;
-export const XP_SCALE = 80; // tune this one number to make the whole curve faster or slower
+export const XP_SCALE = 10; // tune this one number to make the whole curve faster or slower
 
 // XP needed to go from `level` to `level + 1`.
 export const xpToNext = (level) => Math.round(XP_SCALE * level ** 1.3);

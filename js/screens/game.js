@@ -427,6 +427,8 @@ export function initGame() {
     const { kind, mode } = cfg;
     const prevBest = store.profile.best[mode];
     const newBest = kind === 'blitz' && s.score > prevBest && s.score > 0;
+    // XP is intentionally limited to Blitz runs, first-time Daily completions, and new Blitz records.
+    const xpGained = kind === 'blitz' ? 15 + (newBest ? 20 : 0) : kind === 'daily' && scored ? 30 : 0;
     committed = true;
     store.update((p) => {
       p.totals.correct += s.correct; p.totals.wrong += s.wrong;
@@ -434,11 +436,12 @@ export function initGame() {
       p.totals.bestLevel = Math.max(p.totals.bestLevel, s.maxLevel);
       p.totals.seconds += Math.round((performance.now() - startedAt) / 1000);
       if (kind === 'blitz') { p.totals.blitzGames++; if (newBest) p.best[mode] = s.score; }
-      if (kind === 'daily' && scored) p.days[cfg.date] = { score: s.correct, ms: Math.round(s.avgMs * s.answered), grid: s.history.map((x) => (x ? 1 : 0)).join('') };
+      if (kind === 'daily' && scored) p.days[cfg.date] = { score: s.correct, ms: Math.round(s.avgMs * s.answered), grid: s.history.map((x) => (x ? 1 : 0)).join(''), xp: xpGained };
     });
+    if (xpGained > 0) store.addXp(xpGained);
     pushCloud(mode, s.score, newBest);
     publishDailyResult();
-    showResult({ ...s, newBest, prevBest });
+    showResult({ ...s, newBest, prevBest, xpGained });
   }
 
   function showResult(s, quiet = false) {
@@ -460,6 +463,7 @@ export function initGame() {
       grid.hidden = false;
       s.history.forEach((ok) => { const q = h('span', `sq${ok ? ' ok' : ''}`); q.innerHTML = icon(ok ? 'check' : 'cross'); grid.append(q); });
       stat('Accuracy', acc); stat('Avg time', avg);
+      stat('XP earned', `+${s.xpGained || 0} XP`);
       $('#g-r-again').hidden = true;
       $('#g-r-share').className = 'btn btn-primary';
     } else {
@@ -468,6 +472,7 @@ export function initGame() {
       best.textContent = s.newBest ? (s.prevBest ? `PREVIOUS BEST ${fmt(s.prevBest)}` : 'FIRST SCORE!') : `BEST ${fmt(store.profile.best[mode])}`;
       stat('Level', String(s.maxLevel)); stat('Correct', String(s.correct));
       stat('Accuracy', acc); stat('Best streak', String(s.bestStreak));
+      stat('XP earned', `+${s.xpGained || 0} XP`);
       $('#g-r-again').hidden = false;
       $('#g-r-share').className = 'btn';
     }
@@ -487,7 +492,7 @@ export function initGame() {
     const hist = (d.grid || '').split('').map((c) => c === '1');
     const total = hist.length || 10;
     cfg.date = utcDay();
-    showResult({ correct: d.score, answered: total, accuracy: total ? d.score / total : 0, avgMs: total ? d.ms / total : 0, history: hist, over: 'done', newBest: false }, true);
+    showResult({ correct: d.score, answered: total, accuracy: total ? d.score / total : 0, avgMs: total ? d.ms / total : 0, history: hist, over: 'done', newBest: false, xpGained: d.xp || 0 }, true);
   }
 
   async function share() {
