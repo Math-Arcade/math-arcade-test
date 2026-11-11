@@ -30,6 +30,7 @@ export const cloud = {
   user: null, // { uid, name } or null
   pic: '', // small JPEG data URL shown next to this player's leaderboard score
   lvl: 1, // account level shown on the leaderboard
+  title: 'Rookie', // equipped profile title
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   _emit() { listeners.forEach((fn) => fn(this.user)); },
@@ -303,7 +304,7 @@ export const cloud = {
         const snap = await withTimeout(dbM.get(dbM.ref(db, `leaderboard/${mode}/${uid}`)));
         if (!snap.exists()) return null;
         const v = snap.val();
-        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl) };
+        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40) };
       } catch { return null; }
     }))).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
     return { rows, friendCount: friends.length };
@@ -384,6 +385,17 @@ export const cloud = {
   },
 
   // Keep the level on every existing leaderboard entry of this player up to date.
+  async updateLeaderboardTitle(title) {
+    if (!this.user) return;
+    await this.need();
+    const uid = this.user.uid, updates = {};
+    await Promise.all(MODES.map(async (mode) => {
+      const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`)));
+      if (snap.exists()) updates[`leaderboard/${mode}/${uid}/title`] = title || null;
+    }));
+    if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
+  },
+
   async updateLeaderboardLevel(lvl) {
     if (!this.user) return;
     await this.need();
@@ -404,6 +416,7 @@ export const cloud = {
       const extras = {};
       if (this.pic) extras.pic = this.pic;
       if (this.lvl > 1) extras.lvl = this.lvl;
+      if (this.title && this.title !== 'Rookie') extras.title = this.title;
       try {
         await withTimeout(F.dbM.set(r, { ...entry, ...extras }));
       } catch (e) {
@@ -419,7 +432,7 @@ export const cloud = {
     const q = F.dbM.query(F.dbM.ref(F.db, `leaderboard/${mode}`), F.dbM.orderByChild('score'), F.dbM.limitToLast(n));
     const snap = await withTimeout(F.dbM.get(q));
     const rows = [];
-    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl) }); });
+    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40) }); });
     return rows.sort((a, b) => b.score - a.score);
   },
 };

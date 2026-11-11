@@ -233,6 +233,7 @@
               <b id="pf-name">Guest</b>
               <button class="icon-btn pf-edit" id="pf-edit" type="button" aria-label="Change name"><svg class="ico"><use href="#i-edit"></use></svg></button>
             </div>
+            <small class="pf-title" id="pf-title">Rookie</small>
             <small class="muted" id="pf-sub"></small>
           </div>
         </div>
@@ -252,12 +253,20 @@
         </div>
         <input type="file" id="pf-file" accept="image/*" hidden>
       </div>
-      <div class="panel pf-level" id="pf-level">
+      <div class="panel pf-level" id="pf-level" role="button" tabindex="0" aria-label="Open title progression">
         <div class="pfl-top"><b id="pfl-lv">LEVEL 1</b><small class="muted" id="pfl-xp"></small></div>
         <div class="xp-track big"><i id="pfl-fill"></i></div>
         <small class="muted" id="pfl-note"></small>
       </div>
       <div id="st-body"></div>
+    </div>
+    <div class="sheet" id="pf-titles" hidden role="dialog" aria-modal="true" aria-labelledby="pf-titles-heading">
+      <div class="sheet-card pf-title-card">
+        <h2 id="pf-titles-heading">TITLE PROGRESSION</h2>
+        <p class="muted center">Choose any title you have unlocked.</p>
+        <div class="pf-title-scroll" id="pf-title-scroll"></div>
+        <button class="btn btn-ghost" id="pf-titles-close" type="button">CLOSE</button>
+      </div>
     </div>
   </section>
 

@@ -1,6 +1,7 @@
 // What other players can see about you: name, theme, picture and a stats summary.
 import { MODES } from './config.js';
 import { levelInfo } from './engine/level.js';
+import { titleByMilestone, cleanTitleLevel } from './titles.js';
 import { thumbFrom, safePic } from './avatar.js';
 
 export const THEMES = ['green', 'blue', 'red', 'yellow', 'purple', 'light', 'dark', 'colorblind'];
@@ -21,7 +22,7 @@ export async function buildPublic(store, cloud) {
   const stats = { best: {} };
   for (const k of ['blitzGames', 'correct', 'wrong', 'bestStreak', 'bestLevel', 'seconds', 'dailies', 'dailyStreak']) stats[k] = num(s[k]);
   for (const m of MODES) stats.best[m] = num(s.best[m], 100000);
-  const out = { xp: num(store.profile.xp), name: cloud.user.name, theme: THEMES.includes(store.settings.theme) ? store.settings.theme : 'green', stats, updated: Date.now() };
+  const out = { xp: num(store.profile.xp), titleLevel: Number(store.profile.titleLevel) || 1, name: cloud.user.name, theme: THEMES.includes(store.settings.theme) ? store.settings.theme : 'green', stats, updated: Date.now() };
   const pic = await thumbFrom(store.settings.avatar, 96, PUBLIC_PIC_MAX);
   if (pic) out.pic = pic;
   return out;
@@ -34,5 +35,5 @@ export function cleanPublic(v) {
   for (const k of ['blitzGames', 'correct', 'wrong', 'bestStreak', 'bestLevel', 'seconds', 'dailies', 'dailyStreak']) stats[k] = num(v.stats?.[k]);
   for (const m of MODES) stats.best[m] = num(v.stats?.best?.[m], 100000);
   const xp = num(v.xp);
-  return { xp, level: levelInfo(xp).level, name: String(v.name || '?').slice(0, 16), theme: THEMES.includes(v.theme) ? v.theme : 'green', pic: safePic(v.pic, PUBLIC_PIC_MAX), stats };
+  return { xp, level: levelInfo(xp).level, titleLevel: cleanTitleLevel(v.titleLevel, levelInfo(xp).level), title: titleByMilestone(cleanTitleLevel(v.titleLevel, levelInfo(xp).level)).name, name: String(v.name || '?').slice(0, 16), theme: THEMES.includes(v.theme) ? v.theme : 'green', pic: safePic(v.pic, PUBLIC_PIC_MAX), stats };
 }

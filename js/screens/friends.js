@@ -17,14 +17,18 @@ export function initFriends() {
     const main = h('button', 'fr-main'); main.type = 'button';
     const pic = h('span', 'lb-pic'); pic.innerHTML = icon('user');
     const av = h('span', 'lb-av'); av.append(pic);
+    const identity = h('span', 'fr-identity');
     const nm = h('span', 'fr-name', p.name);
+    const title = h('small', 'fr-title', 'Rookie');
+    identity.append(nm, title);
     let badge = null;
-    main.append(av, nm);
-    main.onclick = () => router.go('profile', { uid: p.uid, name: p.name, lvl: info.get(p.uid)?.level, from: 'friends' });
+    main.append(av, identity);
+    main.onclick = () => router.go('profile', { uid: p.uid, name: p.name, lvl: info.get(p.uid)?.level, title: info.get(p.uid)?.title, from: 'friends' });
     row.append(main, actions || h('span'));
     const paint = (i) => {
       if (!i) return;
       if (i.name) nm.textContent = i.name;
+      title.textContent = i.title || 'Rookie';
       if (i.level) { if (!badge) { badge = lvlBadge(i.level); av.append(badge); } else badge.textContent = String(i.level); }
       if (i.pic) { pic.textContent = ''; const im = document.createElement('img'); im.src = i.pic; im.alt = ''; pic.append(im); }
     };

@@ -58,6 +58,7 @@ async function syncPic() {
 let lvlTimer = 0;
 function syncLevel(now = false) {
   const lvl = levelInfo(store.profile.xp).level;
+  import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
   cloud.lvl = lvl; // used for new leaderboard entries straight away
   clearTimeout(lvlTimer);
   lvlTimer = setTimeout(() => { if (cloud.user) cloud.updateLeaderboardLevel(lvl).catch((e) => console.warn('Level sync failed', e)); }, now ? 0 : 2500);
@@ -76,8 +77,9 @@ function publishSoon(delay = 1500) {
 // When a player signs in: merge cloud + local progress, then push the result back.
 function wireCloudSync() {
   store.on('settings', (k) => { if (k === 'avatar') syncPic(); if (k === 'avatar' || k === 'theme') publishSoon(); });
-  store.on('profile', () => { publishSoon(4000); syncLevel(); });
+  store.on('profile', () => { publishSoon(4000); syncLevel(); import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; if (cloud.user) cloud.updateLeaderboardTitle(cloud.title).catch((e) => console.warn('Title sync failed', e)); }); });
   cloud.lvl = levelInfo(store.profile.xp).level;
+  import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
   if (new URLSearchParams(location.search).has('debug')) window.__store = store;
   cloud.onChange(async (user) => {
     if (!user) return;
@@ -85,6 +87,8 @@ function wireCloudSync() {
     try {
       const merged = store.mergeRemote(await cloud.pullProfile());
       await cloud.pushProfile(merged);
+      const { titleByMilestone } = await import('./titles.js');
+      cloud.title = titleByMilestone(merged.titleLevel || 1).name;
       for (const m of MODES) if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]);
     } catch (e) { console.warn('Cloud sync failed', e); }
     publishSoon(300); syncLevel(true);

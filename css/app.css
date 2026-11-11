@@ -283,6 +283,8 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .pf-name-row { display: flex; align-items: center; gap: .5rem; min-width: 0; }
 .pf-name-row[hidden] { display: none; }
 .pf-info b { font-size: 1.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-title { color: var(--primary-2); font-size: .82rem; font-weight: 700; letter-spacing: .02em; }
+.pf-title[hidden] { display: none; }
 .pf-edit { width: 2.1rem; height: 2.1rem; flex: none; border-radius: 8px; box-shadow: 0 2px 0 var(--line); }
 .pf-edit .ico { width: 1.3rem; height: 1.3rem; }
 .pf-form { display: flex; gap: .5rem; align-items: center; }
@@ -305,6 +307,8 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .lb-rank { font-family: var(--font-px); font-size: .72rem; color: var(--muted); }
 .lb-row.top .lb-rank { color: var(--warn); }
 .lb-name { font-size: 1.45rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-identity, .fr-identity { display: flex; flex-direction: column; min-width: 0; gap: .08rem; }
+.lb-title, .fr-title { color: var(--primary-2); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-score { font-family: var(--font-px); font-size: .82rem; color: var(--primary-2); }
 .lb-msg { text-align: center; color: var(--muted); padding: 2.2rem 1rem; font-size: 1.35rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
 .lb-foot { padding-top: .6rem; }
@@ -545,7 +549,24 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
   font: normal .5rem/1 var(--font-px); color: var(--on-primary); background: var(--primary); border: 2px solid var(--bg-2); border-radius: 7px; }
 #pf-lvbadge { left: -.5rem; bottom: -.5rem; min-width: 1.6rem; height: 1.6rem; font-size: .58rem; }
 #pf-lvbadge[hidden] { display: none; }
-.pf-level { gap: .45rem; margin-bottom: .7rem; }
+.pf-level { gap: .45rem; margin-bottom: .7rem; width: 100%; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.pf-level:active { transform: translateY(1px); }
+.pf-title-card { width: min(100%, 30rem); max-height: calc(100% - 1rem); }
+.pf-title-scroll { position: relative; width: 100%; max-height: min(62vh, 34rem); overflow-y: auto; overscroll-behavior: contain; padding: .6rem .25rem; display: flex; flex-direction: column; gap: .7rem; }
+.pf-title-scroll::before { content: ""; position: absolute; top: .3rem; bottom: .3rem; left: 50%; width: 3px; transform: translateX(-50%); background: var(--line); border-radius: 4px; }
+.title-node { position: relative; z-index: 1; width: calc(50% - 1rem); min-height: 4.4rem; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: .22rem; padding: .65rem .7rem; text-align: left; color: var(--text); background: var(--bg); border: 2px solid var(--line); border-radius: 10px; box-shadow: 0 2px 0 var(--shade); }
+.title-node:nth-child(even) { align-self: flex-end; margin-left: auto; }
+.title-node:nth-child(odd) { align-self: flex-start; }
+.title-node:nth-child(odd)::after, .title-node:nth-child(even)::before { content: ""; position: absolute; top: 50%; width: 1rem; height: 2px; background: var(--line); }
+.title-node:nth-child(odd)::after { left: 100%; }
+.title-node:nth-child(even)::before { right: 100%; }
+.title-node.unlocked { border-color: var(--primary); cursor: pointer; }
+.title-node.selected { background: var(--primary); color: var(--on-primary, #04140c); border-color: var(--primary); }
+.title-node.locked { opacity: .58; cursor: pointer; }
+.title-node.final { border-width: 3px; }
+.title-node-level, .title-node-state { font: .52rem var(--font-px); letter-spacing: .02em; }
+.title-node-name { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+.title-node-state { opacity: .78; font-size: .42rem; }
 .pf-level[hidden] { display: none; }
 .pfl-top { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
 .pfl-top b { font-family: var(--font-px); font-weight: 400; font-size: .85rem; color: var(--primary-2); letter-spacing: .04em; }

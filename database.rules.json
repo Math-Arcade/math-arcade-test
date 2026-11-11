@@ -37,6 +37,9 @@
           "lvl": {
             ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
           },
+          "title": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+          },
           "$other": {
             ".validate": false
           }
@@ -112,6 +115,9 @@
         },
         "xp": {
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+        },
+        "titleLevel": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
         },
         "$other": {
           ".validate": false

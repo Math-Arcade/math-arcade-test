@@ -44,7 +44,9 @@ export function initLeaderboard() {
       else pic.innerHTML = icon('user'); // default avatar for players without a photo
       const av = h('span', 'lb-av');
       av.append(pic, lvlBadge(r.uid === myId ? store.level.level : r.lvl || 1)); // level badge, bottom-left
-      row.append(h('span', 'lb-rank', `#${i + 1}`), av, h('span', 'lb-name', r.name), h('span', 'lb-score', fmt(r.score)));
+      const identity = h('span', 'lb-identity');
+      identity.append(h('span', 'lb-name', r.name), h('small', 'lb-title', r.title || 'Rookie'));
+      row.append(h('span', 'lb-rank', `#${i + 1}`), av, identity, h('span', 'lb-score', fmt(r.score)));
       row.classList.add('tap'); row.tabIndex = 0;
       const open = () => (r.uid === myId ? router.go('profile') : router.go('profile', { uid: r.uid, name: r.name, pic: r.pic, score: r.score, lvl: r.lvl, mode }));
       row.onclick = open;

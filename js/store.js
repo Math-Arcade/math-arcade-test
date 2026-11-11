@@ -21,6 +21,7 @@ export const newProfile = () => ({
   totals: { correct: 0, wrong: 0, blitzGames: 0, duelGames: 0, duelWins0: 0, duelWins1: 0, bestStreak: 0, bestLevel: 0, seconds: 0 },
   days: {}, // 'YYYY-MM-DD' -> { score, ms, grid }
   xp: 0, // account experience; the level is worked out from it (js/engine/level.js)
+  titleLevel: null, // equipped title milestone; null defaults to Rookie
   updated: 0,
 });
 
@@ -35,6 +36,7 @@ export function mergeProfiles(a, b) {
   for (const [d, v] of Object.entries(a?.days || {})) if (!days[d] || v.score >= days[d].score) days[d] = v;
   out.days = Object.fromEntries(Object.entries(days).sort().slice(-90));
   out.xp = Math.min(MAX_XP, Math.max(a?.xp || 0, b?.xp || 0));
+  out.titleLevel = a?.titleLevel ?? b?.titleLevel ?? null;
   out.updated = Math.max(a?.updated || 0, b?.updated || 0);
   return out;
 }

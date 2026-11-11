@@ -4,8 +4,9 @@ import { confirmDialog } from '../router.js';
 import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
-import { ownStats, THEMES } from '../public.js';
+import { ownStats, THEMES, buildPublic } from '../public.js';
 import { levelInfo } from '../engine/level.js';
+import { TITLES, titleByMilestone, cleanTitleLevel } from '../titles.js';
 
 // Name shown for the player: online name if signed in, else the local name, else "Guest".
 export const displayName = (cloud, store) => (cloud.user && cloud.user.name) || store.settings.localName || 'Guest';
@@ -61,6 +62,9 @@ export function initProfile() {
 
   // ---- level card (yours, or the player you are looking at) ----
   const lvPanel = $('#pf-level'), lvBadge = $('#pf-lvbadge');
+  const titleEl = $('#pf-title'), titleSheet = $('#pf-titles'), titleScroll = $('#pf-title-scroll');
+  const equippedTitle = () => titleByMilestone(cleanTitleLevel(store.profile.titleLevel, store.level.level));
+  function paintTitle(name) { titleEl.textContent = name || 'Rookie'; titleEl.hidden = false; }
   function paintLevel(info) {
     $('#pfl-lv').textContent = info.maxed ? 'MAX LEVEL' : `LEVEL ${info.level}`;
     $('#pfl-xp').textContent = info.maxed ? `${fmt(info.xp)} XP` : `${fmt(info.into)} / ${fmt(info.need)} XP`;
@@ -68,6 +72,7 @@ export function initProfile() {
     $('#pfl-note').textContent = info.maxed ? 'Top of the ladder. Nothing higher to reach!' : `${fmt(info.toNext)} XP to level ${info.level + 1}`;
     lvBadge.textContent = String(info.level); lvBadge.setAttribute('aria-label', `Level ${info.level}`);
     lvBadge.hidden = false; lvPanel.hidden = false;
+    lvPanel.setAttribute('aria-label', `Level ${info.level}. Open title progression`);
   }
 
   // ---- name ----
@@ -116,10 +121,51 @@ export function initProfile() {
     remove.hidden = !av;
 
     paintLevel(store.level);
+    paintTitle(equippedTitle().name);
     body.textContent = '';
     renderStats(body, ownStats(store));
 
   }
+
+  function closeTitles() { titleSheet.hidden = true; titleSheet.classList.remove('open'); }
+  function openTitles() {
+    if (other) return;
+    const level = store.level.level;
+    const selected = equippedTitle().level;
+    titleScroll.textContent = '';
+    titleScroll.style.setProperty('--title-count', TITLES.length);
+    TITLES.forEach((t, i) => {
+      const unlocked = t.level <= level;
+      const item = h('button', `title-node${unlocked ? ' unlocked' : ' locked'}${selected === t.level ? ' selected' : ''}${t.level === 100 ? ' final' : ''}`);
+      item.type = 'button';
+      item.append(h('span', 'title-node-level', `LEVEL ${t.level}`), h('span', 'title-node-name', t.name));
+      if (selected === t.level) item.append(h('span', 'title-node-state', 'EQUIPPED'));
+      else if (!unlocked) item.append(h('span', 'title-node-state', `LOCKED · UNLOCK AT LEVEL ${t.level}`));
+      else item.append(h('span', 'title-node-state', 'TAP TO EQUIP'));
+      item.style.setProperty('--node-index', String(i));
+      item.onclick = () => {
+        if (!unlocked) { toast(`Unlock at Level ${t.level}`); return; }
+        store.update((p) => { p.titleLevel = t.level; });
+        const name = t.name;
+        cloud.title = name;
+        paintTitle(name);
+        closeTitles();
+        if (cloud.user) cloud.updateLeaderboardTitle(name).catch((e) => console.warn('Title leaderboard sync failed', e));
+        if (cloud.user) buildPublic(store, cloud).then((data) => cloud.publishProfile(data)).catch((e) => console.warn('Title profile sync failed', e));
+        render();
+      };
+      titleScroll.append(item);
+    });
+    titleSheet.hidden = false;
+    requestAnimationFrame(() => titleSheet.classList.add('open'));
+    const current = titleScroll.querySelector('.selected');
+    if (current) current.scrollIntoView({ block: 'center' });
+  }
+  lvPanel.onclick = openTitles;
+  lvPanel.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTitles(); } };
+  $('#pf-titles-close').onclick = closeTitles;
+  titleSheet.addEventListener('click', (e) => { if (e.target === titleSheet) closeTitles(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !titleSheet.hidden) closeTitles(); });
 
   cloud.onChange(render);
   store.on('settings', (k) => { if (k === 'avatar' || k === 'localName') render(); });
@@ -134,7 +180,7 @@ export function initProfile() {
 
   function reset() {
     token++; other = null;
-    fbox.hidden = true; lvPanel.hidden = false; lvBadge.hidden = false;
+    fbox.hidden = true; lvPanel.hidden = false; lvBadge.hidden = false; titleSheet.hidden = true;
     screen.classList.remove('is-other');
     screen.removeAttribute('data-other'); screen.removeAttribute('data-theme');
     const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
@@ -185,6 +231,7 @@ export function initProfile() {
     screen.classList.add('is-other'); screen.dataset.other = '';
     screen.removeAttribute('data-theme'); // the viewer's own theme until theirs has loaded
     pfName.textContent = params.name || '?';
+    paintTitle(params.title || 'Rookie');
     pfSub.textContent = params.score ? `Best score: ${fmt(params.score)}` : '';
     showAvatar(params.pic || '');
     fbox.hidden = true;
@@ -198,6 +245,7 @@ export function initProfile() {
       if (!p) { body.append(h('div', 'lb-msg', "This player hasn't shared a profile yet.")); return; }
       if (THEMES.includes(p.theme)) screen.dataset.theme = p.theme;
       pfName.textContent = p.name;
+      paintTitle(titleByMilestone(cleanTitleLevel(p.titleLevel, p.level)).name);
       showAvatar(p.pic || params.pic || '');
       paintLevel(levelInfo(p.xp));
       renderStats(body, p.stats);
