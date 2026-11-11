@@ -564,9 +564,12 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .title-node.selected { background: var(--primary); color: var(--on-primary, #04140c); border-color: var(--primary); }
 .title-node.locked { opacity: .58; cursor: pointer; }
 .title-node.final { border-width: 3px; }
-.title-node-level, .title-node-state { font: .52rem var(--font-px); letter-spacing: .02em; }
-.title-node-name { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
-.title-node-state { opacity: .78; font-size: .42rem; }
+.title-node-level, .title-node-state { font-family: var(--font-body); font-weight: 700; letter-spacing: .045em; line-height: 1.35; }
+.title-node-level { font-size: .66rem; color: var(--muted); }
+.title-node-name { font-family: var(--font-body); font-weight: 700; font-size: 1rem; line-height: 1.25; letter-spacing: -.015em; overflow-wrap: break-word; text-wrap: pretty; }
+.title-node-state { opacity: .82; font-size: .62rem; }
+.title-node.selected .title-node-level, .title-node.selected .title-node-state { color: inherit; opacity: .82; }
+.title-node.locked .title-node-name { font-weight: 600; }
 .pf-level[hidden] { display: none; }
 .pfl-top { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
 .pfl-top b { font-family: var(--font-px); font-weight: 400; font-size: .85rem; color: var(--primary-2); letter-spacing: .04em; }
