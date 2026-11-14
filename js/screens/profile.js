@@ -115,6 +115,7 @@ export function initProfile() {
     pfName.textContent = displayName(cloud, store);
     pfSub.textContent = !cloud.user ? 'Not signed in' : cloud.user.guest ? 'Guest account' : 'Signed in';
     pfBtn.textContent = cloud.user ? 'SETTINGS' : 'SIGN IN';
+    $('#pf-avatar').dataset.frame = store.profile.frame || '';
     const av = store.settings.avatar;
     img.hidden = !av; ph.style.display = av ? 'none' : '';
     if (av) img.src = av;
@@ -297,6 +298,7 @@ export function initProfile() {
     showAvatar(params.pic || '');
     fbox.hidden = true;
     lvPanel.removeAttribute('role'); lvPanel.tabIndex = -1;
+    $('#pf-avatar').dataset.frame = params.frame || '';
     lvPanel.hidden = true; lvBadge.hidden = !params.lvl; if (params.lvl) lvBadge.textContent = String(params.lvl);
     body.textContent = ''; body.append(h('div', 'lb-msg', 'Loading…'));
     loadRelation(mine);
@@ -310,6 +312,7 @@ export function initProfile() {
       paintTitle(titleByMilestone(cleanTitleLevel(p.titleLevel, p.level)).name);
       showAvatar(p.pic || params.pic || '');
       paintLevel(levelInfo(p.xp));
+      $('#pf-avatar').dataset.frame = p.frame || '';
       renderStats(body, p.stats);
       loadRelation(mine);
       requestAnimationFrame(setThemeColor);

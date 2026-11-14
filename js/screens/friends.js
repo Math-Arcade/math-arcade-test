@@ -29,6 +29,7 @@ export function initFriends() {
     const paint = (i) => {
       if (!i) return;
       if (i.name) nm.textContent = i.name;
+      if (i.frame) pic.dataset.frame = i.frame;
       title.textContent = i.title || 'Rookie'; title.dataset.tier = tierForTitle(i.title || 'Rookie').id;
       if (i.level) { if (!badge) { badge = lvlBadge(i.level); av.append(badge); } else badge.textContent = String(i.level); }
       if (i.pic) { pic.textContent = ''; const im = document.createElement('img'); im.src = i.pic; im.alt = ''; pic.append(im); }

@@ -67,6 +67,7 @@ with sync_playwright() as p:
     tap(pg, (cor(pg) + 1) % 4); pg.wait_for_timeout(1300)
     pg.wait_for_timeout(500)
     check('OUT OF LIVES' in pg.inner_text('#g-result-t') and pg.is_visible('#g-newbest'), 'three misses end the run and flag a new best')
+    check(pg.is_visible('#g-r-lvup') and 'LEVEL' in pg.inner_text('#g-r-lvup').upper() and 'Coins' in pg.inner_text('#g-r-stats'), 'a run that earns a level shows the level-up banner and the coins earned')
     check(pg.evaluate("JSON.parse(localStorage.getItem('ma2.profile')).best.mix") > 0, 'best score is saved locally')
     pg.locator('#g-r-menu').tap(); pg.wait_for_timeout(450)
     stats_before = pg.evaluate("localStorage.getItem('ma2.profile')")
@@ -185,6 +186,19 @@ with sync_playwright() as p:
     check(not pg.is_visible('#pf-titles'), 'the close button closes the titles screen')
     pg.evaluate("(x) => window.__store.update((p) => { p.xp = x; p.titleLevel = 1; })", XP3); pg.wait_for_timeout(300)
     back(pg, 'profile'); pg.wait_for_timeout(500)
+    # ---- store ----
+    pg.evaluate("window.__store.update((p) => { p.coinsEarned = 500; p.coinsSpent = 0; p.owned = []; p.frame = null; })"); pg.wait_for_timeout(300)
+    pg.locator('#h-store').tap(); pg.wait_for_timeout(700)
+    check(pg.locator('.st-card').count() == 8 and pg.inner_text('#st-coins').strip() == '500', 'store lists 8 frames and shows the coin balance')
+    pg.locator('.st-card', has_text='Royal').tap(); pg.wait_for_timeout(400)
+    check('more coins' in pg.inner_text('#toast'), 'too expensive: tells you how many coins are missing')
+    pg.locator('.st-card', has_text='Neon Edge').tap(); pg.wait_for_timeout(400); pg.locator('#dlg-ok').tap(); pg.wait_for_timeout(600)
+    check(pg.evaluate("window.__store.profile.frame") == 'neon' and pg.evaluate("window.__store.coins") == 380 and pg.locator('.st-card.on').count() == 1, 'buying a frame spends coins and equips it')
+    pg.wait_for_timeout(1500)
+    check(fb(pg, "S.db.leaderboard.mix.u1.frame") == 'neon', 'the frame reaches the leaderboard entry')
+    pg.locator('.st-card.on').tap(); pg.wait_for_timeout(300)
+    check(pg.evaluate("window.__store.profile.frame") is None and pg.evaluate("window.__store.profile.owned.includes('neon')"), 'tapping the worn frame takes it off but keeps it')
+    back(pg, 'store'); pg.wait_for_timeout(500)
     # ---- friends ----
     pg.evaluate("""() => { const S = window.__fbmock; const st = (g) => ({ blitzGames: g, correct: 50, wrong: 10, bestStreak: 5, bestLevel: 2, seconds: 300, dailies: 2, dailyStreak: 1, best: { mix: 50, add: 0, sub: 0, mul: 0, div: 0 } });
       S.db.usernames = Object.assign(S.db.usernames || {}, { nova: 'u9', ruby: 'u8', zed: 'u7' });

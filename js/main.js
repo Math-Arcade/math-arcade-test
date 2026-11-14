@@ -64,6 +64,16 @@ function syncLevel(now = false) {
   lvlTimer = setTimeout(() => { if (cloud.user) cloud.updateLeaderboardLevel(lvl).catch((e) => console.warn('Level sync failed', e)); }, now ? 0 : 2500);
 }
 
+// Keep the equipped frame on the leaderboard in step with the store.
+let lastFrame = store.profile.frame || null;
+function syncFrame(now = false) {
+  const f = store.profile.frame || null;
+  cloud.frame = f;
+  if (!now && f === lastFrame) return;
+  lastFrame = f;
+  if (cloud.user) cloud.updateLeaderboardFrame(f).catch((e) => console.warn('Frame sync failed', e));
+}
+
 // Publish the public profile (name, theme, picture, stats) so other players can open it from Ranks.
 let pubTimer = 0;
 function publishSoon(delay = 1500) {
@@ -77,8 +87,8 @@ function publishSoon(delay = 1500) {
 // When a player signs in: merge cloud + local progress, then push the result back.
 function wireCloudSync() {
   store.on('settings', (k) => { if (k === 'avatar') syncPic(); if (k === 'avatar' || k === 'theme') publishSoon(); });
-  store.on('profile', () => { publishSoon(4000); syncLevel(); import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; if (cloud.user) cloud.updateLeaderboardTitle(cloud.title).catch((e) => console.warn('Title sync failed', e)); }); });
-  cloud.lvl = levelInfo(store.profile.xp).level;
+  store.on('profile', () => { publishSoon(4000); syncLevel(); syncFrame(); import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; if (cloud.user) cloud.updateLeaderboardTitle(cloud.title).catch((e) => console.warn('Title sync failed', e)); }); });
+  cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null;
   import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
   if (new URLSearchParams(location.search).has('debug')) window.__store = store;
   cloud.onChange(async (user) => {
@@ -91,7 +101,7 @@ function wireCloudSync() {
       cloud.title = titleByMilestone(merged.titleLevel || 1).name;
       for (const m of MODES) if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]);
     } catch (e) { console.warn('Cloud sync failed', e); }
-    publishSoon(300); syncLevel(true);
+    publishSoon(300); syncLevel(true); syncFrame(true);
     const today = store.today; // a Daily played before signing in (or offline) still reaches friends
     if (today) cloud.publishDaily(utcDay(), today).catch((e) => console.warn('Daily sync failed', e));
   });

@@ -4,6 +4,7 @@
 
 import { utcDay } from './util.js';
 import { levelInfo, MAX_XP } from './engine/level.js';
+import { COINS_PER_XP, LEVEL_UP_COINS, frameById, cleanFrame, balance } from './shop.js';
 
 const SKEY = 'ma2.settings';
 const PKEY = 'ma2.profile';
@@ -22,6 +23,8 @@ export const newProfile = () => ({
   days: {}, // 'YYYY-MM-DD' -> { score, ms, grid }
   xp: 0, // account experience; the level is worked out from it (js/engine/level.js)
   titleLevel: null, // equipped title milestone; null defaults to Rookie
+  coinsEarned: 0, coinsSpent: 0, // balance = earned - spent (both only ever grow, so syncing can't lose coins)
+  owned: [], frame: null, // store: frames you bought, and the one you wear
   updated: 0,
 });
 
@@ -37,6 +40,11 @@ export function mergeProfiles(a, b) {
   out.days = Object.fromEntries(Object.entries(days).sort().slice(-90));
   out.xp = Math.min(MAX_XP, Math.max(a?.xp || 0, b?.xp || 0));
   out.titleLevel = a?.titleLevel ?? b?.titleLevel ?? null;
+  out.coinsEarned = Math.max(a?.coinsEarned || 0, b?.coinsEarned || 0);
+  out.coinsSpent = Math.max(a?.coinsSpent || 0, b?.coinsSpent || 0);
+  out.owned = [...new Set([...(a?.owned || []), ...(b?.owned || [])].filter((id) => frameById(id)))];
+  out.frame = cleanFrame(a?.frame ?? b?.frame ?? null);
+  if (out.frame && !out.owned.includes(out.frame)) out.owned.push(out.frame);
   out.updated = Math.max(a?.updated || 0, b?.updated || 0);
   return out;
 }
@@ -103,12 +111,27 @@ class Store {
   }
 
   // Give XP; returns { before, after } level info so callers can celebrate a level-up.
+  // XP also pays coins (plus a bonus per level gained). `coins` is what this call paid out.
   addXp(n) {
     const before = levelInfo(this.profile.xp);
     const gain = Math.max(0, Math.floor(Number(n) || 0));
-    if (!gain) return { before, after: before };
-    this.update((p) => { p.xp = Math.min(MAX_XP, (p.xp || 0) + gain); });
-    return { before, after: levelInfo(this.profile.xp) };
+    if (!gain) return { before, after: before, coins: 0 };
+    const after = levelInfo(Math.min(MAX_XP, (this.profile.xp || 0) + gain));
+    const coins = gain * COINS_PER_XP + Math.max(0, after.level - before.level) * LEVEL_UP_COINS;
+    this.update((p) => { p.xp = after.xp; p.coinsEarned = (p.coinsEarned || 0) + coins; });
+    return { before, after, coins };
+  }
+  get coins() { return balance(this.profile); }
+  buyFrame(id) {
+    const f = frameById(id);
+    if (!f || this.profile.owned.includes(id) || this.coins < f.price) return false;
+    this.update((p) => { p.coinsSpent = (p.coinsSpent || 0) + f.price; p.owned = [...p.owned, id]; p.frame = id; });
+    return true;
+  }
+  equipFrame(id) { // null takes the frame off
+    if (id && !this.profile.owned.includes(id)) return false;
+    this.update((p) => { p.frame = id || null; });
+    return true;
   }
   get level() { return levelInfo(this.profile.xp); }
 

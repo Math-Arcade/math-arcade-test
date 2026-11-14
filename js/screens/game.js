@@ -2,6 +2,7 @@
 import { app } from '../app.js';
 import { $, $$, h, icon, fmt, clock, num, trim, renderProblem, fitProblem, countUp, toast, utcDay } from '../util.js';
 import { RunEngine, RULES } from '../engine/run.js';
+import { TITLES } from '../titles.js';
 import { MODE_NAME, MODE_SIGN } from '../config.js';
 import { openSheet, closeSheet } from '../router.js';
 import { catSVG } from '../cat.js';
@@ -438,10 +439,11 @@ export function initGame() {
       if (kind === 'blitz') { p.totals.blitzGames++; if (newBest) p.best[mode] = s.score; }
       if (kind === 'daily' && scored) p.days[cfg.date] = { score: s.correct, ms: Math.round(s.avgMs * s.answered), grid: s.history.map((x) => (x ? 1 : 0)).join(''), xp: xpGained };
     });
-    if (xpGained > 0) store.addXp(xpGained);
+    const gain = xpGained > 0 ? store.addXp(xpGained) : null;
+    const levelUp = gain && gain.after.level > gain.before.level ? { to: gain.after.level, titles: TITLES.filter((t) => t.level > gain.before.level && t.level <= gain.after.level), coins: gain.coins } : null;
     pushCloud(mode, s.score, newBest);
     publishDailyResult();
-    showResult({ ...s, newBest, prevBest, xpGained });
+    showResult({ ...s, newBest, prevBest, xpGained, coins: gain ? gain.coins : 0, levelUp });
   }
 
   function showResult(s, quiet = false) {
@@ -455,6 +457,13 @@ export function initGame() {
     grid.textContent = '';
     const stat = (k, v) => { const d = h('div'); d.append(h('dt', '', k), h('dd', '', v)); stats.append(d); };
     const acc = `${Math.round(s.accuracy * 100)}%`;
+    const lvup = $('#g-r-lvup'); lvup.hidden = !s.levelUp;
+    if (s.levelUp) {
+      $('#g-r-lvup-lv').textContent = `LEVEL ${s.levelUp.to}`;
+      const t = s.levelUp.titles;
+      $('#g-r-lvup-sub').textContent = t.length ? `New title: ${t[t.length - 1].name}` : `+${fmt(s.levelUp.coins - (s.xpGained || 0))} bonus coins`;
+      lvup.classList.remove('pop'); void lvup.offsetWidth; lvup.classList.add('pop');
+    }
     const avg = s.answered ? `${(s.avgMs / 1000).toFixed(1)}s` : '-';
 
     if (kind === 'daily') {
@@ -463,7 +472,7 @@ export function initGame() {
       grid.hidden = false;
       s.history.forEach((ok) => { const q = h('span', `sq${ok ? ' ok' : ''}`); q.innerHTML = icon(ok ? 'check' : 'cross'); grid.append(q); });
       stat('Accuracy', acc); stat('Avg time', avg);
-      stat('XP earned', `+${s.xpGained || 0} XP`);
+      stat('XP earned', `+${s.xpGained || 0} XP`); stat('Coins', `+${s.coins || 0}`);
       $('#g-r-again').hidden = true;
       $('#g-r-share').className = 'btn btn-primary';
     } else {
@@ -472,11 +481,12 @@ export function initGame() {
       best.textContent = s.newBest ? (s.prevBest ? `PREVIOUS BEST ${fmt(s.prevBest)}` : 'FIRST SCORE!') : `BEST ${fmt(store.profile.best[mode])}`;
       stat('Level', String(s.maxLevel)); stat('Correct', String(s.correct));
       stat('Accuracy', acc); stat('Best streak', String(s.bestStreak));
-      stat('XP earned', `+${s.xpGained || 0} XP`);
+      stat('XP earned', `+${s.xpGained || 0} XP`); stat('Coins', `+${s.coins || 0}`);
       $('#g-r-again').hidden = false;
       $('#g-r-share').className = 'btn';
     }
     openSheet(E.result);
+    if (s.levelUp) { later(() => { audio.sfx('level'); audio.buzz('level'); fx.confetti(70); }, s.newBest ? 900 : 250); }
     showFriendsToday();
     if (quiet) return;
     if (s.newBest) { audio.sfx('best'); audio.buzz('win'); fx.confetti(); }

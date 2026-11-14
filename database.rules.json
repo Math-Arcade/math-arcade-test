@@ -40,6 +40,9 @@
           "title": {
             ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
           },
+          "frame": {
+            ".validate": "newData.isString() && newData.val().matches(/^(neon|ember|frost|pixel|royal|gold|aurora|rainbow)$/)"
+          },
           "$other": {
             ".validate": false
           }
@@ -118,6 +121,9 @@
         },
         "titleLevel": {
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
+        },
+        "frame": {
+          ".validate": "newData.isString() && newData.val().matches(/^(neon|ember|frost|pixel|royal|gold|aurora|rainbow)$/)"
         },
         "$other": {
           ".validate": false

@@ -4,6 +4,7 @@
 import { FIREBASE_CONFIG, FIREBASE_SDK, MODES } from './config.js';
 import { safePic } from './avatar.js';
 import { cleanPublic } from './public.js';
+import { cleanFrame } from './shop.js';
 
 let F = null;
 let initPromise = null;
@@ -31,6 +32,7 @@ export const cloud = {
   pic: '', // small JPEG data URL shown next to this player's leaderboard score
   lvl: 1, // account level shown on the leaderboard
   title: 'Rookie', // equipped profile title
+  frame: null, // equipped avatar frame
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   _emit() { listeners.forEach((fn) => fn(this.user)); },
@@ -304,7 +306,7 @@ export const cloud = {
         const snap = await withTimeout(dbM.get(dbM.ref(db, `leaderboard/${mode}/${uid}`)));
         if (!snap.exists()) return null;
         const v = snap.val();
-        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40) };
+        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40), frame: cleanFrame(v.frame) };
       } catch { return null; }
     }))).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
     return { rows, friendCount: friends.length };
@@ -339,8 +341,8 @@ export const cloud = {
     const r = F.dbM.ref(F.db, `publicProfiles/${this.user.uid}`);
     try { await withTimeout(F.dbM.set(r, data)); }
     catch (e) { // rules without the newer "xp" field must not stop the rest of the profile from publishing
-      if (data.xp === undefined) throw e;
-      const { xp, ...rest } = data;
+      const { xp, titleLevel, frame, ...rest } = data; // newer optional fields
+      if (xp === undefined && titleLevel === undefined && frame === undefined) throw e;
       await withTimeout(F.dbM.set(r, rest));
     }
   },
@@ -385,6 +387,17 @@ export const cloud = {
   },
 
   // Keep the level on every existing leaderboard entry of this player up to date.
+  async updateLeaderboardFrame(frame) {
+    if (!this.user) return;
+    await this.need();
+    const uid = this.user.uid, updates = {};
+    await Promise.all(MODES.map(async (mode) => {
+      const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`)));
+      if (snap.exists()) updates[`leaderboard/${mode}/${uid}/frame`] = frame || null;
+    }));
+    if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
+  },
+
   async updateLeaderboardTitle(title) {
     if (!this.user) return;
     await this.need();
@@ -417,6 +430,7 @@ export const cloud = {
       if (this.pic) extras.pic = this.pic;
       if (this.lvl > 1) extras.lvl = this.lvl;
       if (this.title && this.title !== 'Rookie') extras.title = this.title;
+      if (this.frame) extras.frame = this.frame;
       try {
         await withTimeout(F.dbM.set(r, { ...entry, ...extras }));
       } catch (e) {
@@ -432,7 +446,7 @@ export const cloud = {
     const q = F.dbM.query(F.dbM.ref(F.db, `leaderboard/${mode}`), F.dbM.orderByChild('score'), F.dbM.limitToLast(n));
     const snap = await withTimeout(F.dbM.get(q));
     const rows = [];
-    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40) }); });
+    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40), frame: cleanFrame(v.frame) }); });
     return rows.sort((a, b) => b.score - a.score);
   },
 };

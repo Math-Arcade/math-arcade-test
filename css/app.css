@@ -653,3 +653,45 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .screen.profile.is-other .pfl-link { display: none; }
 .screen.profile.is-other .pf-level { cursor: default; }
 .screen.profile.is-other .pf-level:active { transform: none; }
+
+/* ===== avatar frames (bought in the Store) ===== */
+[data-frame] { border-width: 3px; }
+[data-frame="neon"] { border-color: #3dffb0; box-shadow: 0 0 0 1px rgba(61, 255, 176, .35), 0 0 12px rgba(61, 255, 176, .7); }
+[data-frame="pixel"] { border-color: #ffcf4a; border-radius: 4px; box-shadow: 0 0 0 2px #2b2000, 3px 3px 0 2px #a87a00; }
+[data-frame="ember"], [data-frame="frost"], [data-frame="royal"], [data-frame="gold"], [data-frame="aurora"], [data-frame="rainbow"] {
+  border-color: transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--fr-grad) border-box; background-size: 100% 100%, 300% 300%; }
+[data-frame="ember"]   { --fr-grad: linear-gradient(135deg, #ff4d1f, #ffd23f, #ff4d1f); box-shadow: 0 0 12px rgba(255, 110, 30, .6); animation: fr-shift 4s linear infinite; }
+[data-frame="frost"]   { --fr-grad: linear-gradient(135deg, #ffffff, #7fe3ff, #ffffff); box-shadow: 0 0 12px rgba(127, 227, 255, .65); }
+[data-frame="royal"]   { --fr-grad: linear-gradient(135deg, #8f5bff, #ffd23f, #8f5bff); box-shadow: 0 0 12px rgba(143, 91, 255, .6); }
+[data-frame="gold"]    { --fr-grad: linear-gradient(120deg, #a87a00, #fff2a8, #ffcf4a, #a87a00); box-shadow: 0 0 12px rgba(255, 207, 74, .55); animation: fr-shift 3s linear infinite; }
+[data-frame="aurora"]  { --fr-grad: linear-gradient(120deg, #45e8ff, #8f7bff, #ff7ad9, #45e8ff); box-shadow: 0 0 14px rgba(143, 123, 255, .6); animation: fr-shift 5s linear infinite; }
+[data-frame="rainbow"] { --fr-grad: linear-gradient(120deg, #ff4d6d, #ffd23f, #3dffb0, #45a8ff, #b45bff, #ff4d6d); box-shadow: 0 0 14px rgba(255, 255, 255, .35); animation: fr-shift 2.5s linear infinite; }
+@keyframes fr-shift { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 300% 50%; } }
+
+/* ===== store ===== */
+.coins { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-width: 3rem; height: 3rem; padding: 0 .7rem; background: var(--bg-2); border: 2px solid var(--line); border-radius: 12px; }
+.coins b { font-family: var(--font-px); font-weight: 400; font-size: .62rem; color: var(--warn); }
+.coins .ico { width: 1.2rem; height: 1.2rem; color: var(--warn); }
+.screen.store .bar { grid-template-columns: 3rem 1fr auto; }
+.st-intro { margin: 0 0 1rem; color: var(--muted); font-size: 1.05rem; line-height: 1.35; }
+.st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.st-card { display: grid; justify-items: center; gap: .55rem; padding: .95rem .6rem .8rem; background: var(--bg-2); border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 3px 0 rgba(0, 0, 0, .28); color: var(--text); }
+.st-card:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, .28); }
+.st-card.on { border-color: var(--primary); }
+.st-prev { width: 4.4rem; height: 4.4rem; }
+.st-prev .ico { width: 2.4rem; height: 2.4rem; }
+.st-name { font-size: 1.15rem; line-height: 1.1; text-align: center; }
+.st-state { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .65rem; font: 700 .72rem/1 var(--font-body); letter-spacing: .08em; color: var(--warn); border: 2px solid var(--line); border-radius: 999px; }
+.st-state .ico { width: .95rem; height: .95rem; }
+.st-card.own .st-state { color: var(--primary-2); }
+.st-card.on .st-state { color: var(--on-primary); background: var(--primary); border-color: transparent; }
+
+/* ===== level-up banner on the result sheet ===== */
+.lvup { width: 100%; display: grid; justify-items: center; gap: .25rem; padding: .7rem .8rem; border: 2px solid var(--warn); border-radius: 12px;
+  background: var(--bg); background: linear-gradient(160deg, rgba(255, 207, 74, .2), var(--bg) 80%); text-align: center; }
+.lvup[hidden] { display: none; }
+.lvup small { font-family: var(--font-px); font-size: .55rem; letter-spacing: .12em; color: var(--warn); }
+.lvup b { font-family: var(--font-px); font-weight: 400; font-size: 1.25rem; color: var(--text); text-shadow: 0 0 18px rgba(255, 207, 74, .55); }
+.lvup span { font-weight: 700; font-size: 1rem; color: var(--primary-2); }
+.lvup.pop { animation: lvup-pop .7s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes lvup-pop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }

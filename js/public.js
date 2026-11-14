@@ -1,6 +1,7 @@
 // What other players can see about you: name, theme, picture and a stats summary.
 import { MODES } from './config.js';
 import { levelInfo } from './engine/level.js';
+import { cleanFrame } from './shop.js';
 import { titleByMilestone, cleanTitleLevel } from './titles.js';
 import { thumbFrom, safePic } from './avatar.js';
 
@@ -25,6 +26,7 @@ export async function buildPublic(store, cloud) {
   const out = { xp: num(store.profile.xp), titleLevel: Number(store.profile.titleLevel) || 1, name: cloud.user.name, theme: THEMES.includes(store.settings.theme) ? store.settings.theme : 'green', stats, updated: Date.now() };
   const pic = await thumbFrom(store.settings.avatar, 96, PUBLIC_PIC_MAX);
   if (pic) out.pic = pic;
+  if (store.profile.frame) out.frame = store.profile.frame;
   return out;
 }
 
@@ -35,5 +37,5 @@ export function cleanPublic(v) {
   for (const k of ['blitzGames', 'correct', 'wrong', 'bestStreak', 'bestLevel', 'seconds', 'dailies', 'dailyStreak']) stats[k] = num(v.stats?.[k]);
   for (const m of MODES) stats.best[m] = num(v.stats?.best?.[m], 100000);
   const xp = num(v.xp);
-  return { xp, level: levelInfo(xp).level, titleLevel: cleanTitleLevel(v.titleLevel, levelInfo(xp).level), title: titleByMilestone(cleanTitleLevel(v.titleLevel, levelInfo(xp).level)).name, name: String(v.name || '?').slice(0, 16), theme: THEMES.includes(v.theme) ? v.theme : 'green', pic: safePic(v.pic, PUBLIC_PIC_MAX), stats };
+  return { frame: cleanFrame(v.frame), xp, level: levelInfo(xp).level, titleLevel: cleanTitleLevel(v.titleLevel, levelInfo(xp).level), title: titleByMilestone(cleanTitleLevel(v.titleLevel, levelInfo(xp).level)).name, name: String(v.name || '?').slice(0, 16), theme: THEMES.includes(v.theme) ? v.theme : 'green', pic: safePic(v.pic, PUBLIC_PIC_MAX), stats };
 }
