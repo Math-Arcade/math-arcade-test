@@ -1,5 +1,5 @@
 // Offline support. Bump VERSION on every release so the precache is rebuilt.
-const VERSION = 'ma-2.9.1';
+const VERSION = 'ma-2.10.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 

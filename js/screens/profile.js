@@ -1,12 +1,12 @@
 import { app } from '../app.js';
-import { $, h, fmt, toast, fillSymbols } from '../util.js';
+import { $, h, fmt, toast, fillSymbols, icon } from '../util.js';
 import { confirmDialog } from '../router.js';
 import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
 import { ownStats, THEMES, buildPublic } from '../public.js';
 import { levelInfo } from '../engine/level.js';
-import { TITLES, titleByMilestone, cleanTitleLevel } from '../titles.js';
+import { TITLES, titleByMilestone, cleanTitleLevel, tierForLevel, tierForTitle, titleProgress } from '../titles.js';
 
 // Name shown for the player: online name if signed in, else the local name, else "Guest".
 export const displayName = (cloud, store) => (cloud.user && cloud.user.name) || store.settings.localName || 'Guest';
@@ -64,7 +64,7 @@ export function initProfile() {
   const lvPanel = $('#pf-level'), lvBadge = $('#pf-lvbadge');
   const titleEl = $('#pf-title'), titleSheet = $('#pf-titles'), titleScroll = $('#pf-title-scroll');
   const equippedTitle = () => titleByMilestone(cleanTitleLevel(store.profile.titleLevel, store.level.level));
-  function paintTitle(name) { titleEl.textContent = name || 'Rookie'; titleEl.hidden = false; }
+  function paintTitle(name) { titleEl.textContent = name || 'Rookie'; titleEl.dataset.tier = tierForTitle(name || 'Rookie').id; titleEl.hidden = false; }
   function paintLevel(info) {
     $('#pfl-lv').textContent = info.maxed ? 'MAX LEVEL' : `LEVEL ${info.level}`;
     $('#pfl-xp').textContent = info.maxed ? `${fmt(info.xp)} XP` : `${fmt(info.into)} / ${fmt(info.need)} XP`;
@@ -127,39 +127,99 @@ export function initProfile() {
 
   }
 
-  function closeTitles() { titleSheet.hidden = true; titleSheet.classList.remove('open'); }
+  // ---- titles screen: hero (equipped + next), then a rail of medals from Rookie to The Mathematician ----
+  const heroEl = $('#tt-hero');
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+  function equipTitle(t) {
+    store.update((p) => { p.titleLevel = t.level; });
+    cloud.title = t.name;
+    paintTitle(t.name);
+    if (cloud.user) cloud.updateLeaderboardTitle(t.name).catch((e) => console.warn('Title leaderboard sync failed', e));
+    if (cloud.user) buildPublic(store, cloud).then((data) => cloud.publishProfile(data)).catch((e) => console.warn('Title profile sync failed', e));
+    render();
+  }
+
+  function paintTitles() {
+    const info = store.level, level = info.level, selected = equippedTitle();
+    const prog = titleProgress(level, info.pct);
+    const keep = titleScroll.scrollTop;
+
+    // hero: what you wear now, and what is next
+    const tier = tierForLevel(selected.level);
+    heroEl.dataset.tier = tier.id;
+    heroEl.textContent = '';
+    const chips = h('div', 'tt-chips');
+    chips.append(h('span', 'tt-chip', `LEVEL ${level}`), h('span', 'tt-chip tier', tier.name));
+    const eyebrow = h('div', 'tt-hero-top');
+    eyebrow.append(h('span', 'tt-eyebrow', 'EQUIPPED TITLE'), h('span', 'tt-eyebrow tt-count', `${prog.unlockedCount} / ${prog.total}`));
+    heroEl.append(eyebrow, h('b', 'tt-hero-name', selected.name), chips);
+    const nx = h('div', 'tt-next');
+    if (prog.next) {
+      nx.dataset.tier = tierForLevel(prog.next.level).id;
+      const top = h('div', 'tt-next-row');
+      top.append(h('span', 'tt-eyebrow', 'NEXT TITLE'), h('span', 'tt-togo', `${plural(prog.levelsToGo, 'level')} to go`));
+      const bar = h('div', 'xp-track big tt-bar'), fill = h('i');
+      fill.style.width = `${Math.round(prog.pct * 100)}%`; bar.append(fill);
+      nx.append(top, h('b', 'tt-next-name', prog.next.name), bar, h('small', 'tt-next-sub', `Unlocks at level ${prog.next.level}`));
+    } else nx.append(h('b', 'tt-next-name', 'Every title unlocked'), h('small', 'tt-next-sub', 'You are at the very top of the ladder.'));
+    heroEl.append(nx);
+
+    // the ladder
+    titleScroll.textContent = '';
+    TITLES.forEach((t, i) => {
+      const unlocked = t.level <= level, equipped = t.level === selected.level, isNext = !!prog.next && prog.next.level === t.level;
+      const tr = tierForLevel(t.level);
+      const row = h('button', `tt-row${unlocked ? ' unlocked' : ' locked'}${equipped ? ' equipped' : ''}${isNext ? ' next' : ''}${t.level === 100 ? ' final' : ''}`);
+      row.type = 'button'; row.dataset.tier = tr.id;
+      row.style.setProperty('--i', String(i));
+      // the rail fills as you climb: the stretch you are on is filled by your progress to the next milestone
+      const nextRow = TITLES[i + 1];
+      const up = unlocked ? 1 : isNext ? Math.max(0, prog.pct * 2 - 1) : 0;
+      const down = nextRow && nextRow.level <= level ? 1 : t === prog.prev ? Math.min(1, prog.pct * 2) : 0;
+      row.style.setProperty('--up', up.toFixed(3)); row.style.setProperty('--down', down.toFixed(3));
+      row.setAttribute('aria-pressed', String(equipped));
+      row.setAttribute('aria-label', `${t.name}, level ${t.level}, ${equipped ? 'equipped' : unlocked ? 'unlocked, tap to equip' : 'locked'}`);
+
+      const medal = h('span', 'tt-medal');
+      if (unlocked) medal.textContent = String(t.level); else medal.innerHTML = icon('lock');
+      const card = h('span', 'tt-card');
+      const text = h('span', 'tt-text');
+      text.append(h('b', 'tt-name', t.name), h('small', 'tt-sub', isNext ? 'NEXT TITLE' : `LEVEL ${t.level} · ${tr.name}`));
+      const state = h('span', 'tt-state');
+      if (equipped) state.innerHTML = `${icon('check')}EQUIPPED`;
+      else if (unlocked) state.textContent = 'EQUIP';
+      else state.textContent = `${t.level - level} TO GO`;
+      card.append(text, state);
+      row.append(medal, card);
+      row.onclick = () => {
+        if (!unlocked) {
+          card.classList.remove('nope'); void card.offsetWidth; card.classList.add('nope');
+          toast(`Reach level ${t.level} to unlock “${t.name}”`);
+          return;
+        }
+        if (equipped) return;
+        equipTitle(t);
+        toast(`Equipped “${t.name}”`);
+        paintTitles();
+      };
+      titleScroll.append(row);
+    });
+    titleScroll.scrollTop = keep;
+  }
+
+  function closeTitles() { titleSheet.hidden = true; titleSheet.classList.remove('open'); lvPanel.focus?.(); }
   function openTitles() {
     if (other) return;
-    const level = store.level.level;
-    const selected = equippedTitle().level;
-    titleScroll.textContent = '';
-    titleScroll.style.setProperty('--title-count', TITLES.length);
-    TITLES.forEach((t, i) => {
-      const unlocked = t.level <= level;
-      const item = h('button', `title-node${unlocked ? ' unlocked' : ' locked'}${selected === t.level ? ' selected' : ''}${t.level === 100 ? ' final' : ''}`);
-      item.type = 'button';
-      item.append(h('span', 'title-node-level', `LEVEL ${t.level}`), h('span', 'title-node-name', t.name));
-      if (selected === t.level) item.append(h('span', 'title-node-state', 'EQUIPPED'));
-      else if (!unlocked) item.append(h('span', 'title-node-state', `LOCKED · UNLOCK AT LEVEL ${t.level}`));
-      else item.append(h('span', 'title-node-state', 'TAP TO EQUIP'));
-      item.style.setProperty('--node-index', String(i));
-      item.onclick = () => {
-        if (!unlocked) { toast(`Unlock at Level ${t.level}`); return; }
-        store.update((p) => { p.titleLevel = t.level; });
-        const name = t.name;
-        cloud.title = name;
-        paintTitle(name);
-        closeTitles();
-        if (cloud.user) cloud.updateLeaderboardTitle(name).catch((e) => console.warn('Title leaderboard sync failed', e));
-        if (cloud.user) buildPublic(store, cloud).then((data) => cloud.publishProfile(data)).catch((e) => console.warn('Title profile sync failed', e));
-        render();
-      };
-      titleScroll.append(item);
-    });
+    titleScroll.scrollTop = 0;
+    paintTitles();
     titleSheet.hidden = false;
-    requestAnimationFrame(() => titleSheet.classList.add('open'));
-    const current = titleScroll.querySelector('.selected');
-    if (current) current.scrollIntoView({ block: 'center' });
+    requestAnimationFrame(() => {
+      titleSheet.classList.add('open');
+      const cur = titleScroll.querySelector('.next') || titleScroll.querySelector('.equipped');
+      if (cur) titleScroll.scrollTop = Math.max(0, cur.offsetTop - (titleScroll.clientHeight - cur.offsetHeight) / 2);
+      $('#pf-titles-close').focus({ preventScroll: true });
+    });
   }
   lvPanel.onclick = openTitles;
   lvPanel.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTitles(); } };
@@ -181,6 +241,7 @@ export function initProfile() {
   function reset() {
     token++; other = null;
     fbox.hidden = true; lvPanel.hidden = false; lvBadge.hidden = false; titleSheet.hidden = true;
+    lvPanel.setAttribute('role', 'button'); lvPanel.tabIndex = 0;
     screen.classList.remove('is-other');
     screen.removeAttribute('data-other'); screen.removeAttribute('data-theme');
     const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
@@ -235,6 +296,7 @@ export function initProfile() {
     pfSub.textContent = params.score ? `Best score: ${fmt(params.score)}` : '';
     showAvatar(params.pic || '');
     fbox.hidden = true;
+    lvPanel.removeAttribute('role'); lvPanel.tabIndex = -1;
     lvPanel.hidden = true; lvBadge.hidden = !params.lvl; if (params.lvl) lvBadge.textContent = String(params.lvl);
     body.textContent = ''; body.append(h('div', 'lb-msg', 'Loading…'));
     loadRelation(mine);

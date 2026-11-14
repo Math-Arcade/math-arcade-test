@@ -2,6 +2,7 @@ import { app } from '../app.js';
 import { $, h, fmt, icon, lvlBadge } from '../util.js';
 import { friendlyError } from '../cloud.js';
 import { buildOpChips, setChecked } from './modes.js';
+import { tierForTitle } from '../titles.js';
 
 export function initLeaderboard() {
   const { store, cloud, router } = app;
@@ -45,7 +46,8 @@ export function initLeaderboard() {
       const av = h('span', 'lb-av');
       av.append(pic, lvlBadge(r.uid === myId ? store.level.level : r.lvl || 1)); // level badge, bottom-left
       const identity = h('span', 'lb-identity');
-      identity.append(h('span', 'lb-name', r.name), h('small', 'lb-title', r.title || 'Rookie'));
+      const ttl = h('small', 'lb-title', r.title || 'Rookie'); ttl.dataset.tier = tierForTitle(r.title || 'Rookie').id;
+      identity.append(h('span', 'lb-name', r.name), ttl);
       row.append(h('span', 'lb-rank', `#${i + 1}`), av, identity, h('span', 'lb-score', fmt(r.score)));
       row.classList.add('tap'); row.tabIndex = 0;
       const open = () => (r.uid === myId ? router.go('profile') : router.go('profile', { uid: r.uid, name: r.name, pic: r.pic, score: r.score, lvl: r.lvl, mode }));
