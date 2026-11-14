@@ -4,10 +4,7 @@ export const LEVEL_UP_COINS = 25; // bonus coins for every level gained
 
 export const FRAMES = [
   { id: 'neon', name: 'Neon Edge', price: 120 },
-  { id: 'ember', name: 'Ember', price: 250 },
   { id: 'frost', name: 'Frostbite', price: 250 },
-  { id: 'pixel', name: 'Pixel Crown', price: 400 },
-  { id: 'royal', name: 'Royal', price: 600 },
   { id: 'gold', name: 'Gold Rush', price: 900 },
   { id: 'aurora', name: 'Aurora', price: 1200 },
   { id: 'rainbow', name: 'Prismatic', price: 2000 },
