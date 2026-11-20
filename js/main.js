@@ -7,7 +7,7 @@ import { cloud } from './cloud.js';
 import { MODES } from './config.js';
 import { sleep, fillSymbols, utcDay } from './util.js';
 import { thumbFrom } from './avatar.js';
-import { buildPublic } from './public.js';
+import { publishFor } from './public.js';
 import { levelInfo } from './engine/level.js';
 import { initHome } from './screens/home.js';
 import { initModes } from './screens/modes.js';
@@ -61,7 +61,8 @@ function syncLevel(now = false) {
   import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
   cloud.lvl = lvl; // used for new leaderboard entries straight away
   clearTimeout(lvlTimer);
-  lvlTimer = setTimeout(() => { if (cloud.user) cloud.updateLeaderboardLevel(lvl).catch((e) => console.warn('Level sync failed', e)); }, now ? 0 : 2500);
+  // work the level out when the timer fires, for whoever is signed in then (the account may have changed meanwhile)
+  lvlTimer = setTimeout(() => { if (cloud.user) cloud.updateLeaderboardLevel(levelInfo(store.profile.xp).level).catch((e) => console.warn('Level sync failed', e)); }, now ? 0 : 2500);
 }
 
 // Keep the equipped frame on the leaderboard in step with the store.
@@ -80,7 +81,7 @@ function publishSoon(delay = 1500) {
   clearTimeout(pubTimer);
   pubTimer = setTimeout(async () => {
     if (!cloud.user) return;
-    try { await cloud.publishProfile(await buildPublic(store, cloud)); } catch (e) { console.warn('Public profile sync failed', e); }
+    try { await publishFor(store, cloud); } catch (e) { console.warn('Public profile sync failed', e); }
   }, delay);
 }
 
@@ -90,17 +91,34 @@ function wireCloudSync() {
   store.on('profile', () => { publishSoon(4000); syncLevel(); syncFrame(); import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; if (cloud.user) cloud.updateLeaderboardTitle(cloud.title).catch((e) => console.warn('Title sync failed', e)); }); });
   cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null;
   import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
-  if (new URLSearchParams(location.search).has('debug')) window.__store = store;
+  if (new URLSearchParams(location.search).has('debug')) { window.__store = store; window.__cloud = cloud; }
+  cloud.onAccountDeleted((uid) => store.purgeOwner(uid)); // a deleted account's progress must never come back
+  let syncGen = 0;
   cloud.onChange(async (user) => {
-    if (!user) return;
+    if (!user) { store.switchOwner('guest'); return; } // signed out: back to the device's own guest profile
+    // Each person keeps their own local profile. Only a guest that just registered brings its progress along.
+    const owner = user.guest ? 'guest' : user.uid;
+    if (store.owner !== owner) {
+      if (owner !== 'guest' && cloud.upgradedUid === user.uid) store.adoptGuestInto(user.uid);
+      else store.switchOwner(owner);
+    }
+    if (cloud.upgradedUid === user.uid) cloud.upgradedUid = null;
+    cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null;
+    const uid = user.uid, gen = ++syncGen;
+    const stale = () => gen !== syncGen || !cloud.user || cloud.user.uid !== uid; // the account changed while we were waiting
     await syncPic();
+    if (stale()) return;
     try {
-      const merged = store.mergeRemote(await cloud.pullProfile());
+      const remote = await cloud.pullProfile();
+      if (stale()) return;
+      const merged = store.mergeRemote(remote);
       await cloud.pushProfile(merged);
+      if (stale()) return;
       const { titleByMilestone } = await import('./titles.js');
       cloud.title = titleByMilestone(merged.titleLevel || 1).name;
-      for (const m of MODES) if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]);
+      for (const m of MODES) { if (stale()) return; if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]); }
     } catch (e) { console.warn('Cloud sync failed', e); }
+    if (stale()) return;
     publishSoon(300); syncLevel(true); syncFrame(true);
     const today = store.today; // a Daily played before signing in (or offline) still reaches friends
     if (today) cloud.publishDaily(utcDay(), today).catch((e) => console.warn('Daily sync failed', e));

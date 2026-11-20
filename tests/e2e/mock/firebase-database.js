@@ -2,11 +2,26 @@ const S = (window.__fbmock ||= { users: {}, cur: null, subs: [], db: {}, n: 0 })
 const parts = (p) => p.split('/').filter(Boolean);
 const getAt = (p) => parts(p).reduce((o, k) => (o == null ? undefined : o[k]), S.db);
 function setAt(p, val) {
-  const ks = parts(p); let o = S.db;
+  const ks = parts(p);
+  if (val === null || val === undefined) { // like the real database: deleting never creates parents, and empty parents disappear
+    const chain = [S.db]; let o = S.db;
+    for (const k of ks.slice(0, -1)) { o = o && o[k]; if (!o || typeof o !== 'object') return; chain.push(o); }
+    delete o[ks.at(-1)];
+    for (let i = chain.length - 1; i > 0 && !Object.keys(chain[i]).length; i -= 1) delete chain[i - 1][ks[i - 1]];
+    return;
+  }
+  let o = S.db;
   ks.slice(0, -1).forEach((k) => { o = o[k] ||= {}; });
-  if (val === null || val === undefined) delete o[ks.at(-1)]; else o[ks.at(-1)] = JSON.parse(JSON.stringify(val));
+  o[ks.at(-1)] = JSON.parse(JSON.stringify(val));
 }
-const snap = (val, key) => ({ key, exists: () => val !== undefined && val !== null, val: () => val,
+// Tests can make the database fail on purpose: window.__fbmock.failDb = { ops: ['update'], match: 'regex on the path' }
+const fault = (op, path) => {
+  const f = S.failDb;
+  if (f && f.ops.includes(op) && (!f.match || new RegExp(f.match).test(path))) throw Object.assign(new Error('PERMISSION_DENIED: Permission denied'), { code: 'PERMISSION_DENIED' });
+};
+// a snapshot is a copy, like the real database: later writes must not change data a caller already read
+const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
+const snap = (val, key) => ({ key, exists: () => val !== undefined && val !== null, val: () => copy(val),
   forEach(fn) { Object.entries(val || {}).forEach(([k, v]) => fn(snap(v, k))); } });
 export const getDatabase = () => ({});
 export const ref = (db, path = '') => ({ path });
@@ -31,12 +46,13 @@ export async function get(r) {
   }
   return snap(val, parts(r.path).at(-1));
 }
-export async function set(r, v) { setAt(r.path, v); }
-export async function update(r, updates) { for (const [p, v] of Object.entries(updates)) setAt((r.path ? r.path + '/' : '') + p, v); }
+export async function set(r, v) { fault('set', r.path); setAt(r.path, v); }
+export async function update(r, updates) { fault('update', Object.keys(updates).join(' ')); for (const [p, v] of Object.entries(updates)) setAt((r.path ? r.path + '/' : '') + p, v); }
 export async function runTransaction(r, fn) {
+  fault('transaction', r.path);
   const cur = getAt(r.path), next = fn(cur === undefined ? null : cur);
   if (next === undefined) return { committed: false };
   setAt(r.path, next);
   return { committed: true };
 }
-export async function remove(r) { setAt(r.path, null); }
+export async function remove(r) { fault('remove', r.path); setAt(r.path, null); }

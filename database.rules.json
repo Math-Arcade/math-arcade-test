@@ -41,7 +41,7 @@
             ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
           },
           "frame": {
-            ".validate": "newData.isString() && newData.val().matches(/^(neon|ember|frost|pixel|royal|gold|aurora|rainbow)$/)"
+            ".validate": "newData.isString() && newData.val().matches(/^(neon|frost|gold|aurora|rainbow)$/)"
           },
           "$other": {
             ".validate": false
@@ -123,7 +123,7 @@
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
         },
         "frame": {
-          ".validate": "newData.isString() && newData.val().matches(/^(neon|ember|frost|pixel|royal|gold|aurora|rainbow)$/)"
+          ".validate": "newData.isString() && newData.val().matches(/^(neon|frost|gold|aurora|rainbow)$/)"
         },
         "$other": {
           ".validate": false
@@ -134,7 +134,7 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         "$friend": {
-          ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || root.child('friendRequests').child(auth.uid).child($friend).exists())) || (auth.uid === $friend && (!newData.exists() || root.child('friendRequests').child($friend).child($uid).exists())))",
+          ".write": "auth != null && ((auth.uid === $uid && (!newData.exists() || root.child('friendRequests').child(auth.uid).child($friend).exists())) || (auth.uid === $friend && (!newData.exists() || root.child('friendRequests').child($friend).child($uid).exists())) || (auth.uid === $friend && newData.exists() && data.exists() && root.child('friends').child($friend).child($uid).exists()))",
           ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 16"
         }
       }
@@ -161,7 +161,7 @@
       "$from": {
         ".read": "auth != null && auth.uid === $from",
         "$to": {
-          ".write": "auth != null && (auth.uid === $from ? $from !== $to : (auth.uid === $to && !newData.exists()))",
+          ".write": "auth != null && (auth.uid === $from ? $from !== $to : (auth.uid === $to && (!newData.exists() || data.exists())))",
           ".validate": "newData.hasChildren(['name', 'ts'])",
           "name": {
             ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 16"

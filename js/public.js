@@ -18,16 +18,25 @@ export function ownStats(store) {
   };
 }
 
-export async function buildPublic(store, cloud) {
+export async function buildPublic(store, cloud, me = cloud.user) {
   const s = ownStats(store);
   const stats = { best: {} };
   for (const k of ['blitzGames', 'correct', 'wrong', 'bestStreak', 'bestLevel', 'seconds', 'dailies', 'dailyStreak']) stats[k] = num(s[k]);
   for (const m of MODES) stats.best[m] = num(s.best[m], 100000);
-  const out = { xp: num(store.profile.xp), titleLevel: Number(store.profile.titleLevel) || 1, name: cloud.user.name, theme: THEMES.includes(store.settings.theme) ? store.settings.theme : 'green', stats, updated: Date.now() };
+  const out = { xp: num(store.profile.xp), titleLevel: Number(store.profile.titleLevel) || 1, name: me.name, theme: THEMES.includes(store.settings.theme) ? store.settings.theme : 'green', stats, updated: Date.now() };
+  if (store.profile.frame) out.frame = store.profile.frame; // everything is read before the first await, so it all belongs to one moment
   const pic = await thumbFrom(store.settings.avatar, 96, PUBLIC_PIC_MAX);
   if (pic) out.pic = pic;
-  if (store.profile.frame) out.frame = store.profile.frame;
   return out;
+}
+
+// Build and publish the signed-in player's public profile. The account is fixed at the start and checked again at the
+// write, so a profile built for one account can never land on another one that signed in meanwhile.
+export async function publishFor(store, cloud) {
+  const me = cloud.user;
+  if (!me) return false;
+  const data = await buildPublic(store, cloud, me);
+  return cloud.publishProfile(data, me.uid);
 }
 
 // Anything read back from the database is treated as untrusted.

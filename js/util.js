@@ -1,3 +1,5 @@
+import { revealText } from './engine/problems.js';
+
 export const $ = (sel, root = document) => {
   const n = root.querySelector(sel);
   if (!n) throw new Error(`Missing element: ${sel}`);
@@ -16,10 +18,9 @@ export function clock(sec) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-// Build the big problem text safely (no innerHTML with data): handles ^2 and √.
-export function renderProblem(el, text) {
-  el.textContent = '';
-  const re = /√(\d+)|\^2/g;
+// Append text to `el` safely (no innerHTML with data): "√n" becomes a radical, "^d" a superscript.
+export function renderMath(el, text) {
+  const re = /√(\d+)|\^(\d)/g;
   let last = 0, m;
   while ((m = re.exec(text))) {
     if (m.index > last) el.append(text.slice(last, m.index));
@@ -34,17 +35,109 @@ export function renderProblem(el, text) {
       el.append(rad);
     } else {
       const sup = document.createElement('sup');
-      sup.textContent = '2';
+      sup.textContent = m[2];
       el.append(sup);
     }
     last = m.index + m[0].length;
   }
   if (last < text.length) el.append(text.slice(last));
-  const len = text.replace(/\^2/g, '²').length;
+}
+
+// How a piece of maths is read aloud.
+const POWER_WORD = { 2: 'squared', 3: 'cubed' };
+export function speak(text) {
+  return text
+    .replace(/√(\d+)/g, 'square root of $1')
+    .replace(/\^(\d)/g, (_, d) => ` ${POWER_WORD[d] || `to the power of ${d}`}`)
+    .replace(/−/g, 'minus').replace(/×/g, 'times').replace(/÷/g, 'divided by')
+    .replace(/\?/g, 'what').replace(/=/g, 'equals');
+}
+
+// Build the big problem text safely: handles ^n and √.
+export function renderProblem(el, text) {
+  el.textContent = '';
+  renderMath(el, text);
+  const len = text.replace(/\^(\d)/g, '$1').length;
   el.style.setProperty('--fit', len <= 8 ? 1 : len <= 11 ? 0.86 : len <= 14 ? 0.72 : 0.6);
-  el.setAttribute('aria-label', text
-    .replace(/√(\d+)/g, 'square root of $1').replace(/\^2/g, ' squared')
-    .replace('−', 'minus').replace('×', 'times').replace('÷', 'divided by').replace('?', 'what'));
+  el.setAttribute('aria-label', speak(text));
+}
+
+// Draw any question format into the big card. `revealed` fills in the answer (shown after answering).
+const SAY = { '>': 'greater than', '=': 'equal to', '<': 'less than' };
+export function renderQuestion(el, p, revealed = false) {
+  const fmt = p.format || 'number';
+  el.dataset.fmt = fmt;
+  if (fmt === 'sequence') {
+    el.textContent = '';
+    const items = p.seq.map((v, i) => (i === p.hole ? (revealed ? num(p.answer) : '?') : num(v)));
+    const spans = items.map((t, i) => {
+      const s = document.createElement('span');
+      s.className = i === p.hole ? 'seq-i seq-q' : 'seq-i';
+      s.textContent = t;
+      return s;
+    });
+    const row = (list) => { const r = document.createElement('span'); r.className = 'seq-row'; r.append(...list); return r; };
+    el.style.setProperty('--fit', 1);
+    el.append(row(spans));
+    // one row if it fits the card, otherwise two balanced rows (3 + 3, 3 + 2)
+    const avail = el.parentElement ? el.parentElement.clientWidth - 30 : 0;
+    if (avail > 0 && el.offsetWidth > avail && spans.length > 3) {
+      const k = Math.ceil(spans.length / 2);
+      el.textContent = '';
+      el.append(row(spans.slice(0, k)), row(spans.slice(k)));
+    }
+    el.setAttribute('aria-label', `Number sequence: ${items.join(', ').replace('?', 'missing number')}`);
+  } else if (fmt === 'compare') {
+    el.textContent = '';
+    const side = (t) => { const s = document.createElement('span'); renderMath(s, t); return s; };
+    const q = document.createElement('span');
+    q.className = 'cmp-q';
+    q.textContent = revealed ? p.answer : '?';
+    el.append(side(p.left), q, side(p.right));
+    el.style.setProperty('--fit', 1);
+    el.setAttribute('aria-label', `${speak(p.left)} ${revealed ? SAY[p.answer] : 'compared with'} ${speak(p.right)}`);
+  } else if (fmt === 'equations') {
+    el.textContent = p.text;
+    el.style.setProperty('--fit', 1);
+    el.setAttribute('aria-label', 'Find the incorrect equation');
+  } else {
+    renderProblem(el, revealed ? revealText(p) : p.text);
+  }
+}
+
+// Fill the answer buttons for a question: numbers, equations or the three comparison symbols.
+// Buttons the format does not use are hidden, so the interface always matches the question.
+export function setChoices(btns, p) {
+  btns.forEach((b, k) => {
+    const used = k < p.choices.length;
+    b.hidden = !used;
+    b.textContent = '';
+    b.style.removeProperty('--bfit');
+    b.removeAttribute('aria-label');
+    if (!used) return;
+    const c = p.choices[k];
+    if (p.format === 'equations') {
+      const t = document.createElement('span');
+      t.className = 'eqt';
+      renderMath(t, c);
+      b.append(t);
+      b.setAttribute('aria-label', speak(c));
+    } else if (p.format === 'compare') {
+      b.textContent = c;
+      b.setAttribute('aria-label', SAY[c]);
+    } else {
+      b.textContent = num(c);
+    }
+  });
+}
+
+// Shrink an equation button's text so a long equation never overflows its button.
+export function fitChoice(b) {
+  const t = b.querySelector('.eqt');
+  if (!t) return;
+  b.style.removeProperty('--bfit');
+  const avail = b.clientWidth - 30;
+  if (avail > 0 && t.offsetWidth > avail) b.style.setProperty('--bfit', Math.max(0.5, avail / t.offsetWidth).toFixed(3));
 }
 
 export function countUp(el, to, ms = 800, format = fmt) {

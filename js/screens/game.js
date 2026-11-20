@@ -1,7 +1,8 @@
 // Game screen controller for Blitz, Zen and Daily. All rules live in engine/run.js.
 import { app } from '../app.js';
-import { $, $$, h, icon, fmt, clock, num, trim, renderProblem, fitProblem, countUp, toast, utcDay } from '../util.js';
+import { $, $$, h, icon, fmt, clock, trim, renderQuestion, setChoices, fitChoice, fitProblem, countUp, toast, utcDay } from '../util.js';
 import { RunEngine, RULES } from '../engine/run.js';
+import { isValidChoice } from '../engine/problems.js';
 import { TITLES } from '../titles.js';
 import { MODE_NAME, MODE_SIGN } from '../config.js';
 import { openSheet, closeSheet } from '../router.js';
@@ -57,7 +58,8 @@ export function initGame() {
     E.card.classList.remove('ok', 'bad'); E.verdict.innerHTML = ''; E.banner.hidden = true;
     E.cue.classList.remove('show'); E.card.classList.remove('cueing'); E.hearts.classList.remove('gain', 'hit'); livesShown = 3; E.tint.classList.remove('on'); recordShown = false; runBest = kind === 'blitz' ? store.profile.best[mode] : 0;
     E.problem.textContent = '';
-    E.btns.forEach((b) => { b.disabled = true; b.className = 'answer'; b.textContent = ''; });
+    for (const el of [E.problem, E.card, E.answers]) el.removeAttribute('data-fmt');
+    E.btns.forEach((b) => { b.disabled = true; b.hidden = false; b.className = 'answer'; b.textContent = ''; b.style.removeProperty('--bfit'); });
     E.cat.hidden = kind !== 'zen';
     if (kind === 'zen') { setCat('idle'); catLoop(); }
     if (kind !== 'zen') buildCells();
@@ -203,9 +205,13 @@ export function initGame() {
     const p = eng.next(performance.now());
     E.card.classList.remove('ok', 'bad');
     E.verdict.innerHTML = '';
-    renderProblem(E.problem, p.text);
+    // the interface follows the question: 4 number buttons, 4 equations, or the 3 comparison symbols
+    E.card.dataset.fmt = E.answers.dataset.fmt = p.format;
+    renderQuestion(E.problem, p);
     fitProblem(E.problem);
-    E.btns.forEach((b, k) => { b.disabled = false; b.className = 'answer'; b.textContent = num(p.choices[k]); });
+    E.btns.forEach((b) => { b.disabled = false; b.className = 'answer'; });
+    setChoices(E.btns, p);
+    E.btns.forEach(fitChoice);
     for (const el of [E.card, E.answers]) { el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }
     renderHud();
     locked = false;
@@ -213,6 +219,7 @@ export function initGame() {
 
   function answer(i) {
     if (!running || paused || locked || !eng.problem) return;
+    if (i >= 0 && !isValidChoice(eng.problem, i)) return; // e.g. key 4 on a 3-button question
     locked = true;
     const p = eng.problem;
     const prevMult = eng.multiplier;
@@ -224,7 +231,7 @@ export function initGame() {
       else if (k === i) mark(b, 'bad', 'cross');
       else b.classList.add('dim');
     });
-    renderProblem(E.problem, p.text.replace('?', num(p.answer)));
+    renderQuestion(E.problem, p, true);
     fitProblem(E.problem);
     E.card.classList.add(r.correct ? 'ok' : 'bad');
     E.verdict.innerHTML = icon(r.correct ? 'check' : 'cross');
@@ -359,9 +366,11 @@ export function initGame() {
     if (router.current !== 'game') return;
     if (e.key === 'Escape') { paused ? resume() : (cfg.kind === 'zen' ? quit() : pause()); return; }
     const n = ['1', '2', '3', '4'].indexOf(e.key);
-    if (n >= 0) answer(n);
+    if (n >= 0) { answer(n); return; }
+    const sym = ['>', '=', '<'].indexOf(e.key); // comparison questions also take the symbol keys
+    if (sym >= 0 && eng && eng.problem && eng.problem.format === 'compare') answer(sym);
   });
-  window.addEventListener('resize', () => { if (router.current === 'game' && E.problem.firstChild) fitProblem(E.problem); });
+  window.addEventListener('resize', () => { if (router.current === 'game' && E.problem.firstChild) { fitProblem(E.problem); E.btns.forEach(fitChoice); } });
 
   // fast taps: respond on pointerdown, keep click for keyboard/assistive tech
   E.btns.forEach((b) => {

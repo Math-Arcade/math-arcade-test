@@ -26,8 +26,28 @@ tools/make-sprite.py  regenerates the pixel icon sprite inside index.html
 database.rules.json   Firebase Realtime Database rules (DEPLOY THESE)
 ```
 
+## Question types and progression
+Each level unlocks one idea, and everything unlocked stays in the mix. Every newly reached level opens with the type it unlocks.
+
+| Level | Unlocks | Format / answer buttons |
+|---|---|---|
+| 1 | Addition | number, 4 buttons |
+| 2 | Multiplication | number, 4 buttons |
+| 3 | Division, subtraction with negative results | number, 4 buttons |
+| 4 | Find the Incorrect Equation | 4 selectable equations |
+| 5 | Number sequences (and missing-number `7 + ? = 12`) | 4 number buttons |
+| 6 | Equation comparison | 3 buttons: `>` `=` `<` |
+| 7 | Powers (squares, cubes, powers of 2) | number |
+| 8 | Square roots | number |
+| 9 | Brackets and order of operations | number |
+| 10-12 | Combinations of everything above, richer each level | number |
+
+Every problem carries `format` (`number`, `sequence`, `equations`, `compare`) plus `choices`, `correctIndex` and format metadata (`seq`/`hole`/`rule`, `valid[]`, `left`/`right`/`relation`), so the UI draws it and shows the right buttons with no special cases: `renderQuestion` and `setChoices` in `js/util.js`. Single-operation Blitz modes (Addition, Subtraction, ...) stay number-only, and Duel only deals number questions (its layout has four number buttons per side).
+
+Sequences (`js/engine/sequences.js`) are generated from a named rule and then proven unambiguous: every other value for the hidden term is tried, and none may complete the sequence into any known pattern (arithmetic, geometric, quadratic, cubic, alternating steps, Fibonacci-style, affine, interleaved).
+
 ## Tuning the game
-Everything balance-related is in `js/engine/run.js` (`RULES`: start time, lives, time bonus per level, combo step, score) and the level tables at the top of `js/engine/problems.js`.
+Everything balance-related is in `js/engine/run.js` (`RULES`: start time, lives, `levelSteps` = correct answers per level, time bonus per level and per format, Daily levels, Zen range) and the tables at the top of `js/engine/problems.js` (`TYPES` unlock levels and weights, number ranges). Difficulty rises through new concepts and multi-step questions, not bigger numbers (no operand above ~260).
 
 ## Firebase (accounts + leaderboard)
 1. Firebase console, Realtime Database, Rules: paste `database.rules.json` and publish. Without it the leaderboard will not work (and old rules may expose user emails).

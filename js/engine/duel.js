@@ -8,7 +8,8 @@ export class DuelEngine {
   constructor({ seed, target = 10, mode = 'mix', lockMs = 1000 } = {}) {
     this.target = target;
     this.lockMs = lockMs;
-    this.stream = new ProblemStream({ seed, mode });
+    // the duel screen has four number buttons per side, so it only deals number-answer questions
+    this.stream = new ProblemStream({ seed, mode, formats: ['number'] });
     this.scores = [0, 0];
     this.lockedUntil = [0, 0];
     this.winner = null;

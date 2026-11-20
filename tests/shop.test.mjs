@@ -5,10 +5,10 @@ import { FRAMES, balance, cleanFrame } from '../js/shop.js';
 
 test('coins only grow when merging, so syncing never loses or duplicates them', () => {
   const a = { ...newProfile(), coinsEarned: 500, coinsSpent: 120, owned: ['neon'], frame: 'neon' };
-  const b = { ...newProfile(), coinsEarned: 300, coinsSpent: 250, owned: ['ember'] };
+  const b = { ...newProfile(), coinsEarned: 300, coinsSpent: 250, owned: ['frost'] };
   const m = mergeProfiles(a, b);
   assert.equal(m.coinsEarned, 500); assert.equal(m.coinsSpent, 250);
-  assert.deepEqual(m.owned.sort(), ['ember', 'neon']);
+  assert.deepEqual(m.owned.sort(), ['frost', 'neon']);
   assert.equal(m.frame, 'neon');
   assert.equal(balance(m), 250);
 });

@@ -5,18 +5,22 @@ import { FIREBASE_CONFIG, FIREBASE_SDK, MODES } from './config.js';
 import { safePic } from './avatar.js';
 import { cleanPublic } from './public.js';
 import { cleanFrame } from './shop.js';
+import { planWipe, planRename } from './cloudplan.js';
 
 let F = null;
 let initPromise = null;
 const listeners = new Set();
 const fail = (code) => Object.assign(new Error(code), { code });
 const withTimeout = (p, ms = 9000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(fail('timeout')), ms))]);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const nameKey = (name) => name.trim().toLowerCase().replace(/[.#$/[\]\s]/g, '_');
 const cleanLvl = (v) => Math.max(1, Math.min(100, Math.floor(Number(v) || 1)));
 const cleanName = (n) => { const s = String(n || '').trim().slice(0, 16); return s.length >= 3 ? s : 'Player'; };
 const guestKey = (uid) => `ma2.guestName.${uid}`;
 const readGuestName = (uid) => { try { return localStorage.getItem(guestKey(uid)); } catch { return null; } };
 const writeGuestName = (uid, name) => { try { localStorage.setItem(guestKey(uid), name); } catch {} };
+const clearGuestName = (uid) => { try { localStorage.removeItem(guestKey(uid)); } catch {} };
+const wrapErr = (code, cause) => Object.assign(new Error(code), { code, cause });
 const guestName = () => `guest#${Math.floor(100 + Math.random() * 900)}`;
 
 export function validateName(raw) {
@@ -29,6 +33,9 @@ export function validateName(raw) {
 export const cloud = {
   ready: false,
   user: null, // { uid, name } or null
+  deleting: false, // true while an account is being removed: nothing may write its data back
+  upgradedUid: null, // set when a guest has just become a registered account, so the app carries the guest's progress over
+  _deletedHooks: [],
   pic: '', // small JPEG data URL shown next to this player's leaderboard score
   lvl: 1, // account level shown on the leaderboard
   title: 'Rookie', // equipped profile title
@@ -47,7 +54,7 @@ export const cloud = {
           import(`${FIREBASE_SDK}/firebase-database.js`),
         ]), 15000);
         const app = appM.initializeApp(FIREBASE_CONFIG);
-        F = { authM, dbM, auth: authM.getAuth(app), db: dbM.getDatabase(app) };
+        F = { appM, authM, dbM, app, auth: authM.getAuth(app), db: dbM.getDatabase(app) };
         authM.onAuthStateChanged(F.auth, async (u) => {
           if (!u) {
             try { await withTimeout(authM.signInAnonymously(F.auth)); }
@@ -98,6 +105,10 @@ export const cloud = {
       const key = nameKey(saved);
       const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `usernames/${key}`)));
       if (snap.exists() && snap.val() === u.uid) return saved;
+      if (!snap.exists()) { // the claim was released (for example by an aborted sign-in): take the same name back
+        try { await this.reserveUsername(saved, u.uid); return saved; }
+        catch (e) { if ((e && e.code) !== 'name-taken') throw e; }
+      }
     }
 
     for (let i = 0; i < 20; i++) {
@@ -128,45 +139,181 @@ export const cloud = {
 
     // Same name, different letter case: the claim already belongs to this player, only the display changes.
     const sameClaim = String(oldName || '').toLowerCase() === name.toLowerCase();
-    const newKey = sameClaim ? null : await this.reserveUsername(name, u.uid);
+    const newKey = sameClaim ? null : await this.reserveUsername(name, u.uid); // atomic: throws name-taken or the real error
     try {
       await withTimeout(F.authM.updateProfile(u, { displayName: name }));
-      if (guest) writeGuestName(u.uid, name);
-      if (!sameClaim && oldName) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${nameKey(oldName)}`)));
-      await this.updateLeaderboardName(u.uid, name);
-      this.user = { uid: u.uid, name, guest };
-      this._emit();
-      return name;
     } catch (e) {
       if (newKey) await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${newKey}`))).catch(() => {});
-      throw e;
+      throw e; // nothing changed
+    }
+    // From here the new name is the player's name; the rest is housekeeping that must not undo it.
+    if (guest) writeGuestName(u.uid, name);
+    this.user = { uid: u.uid, name, guest };
+    if (!sameClaim && oldName) {
+      try { await withTimeout(F.dbM.remove(F.dbM.ref(F.db, `usernames/${nameKey(oldName)}`))); }
+      catch (e) { console.warn('Could not release the old name', e); }
+    }
+    const results = await Promise.allSettled([this.updateLeaderboardName(u.uid, name), this._syncNames(u.uid, name)]);
+    results.forEach((r) => { if (r.status === 'rejected') console.warn('Name sync incomplete', r.reason); });
+    this._emit();
+    return name;
+  },
+
+  // Friends, friend requests and recent Daily results keep a copy of your name: keep those copies current.
+  async _syncNames(uid, name) {
+    const { dbM, db } = F;
+    const keys = async (p) => { const s = await withTimeout(dbM.get(dbM.ref(db, p))); return s.exists() ? Object.keys(s.val()) : []; };
+    const [friends, incoming, sent, days] = await Promise.all([keys(`friends/${uid}`), keys(`friendRequests/${uid}`), keys(`friendSent/${uid}`), keys(`dailyResults/${uid}`)]);
+    const updates = planRename(uid, name, { friends, incoming, sent, days });
+    if (!Object.keys(updates).length) return;
+    try { await withTimeout(dbM.update(dbM.ref(db), updates)); }
+    catch (e) { // one stale record must not block the others
+      await Promise.allSettled(Object.entries(updates).map(([path, v]) => withTimeout(dbM.set(dbM.ref(db, path), v))));
     }
   },
 
+  // Everything online that belongs to one uid. One atomic update: it either all goes or none of it does.
+  // Returns what was removed, so a caller that has to back out can put back what the rules allow.
+  async _wipeCloudData(uid, names = []) {
+    const { dbM, db } = F;
+    const val = async (p) => { const s = await withTimeout(dbM.get(dbM.ref(db, p))); return s.exists() ? s.val() : null; };
+    const [users, pub, daily, friends, incoming, sent, ...boards] = await Promise.all([
+      val(`users/${uid}`), val(`publicProfiles/${uid}`), val(`dailyResults/${uid}`), val(`friends/${uid}`), val(`friendRequests/${uid}`), val(`friendSent/${uid}`),
+      ...MODES.map((m) => val(`leaderboard/${m}/${uid}`)),
+    ]);
+    const board = {};
+    boards.forEach((e, i) => { if (e) board[MODES[i]] = e; });
+    const claims = [];
+    for (const n of new Set(names.filter(Boolean))) { // only release name claims that really are ours
+      const k = nameKey(n);
+      const claim = await withTimeout(dbM.get(dbM.ref(db, `usernames/${k}`)));
+      if (claim.exists() && claim.val() === uid) claims.push(k);
+    }
+    const updates = planWipe(uid, { friends, incoming, sent, daily, claims }); // single-entry writes, as the rules require
+    await withTimeout(dbM.update(dbM.ref(db), updates));
+    return { users, pub, daily, friends: friends || {}, incoming: incoming || {}, sent: sent || {}, board, claims, name: names.find(Boolean) || 'Player' };
+  },
+
+  // Put back what _wipeCloudData removed, as far as the security rules let one person do so. Your own records and the
+  // requests you sent can be re-created; friendships and requests other people sent you cannot (only they can create them).
+  async _restoreCloudData(uid, saved) {
+    const { dbM, db } = F;
+    const updates = {};
+    if (saved.users) updates[`users/${uid}`] = saved.users;
+    if (saved.pub) updates[`publicProfiles/${uid}`] = saved.pub;
+    if (saved.daily) updates[`dailyResults/${uid}`] = saved.daily;
+    Object.entries(saved.board).forEach(([m, e]) => { updates[`leaderboard/${m}/${uid}`] = e; });
+    saved.claims.forEach((k) => { updates[`usernames/${k}`] = uid; });
+    Object.entries(saved.sent).forEach(([x, v]) => { updates[`friendSent/${uid}/${x}`] = v; updates[`friendRequests/${x}/${uid}`] = { name: cleanName(saved.name), ts: Number(v && v.ts) || Date.now() }; });
+    if (Object.keys(updates).length) {
+      try { await withTimeout(dbM.update(dbM.ref(db), updates)); }
+      catch (e) { await Promise.allSettled(Object.entries(updates).map(([p, v]) => withTimeout(dbM.set(dbM.ref(db, p), v)))); }
+    }
+    return { friends: Object.keys(saved.friends).length, incoming: Object.keys(saved.incoming).length }; // what could not come back
+  },
 
   async signUp(rawName, email, password) {
     await this.need();
     const { authM, dbM, auth, db } = F;
     const name = validateName(rawName);
-    const key = nameKey(name);
-    const taken = await withTimeout(dbM.get(dbM.ref(db, `usernames/${key}`)));
+    email = String(email || '').trim();
+    const cur = auth.currentUser;
+    if (cur && cur.isAnonymous) return this._upgradeGuest(cur, name, email, password);
+
+    // No guest session (for example guest sign-in was unavailable): create the account, then claim the name atomically.
+    const taken = await withTimeout(dbM.get(dbM.ref(db, `usernames/${nameKey(name)}`)));
     if (taken.exists()) throw fail('name-taken');
-    const cred = await withTimeout(authM.createUserWithEmailAndPassword(auth, email.trim(), password));
+    const cred = await withTimeout(authM.createUserWithEmailAndPassword(auth, email, password));
+    let key = null;
     try {
-      await authM.updateProfile(cred.user, { displayName: name });
-      await dbM.set(dbM.ref(db, `usernames/${key}`), cred.user.uid);
-    } catch (e) {
+      key = await this.reserveUsername(name, cred.user.uid);
+      await withTimeout(authM.updateProfile(cred.user, { displayName: name }));
+    } catch (e) { // roll back so nothing half-made is left behind, but keep the real reason
+      if (key) await withTimeout(dbM.remove(dbM.ref(db, `usernames/${key}`))).catch(() => {});
       await cred.user.delete().catch(() => {});
-      throw fail('name-taken');
+      throw e;
     }
-    this.user = { uid: cred.user.uid, name };
+    this.upgradedUid = cred.user.uid; // the device's guest progress becomes this account's
+    this.user = { uid: cred.user.uid, name, guest: false };
     this._emit();
     return this.user;
   },
 
+  // Guest -> registered account: the guest account itself is upgraded in place, so its uid, progress,
+  // leaderboard entries and friends stay and nothing is left abandoned.
+  async _upgradeGuest(cur, name, email, password) {
+    const { authM, dbM, db } = F;
+    const uid = cur.uid;
+    const oldName = this.user?.name || cur.displayName || readGuestName(uid) || '';
+    const sameClaim = String(oldName).toLowerCase() === name.toLowerCase();
+    const newKey = sameClaim ? null : await this.reserveUsername(name, uid); // atomic; throws name-taken or the real error
+    const release = () => (newKey ? withTimeout(dbM.remove(dbM.ref(db, `usernames/${newKey}`))).catch(() => {}) : null);
+    try {
+      await withTimeout(authM.linkWithCredential(cur, authM.EmailAuthProvider.credential(email, password)));
+    } catch (e) { await release(); throw e; } // email in use, weak password...: the guest is untouched
+    // The account exists now. Finish the rename; problems here must not undo it.
+    let shown = name;
+    try { await withTimeout(authM.updateProfile(cur, { displayName: name })); }
+    catch (e) { console.warn('Could not set the display name', e); await release(); shown = oldName || name; }
+    if (shown === name && !sameClaim && oldName) await withTimeout(dbM.remove(dbM.ref(db, `usernames/${nameKey(oldName)}`))).catch((e) => console.warn('Could not release the guest name', e));
+    clearGuestName(uid);
+    this.user = { uid, name: shown, guest: false };
+    this.upgradedUid = uid;
+    await Promise.allSettled([this.updateLeaderboardName(uid, shown), this._syncNames(uid, shown)]);
+    this._emit();
+    return this.user;
+  },
+
+  // Checks an email and password on a separate, throw-away login, so the current (guest) session is never touched.
+  async _verifyCredentials(email, password) {
+    const { appM, authM } = F;
+    if (!F.verifyAuth) {
+      const app2 = appM.getApps().find((a) => a.name === 'verify') || appM.initializeApp(FIREBASE_CONFIG, 'verify');
+      try { F.verifyAuth = authM.initializeAuth(app2, { persistence: authM.inMemoryPersistence }); }
+      catch { F.verifyAuth = authM.getAuth(app2); }
+    }
+    try { await withTimeout(authM.signInWithEmailAndPassword(F.verifyAuth, email, password)); }
+    finally { try { await authM.signOut(F.verifyAuth); } catch { /* ignore */ } }
+  },
+
   async signIn(email, password) {
     await this.need();
-    await withTimeout(F.authM.signInWithEmailAndPassword(F.auth, email.trim(), password));
+    const { authM, auth } = F;
+    email = String(email || '').trim();
+    const cur = auth.currentUser;
+    if (!cur || !cur.isAnonymous) { await withTimeout(authM.signInWithEmailAndPassword(auth, email, password)); return; }
+
+    // Signing in to an existing account leaves the current guest behind. Its online traces go with it, but nothing is
+    // deleted until the password is proven right, and nothing at all if the cleanup itself cannot be completed.
+    await this._verifyCredentials(email, password); // wrong password / no network: the guest and all its records stay exactly as they are
+    const names = [cur.displayName, readGuestName(cur.uid)];
+    this.deleting = true;
+    let saved;
+    try { saved = await this._wipeCloudData(cur.uid, names); } // atomic
+    catch (e) { this.deleting = false; throw wrapErr('guest-cleanup-failed', e); } // nothing removed, still signed in as the guest
+    const hopeless = ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/user-disabled', 'auth/invalid-email'];
+    let failure = null;
+    for (let i = 0; i < 3; i += 1) { // the password is already known to be right, so only a network hiccup can fail here
+      try { await withTimeout(authM.signInWithEmailAndPassword(auth, email, password)); failure = null; break; }
+      catch (e) { failure = e; if (hopeless.includes(e && e.code)) break; await wait(400 * (i + 1)); }
+    }
+    this.deleting = false;
+    if (failure) {
+      const lost = await this._restoreCloudData(cur.uid, saved).catch(() => ({ friends: 0, incoming: 0 }));
+      await this._restoreGuest(cur);
+      if (lost.friends + lost.incoming > 0) throw wrapErr('signin-failed-guest-partial', failure);
+      throw failure;
+    }
+    clearGuestName(cur.uid);
+    authM.deleteUser(cur).catch(() => {}); // best effort: the empty guest login itself
+  },
+
+  async _restoreGuest(cur) {
+    try {
+      const name = await this.ensureGuestName(cur);
+      this.user = { uid: cur.uid, name, guest: true };
+      this._emit(); // the app re-syncs the guest's local progress
+    } catch (e) { console.warn('Could not restore the guest', e); }
   },
 
   async signOut() { if (F) await F.authM.signOut(F.auth); },
@@ -176,25 +323,26 @@ export const cloud = {
     await withTimeout(F.authM.sendPasswordResetEmail(F.auth, email.trim()));
   },
 
+  onAccountDeleted(fn) { this._deletedHooks.push(fn); },
+
   // Required by Google Play: players must be able to delete their account (and data) in-app.
+  // Every step is safe to repeat. Success is only reported when the login itself is gone.
   async deleteAccount(password) {
     await this.need();
-    const { authM, dbM, auth, db } = F;
+    const { authM, auth } = F;
     const u = auth.currentUser;
-    if (!u) throw fail('not-signed-in');
+    if (!u || u.isAnonymous) throw fail('not-signed-in');
     await withTimeout(authM.reauthenticateWithCredential(u, authM.EmailAuthProvider.credential(u.email, password)));
-    const updates = { [`users/${u.uid}`]: null, [`publicProfiles/${u.uid}`]: null, [`friends/${u.uid}`]: null, [`friendRequests/${u.uid}`]: null, [`friendSent/${u.uid}`]: null, [`dailyResults/${u.uid}`]: null };
+    const uid = u.uid;
+    this.deleting = true;
     try {
-      const read = async (p) => { const s = await withTimeout(dbM.get(dbM.ref(db, p))); return s.exists() ? Object.keys(s.val()) : []; };
-      const [fr, inc, sent] = await Promise.all([read(`friends/${u.uid}`), read(`friendRequests/${u.uid}`), read(`friendSent/${u.uid}`)]);
-      fr.forEach((x) => { updates[`friends/${x}/${u.uid}`] = null; });
-      inc.forEach((x) => { updates[`friendSent/${x}/${u.uid}`] = null; });
-      sent.forEach((x) => { updates[`friendRequests/${x}/${u.uid}`] = null; });
-    } catch (e) { console.warn('Could not tidy friend data', e); }
-    MODES.forEach((m) => { updates[`leaderboard/${m}/${u.uid}`] = null; });
-    if (u.displayName) updates[`usernames/${nameKey(u.displayName)}`] = null;
-    await withTimeout(dbM.update(dbM.ref(db), updates));
-    await withTimeout(authM.deleteUser(u));
+      try { await this._wipeCloudData(uid, [u.displayName]); }
+      catch (e) { throw wrapErr('delete-data-failed', e); } // atomic: nothing was removed
+      try { await withTimeout(authM.deleteUser(u)); }
+      catch (e) { throw wrapErr('delete-account-failed', e); } // online data is gone, the login is not: retry finishes the job
+      if (auth.currentUser && auth.currentUser.uid === uid) throw wrapErr('delete-account-failed', null);
+    } finally { this.deleting = false; }
+    this._deletedHooks.forEach((fn) => { try { fn(uid); } catch (e) { console.warn(e); } });
     this.user = null;
     this._emit();
   },
@@ -314,6 +462,7 @@ export const cloud = {
 
   // Daily Challenge results are readable by you and your friends only (see database rules).
   async publishDaily(day, d) {
+    if (this.deleting) return;
     const me = this._me(); await this.need();
     const grid = String(d.grid || '').replace(/[^01]/g, '').slice(0, 50);
     const data = { name: me.name, score: Math.max(0, Math.round(d.score) || 0), total: Math.max(1, grid.length || 10), ms: Math.max(0, Math.round(d.ms) || 0), grid };
@@ -335,16 +484,19 @@ export const cloud = {
     return { rows, friendCount: friends.length };
   },
 
-  async publishProfile(data) {
-    if (!this.user) return;
+  // `uid` is the account the data was built for. If somebody else is signed in by the time we write, the data is dropped.
+  async publishProfile(data, uid = this.user && this.user.uid) {
+    if (this.deleting || !uid) return false;
     await this.need();
-    const r = F.dbM.ref(F.db, `publicProfiles/${this.user.uid}`);
+    if (!this.user || this.user.uid !== uid) return false;
+    const r = F.dbM.ref(F.db, `publicProfiles/${uid}`);
     try { await withTimeout(F.dbM.set(r, data)); }
     catch (e) { // rules without the newer "xp" field must not stop the rest of the profile from publishing
       const { xp, titleLevel, frame, ...rest } = data; // newer optional fields
       if (xp === undefined && titleLevel === undefined && frame === undefined) throw e;
       await withTimeout(F.dbM.set(r, rest));
     }
+    return true;
   },
 
   async fetchPublicProfile(uid) {
@@ -360,11 +512,13 @@ export const cloud = {
   },
 
   async pushProfile(profile) {
+    if (this.deleting) return;
     if (!this.user) return;
     await withTimeout(F.dbM.set(F.dbM.ref(F.db, `users/${this.user.uid}/profile`), profile));
   },
 
   async updateLeaderboardName(uid, name) {
+    if (this.deleting) return;
     const updates = {};
     await Promise.all(MODES.map(async (mode) => {
       const r = F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`);
@@ -376,6 +530,7 @@ export const cloud = {
 
   // Add / change / remove (pic = '') the picture on every existing leaderboard entry of this player.
   async updateLeaderboardPic(pic) {
+    if (this.deleting) return;
     if (!this.user) return;
     await this.need();
     const uid = this.user.uid, updates = {};
@@ -388,6 +543,7 @@ export const cloud = {
 
   // Keep the level on every existing leaderboard entry of this player up to date.
   async updateLeaderboardFrame(frame) {
+    if (this.deleting) return;
     if (!this.user) return;
     await this.need();
     const uid = this.user.uid, updates = {};
@@ -399,6 +555,7 @@ export const cloud = {
   },
 
   async updateLeaderboardTitle(title) {
+    if (this.deleting) return;
     if (!this.user) return;
     await this.need();
     const uid = this.user.uid, updates = {};
@@ -410,6 +567,7 @@ export const cloud = {
   },
 
   async updateLeaderboardLevel(lvl) {
+    if (this.deleting) return;
     if (!this.user) return;
     await this.need();
     const uid = this.user.uid, updates = {};
@@ -421,11 +579,14 @@ export const cloud = {
   },
 
   async submitScore(mode, score) {
-    if (!this.user || !score) return;
-    const r = F.dbM.ref(F.db, `leaderboard/${mode}/${this.user.uid}`);
+    if (this.deleting) return;
+    const me = this.user;
+    if (!me || !score) return;
+    const r = F.dbM.ref(F.db, `leaderboard/${mode}/${me.uid}`);
     const snap = await withTimeout(F.dbM.get(r));
+    if (this.deleting || !this.user || this.user.uid !== me.uid) return; // the account changed while we were reading
     if (!snap.exists() || (snap.val().score || 0) < score) {
-      const entry = { name: this.user.name, score };
+      const entry = { name: me.name, score };
       const extras = {};
       if (this.pic) extras.pic = this.pic;
       if (this.lvl > 1) extras.lvl = this.lvl;
@@ -471,6 +632,10 @@ export function friendlyError(e) {
     'name-length': 'Player name must be 3 to 16 characters.',
     'name-chars': 'Use letters, numbers, spaces, #, . _ or - only.',
     'not-guest': 'Only guest usernames can be changed here.',
+    'guest-cleanup-failed': "We couldn't prepare this guest for sign-in, so you were not signed in and nothing was changed. Please try again.",
+    'signin-failed-guest-partial': "We couldn't sign you in, and some of this guest's friends and requests couldn't be put back. Your progress is safe.",
+    'delete-data-failed': "We couldn't remove your online data, so nothing was deleted. Please try again.",
+    'delete-account-failed': "Your online data was removed, but we couldn't finish deleting your login. Please try again.",
   };
   if (map[c]) return map[c];
   if (/PERMISSION_DENIED/i.test(String(e && e.message))) return 'The online service is not ready for this yet.';

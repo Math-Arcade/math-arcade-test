@@ -4,7 +4,7 @@ import { confirmDialog } from '../router.js';
 import { MODES, MODE_SIGN, MODE_NAME } from '../config.js';
 import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
-import { ownStats, THEMES, buildPublic } from '../public.js';
+import { ownStats, THEMES, publishFor } from '../public.js';
 import { levelInfo } from '../engine/level.js';
 import { TITLES, titleByMilestone, cleanTitleLevel, tierForLevel, tierForTitle, titleProgress } from '../titles.js';
 
@@ -137,7 +137,7 @@ export function initProfile() {
     cloud.title = t.name;
     paintTitle(t.name);
     if (cloud.user) cloud.updateLeaderboardTitle(t.name).catch((e) => console.warn('Title leaderboard sync failed', e));
-    if (cloud.user) buildPublic(store, cloud).then((data) => cloud.publishProfile(data)).catch((e) => console.warn('Title profile sync failed', e));
+    if (cloud.user) publishFor(store, cloud).catch((e) => console.warn('Title profile sync failed', e));
     render();
   }
 

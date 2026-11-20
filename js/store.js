@@ -7,7 +7,11 @@ import { levelInfo, MAX_XP } from './engine/level.js';
 import { COINS_PER_XP, LEVEL_UP_COINS, frameById, cleanFrame, balance } from './shop.js';
 
 const SKEY = 'ma2.settings';
-const PKEY = 'ma2.profile';
+const PKEY = 'ma2.profile'; // the device's guest profile; every registered account gets its own: `${PKEY}.${uid}`
+const AKEY = 'ma2.active'; // whose profile is loaded ('guest' or a uid), so a reload picks up where it left off
+const slotKey = (owner) => (owner === 'guest' ? PKEY : `${PKEY}.${owner}`);
+const prefsKey = (owner) => `ma2.prefs.${owner}`; // per-person extras that live in settings: profile picture, offline name
+const cleanOwner = (o) => (typeof o === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(o) ? o : 'guest');
 
 export const DEFAULT_SETTINGS = {
   theme: 'green', sfx: true, sfxVol: 0.8, music: 'none', musicVol: 0.5, haptics: true,
@@ -65,7 +69,57 @@ class Store {
     for (const k of ['grid', 'crt', 'particles', 'reduceMotion']) delete this.settings[k];
     if (!['green', 'blue', 'red', 'yellow', 'purple', 'light', 'dark', 'colorblind'].includes(this.settings.theme)) this.settings.theme = 'green';
     if (!saved) write(SKEY, this.settings);
-    this.profile = mergeProfiles(read(PKEY), null);
+    this._owner = cleanOwner(read(AKEY));
+    this.profile = mergeProfiles(read(slotKey(this._owner)), null);
+  }
+
+  get owner() { return this._owner; }
+
+  _savePrefs() { write(prefsKey(this._owner), { avatar: this.settings.avatar || '', localName: this.settings.localName || '' }); }
+  _loadPrefs(owner) {
+    const p = read(prefsKey(owner)) || {};
+    this.settings.avatar = typeof p.avatar === 'string' ? p.avatar : '';
+    this.settings.localName = typeof p.localName === 'string' ? p.localName : '';
+    write(SKEY, this.settings);
+    this.emit('settings', 'avatar'); this.emit('settings', 'localName');
+  }
+
+  // Load another person's profile. Progress, picture and offline name never cross from one owner to the next.
+  switchOwner(owner, { persist = true } = {}) {
+    owner = cleanOwner(owner);
+    if (owner === this._owner) return false;
+    if (persist) this._savePrefs();
+    this._owner = owner;
+    write(AKEY, owner);
+    this.profile = mergeProfiles(read(slotKey(owner)), null);
+    this._loadPrefs(owner);
+    this.emit('profile');
+    return true;
+  }
+
+  // A guest registered: the device's guest progress (and picture) moves into the new account.
+  adoptGuestInto(uid) {
+    uid = cleanOwner(uid);
+    if (uid === 'guest') return false;
+    if (this._owner !== 'guest') return this.switchOwner(uid);
+    const merged = mergeProfiles(this.profile, read(slotKey(uid)));
+    write(slotKey(uid), merged);
+    write(prefsKey(uid), { avatar: this.settings.avatar || '', localName: '' });
+    write(PKEY, newProfile()); // the guest slot starts fresh
+    write(prefsKey('guest'), { avatar: '', localName: '' });
+    this._owner = uid; write(AKEY, uid);
+    this.profile = merged;
+    this.settings.localName = ''; write(SKEY, this.settings);
+    this.emit('settings', 'localName'); this.emit('profile');
+    return true;
+  }
+
+  // Remove everything stored locally for a deleted account.
+  purgeOwner(uid) {
+    uid = cleanOwner(uid);
+    if (uid === 'guest') return;
+    try { localStorage.removeItem(slotKey(uid)); localStorage.removeItem(prefsKey(uid)); } catch { /* ignore */ }
+    if (this._owner === uid) this.switchOwner('guest', { persist: false });
   }
 
   // Import settings from the v1 game once, so existing players keep their look.
@@ -91,13 +145,14 @@ class Store {
     if (this.settings[key] === val) return;
     this.settings[key] = val;
     write(SKEY, this.settings);
+    if (key === 'avatar' || key === 'localName') this._savePrefs();
     this.emit('settings', key);
   }
 
   update(fn) {
     fn(this.profile);
     this.profile.updated = Date.now();
-    write(PKEY, this.profile);
+    write(slotKey(this._owner), this.profile);
     this.emit('profile');
   }
 
@@ -105,7 +160,7 @@ class Store {
     const merged = mergeProfiles(this.profile, remote);
     const changed = JSON.stringify(merged) !== JSON.stringify(this.profile);
     this.profile = merged;
-    write(PKEY, merged);
+    write(slotKey(this._owner), merged);
     if (changed) this.emit('profile');
     return merged;
   }
@@ -140,7 +195,7 @@ class Store {
 
   resetAll() {
     this.profile = newProfile();
-    write(PKEY, this.profile);
+    write(slotKey(this._owner), this.profile);
     this.emit('profile');
   }
 }

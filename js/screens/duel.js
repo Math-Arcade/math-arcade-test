@@ -1,6 +1,7 @@
 // Local two-player duel: phone flat on a table, players face each other.
 import { app } from '../app.js';
 import { $, $$, h, icon, num, renderProblem, fitProblem, toast } from '../util.js';
+import { revealText } from '../engine/problems.js';
 import { DuelEngine } from '../engine/duel.js';
 import { openSheet, closeSheet } from '../router.js';
 
@@ -139,7 +140,7 @@ export function initDuel() {
         if (k === r.problem.correctIndex) mark(b, 'good', 'check');
         else b.classList.add('dim');
       });
-      renderProblem(pl.problem, r.problem.text.replace('?', num(r.problem.answer)));
+      renderProblem(pl.problem, revealText(r.problem));
       fitProblem(pl.problem);
       pl.card.classList.add(pi === player ? 'ok' : 'bad');
     });

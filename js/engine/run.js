@@ -1,22 +1,41 @@
 // RunEngine: the rules for Blitz, Daily and Zen. No DOM in here, so it is easy to test
 // and easy to reuse when online play arrives.
 
-import { ProblemStream, MAX_LEVEL } from './problems.js';
+import { ProblemStream, MAX_LEVEL, isValidChoice } from './problems.js';
 
 export const RULES = {
-  blitz: { time: 30, maxTime: 40, lives: 3, maxLives: 5, levelEvery: 10, levelBonus: 5, bonus: [2.5, 2.5, 2.5, 2, 2, 2, 1.5, 1.5, 1.5, 1], fastBonus: 0.5 },
-  daily: { questions: 10, qTime: 12, levels: [2, 2, 3, 3, 4, 5, 5, 6, 7, 7] },
-  zen: { levelEvery: 8, maxLevel: 8 },
+  blitz: {
+    time: 30, maxTime: 40, lives: 3, maxLives: 5, levelBonus: 5,
+    // Correct answers needed to climb FROM level n TO n+1 (index 0 = level 1). The curve is the heart of the
+    // difficulty: quick early levels (new things arrive fast), long middle levels (room to enjoy each new
+    // format before the maths gets hard), and a slow climb through the 10+ combination levels.
+    levelSteps: [4, 5, 6, 10, 12, 14, 15, 16, 17, 18, 19],
+    bonus: [2.5, 2.5, 2.5, 2.5, 2, 2, 2, 2, 1.5, 1.5, 1.5, 1.5], // seconds earned per correct answer, by level
+    formatBonus: { equations: 1.5, sequence: 1, compare: 0.5 },   // reading four equations takes longer than one sum
+    fastBonus: 0.5,
+  },
+  daily: { questions: 10, qTime: 15, levels: [2, 3, 3, 4, 4, 5, 5, 6, 6, 7] },
+  zen: { startLevel: 2, maxLevel: 9 },
   fastMs: 2000,
   comboEvery: 5,
   maxMultiplier: 5,
 };
 
+// LEVEL_AT[n] = total correct answers needed to reach level n.
+export const LEVEL_AT = [0, 0];
+for (let l = 2; l <= MAX_LEVEL; l++) LEVEL_AT[l] = LEVEL_AT[l - 1] + RULES.blitz.levelSteps[l - 2];
+export function levelForCorrect(correct, max = MAX_LEVEL) {
+  let l = 1;
+  while (l < max && LEVEL_AT[l + 1] <= correct) l++;
+  return l;
+}
+
 export class RunEngine {
   constructor({ kind = 'blitz', mode = 'mix', seed } = {}) {
     this.kind = kind;
     this.mode = mode;
-    this.stream = new ProblemStream({ seed, mode });
+    // every newly reached level opens with the type it unlocks (the Daily too, so it always shows real variety)
+    this.stream = new ProblemStream({ seed, mode, intro: true });
     this.reset();
   }
 
@@ -36,15 +55,15 @@ export class RunEngine {
   get multiplier() { return Math.min(RULES.maxMultiplier, 1 + Math.floor(this.streak / RULES.comboEvery)); }
 
   levelFor() {
-    if (this.kind === 'blitz') return Math.min(MAX_LEVEL, 1 + Math.floor(this.correct / RULES.blitz.levelEvery));
+    if (this.kind === 'blitz') return levelForCorrect(this.correct);
     if (this.kind === 'daily') return RULES.daily.levels[Math.min(this.answered, RULES.daily.levels.length - 1)];
-    return Math.min(RULES.zen.maxLevel, 2 + Math.floor(this.correct / RULES.zen.levelEvery));
+    return levelForCorrect(this.correct + LEVEL_AT[RULES.zen.startLevel], RULES.zen.maxLevel);
   }
 
   // progress toward the next level, 0..1 (blitz only)
   get levelProgress() {
     if (this.kind !== 'blitz' || this.level >= MAX_LEVEL) return 1;
-    return (this.correct % RULES.blitz.levelEvery) / RULES.blitz.levelEvery;
+    return (this.correct - LEVEL_AT[this.level]) / (LEVEL_AT[this.level + 1] - LEVEL_AT[this.level]);
   }
 
   next(now = performance.now()) {
@@ -68,7 +87,7 @@ export class RunEngine {
   answer(index, now = performance.now()) {
     const p = this.problem;
     const ms = Math.max(0, now - this.qStart);
-    const correct = index === p.correctIndex;
+    const correct = isValidChoice(p, index) && index === p.correctIndex; // works for 3- and 4-choice formats
     this.answered++;
     this.totalMs += ms;
     const res = {
@@ -86,7 +105,7 @@ export class RunEngine {
       this.score += res.points;
 
       if (this.kind === 'blitz') {
-        res.timeBonus = RULES.blitz.bonus[this.level - 1] + (res.fast ? RULES.blitz.fastBonus : 0);
+        res.timeBonus = RULES.blitz.bonus[this.level - 1] + (RULES.blitz.formatBonus[p.format] || 0) + (res.fast ? RULES.blitz.fastBonus : 0);
         if (this.levelFor() > this.level) {
           res.leveledUp = true;
           res.timeBonus += RULES.blitz.levelBonus;

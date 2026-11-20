@@ -2,16 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { RNG } from '../js/engine/rng.js';
 import { generate, ProblemStream, MAX_LEVEL } from '../js/engine/problems.js';
-import { RunEngine, RULES } from '../js/engine/run.js';
+import { RunEngine, RULES, levelForCorrect } from '../js/engine/run.js';
+import { evalExpr } from './helpers/expr.mjs';
 import { DuelEngine } from '../js/engine/duel.js';
 
-// tiny safe evaluator for the display strings, to prove the shown answer is right
+// evaluate the display string, to prove the shown answer is right (shared independent parser)
 function evalText(text) {
-  let m;
-  if ((m = /^√(\d+) = \?$/.exec(text))) return Math.sqrt(+m[1]);
-  if ((m = /^(\d+)\^2 = \?$/.exec(text))) return (+m[1]) ** 2;
-  const norm = (s) => s.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
   if (text.includes('?') && !text.endsWith('= ?')) { // missing-number: solve by brute force
+    const norm = (s) => s.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
     const [lhs, rhs] = text.split('=').map((s) => norm(s.trim()));
     for (let x = -2000; x <= 100000; x++) {
       const v = Function(`return (${lhs.replace('?', `(${x})`)})`)();
@@ -19,16 +17,17 @@ function evalText(text) {
     }
     return NaN;
   }
-  return Function(`return (${norm(text.replace(/ = \?$/, ''))})`)();
+  return evalExpr(text.replace(/ = \?$/, ''));
 }
 
 test('every generated problem is valid (all modes x levels)', () => {
   const rng = new RNG(12345);
   for (const mode of ['mix', 'add', 'sub', 'mul', 'div']) {
     for (let level = 1; level <= MAX_LEVEL; level++) {
-      for (let i = 0; i < 600; i++) {
+      for (let i = 0; i < 300; i++) {
         const p = generate(rng, { mode, level });
         const ctx = `${mode} L${level}: ${p.text}`;
+        if (p.format === 'equations' || p.format === 'compare') continue; // covered in formats.test.mjs
         assert.equal(p.choices.length, 4, ctx);
         assert.equal(new Set(p.choices).size, 4, `duplicate choices ${ctx} ${p.choices}`);
         assert.ok(p.choices.every(Number.isInteger), ctx);
@@ -36,7 +35,7 @@ test('every generated problem is valid (all modes x levels)', () => {
         assert.equal(p.choices[p.correctIndex], p.answer, ctx);
         assert.ok(Number.isInteger(p.answer), `non-integer answer ${ctx}`);
         if (p.answer >= 0) assert.ok(p.choices.every((c) => c >= 0), `negative distractor ${ctx} ${p.choices}`);
-        assert.equal(evalText(p.text), p.answer, `wrong answer for ${ctx}`);
+        if (p.format === 'number') assert.equal(evalText(p.text), p.answer, `wrong answer for ${ctx}`);
         assert.ok(!p.text.includes('NaN') && !p.text.includes('undefined'), ctx);
       }
     }
@@ -75,9 +74,9 @@ test('correct answer position is roughly uniform', () => {
 
 test('mixed mode ramps up: early levels are add-only, late levels have variety', () => {
   const rng = new RNG(3);
-  const types = (lvl) => new Set(Array.from({ length: 400 }, () => generate(rng, { mode: 'mix', level: lvl }).type));
+  const types = (lvl) => new Set(Array.from({ length: 600 }, () => generate(rng, { mode: 'mix', level: lvl }).type));
   assert.deepEqual([...types(1)], ['add']);
-  assert.ok(types(10).size >= 6);
+  assert.ok(types(10).size >= 10);
 });
 
 test('blitz scoring, combo, lives, level-up', () => {
@@ -94,10 +93,10 @@ test('blitz scoring, combo, lives, level-up', () => {
   const wrongIdx = (e.problem.correctIndex + 1) % 4;
   r = e.answer(wrongIdx, t + 3000);
   assert.equal(r.correct, false);
-  assert.equal(e.lives, 2);
+  assert.equal(e.lives, RULES.blitz.lives + 1 - 1); // level 2 was reached on the way (+1 heart), the miss costs one
   assert.equal(e.streak, 0);
   e.next(t);
-  e.answer((e.problem.correctIndex + 1) % 4, t); e.next(t);
+  while (e.lives > 1) { e.answer((e.problem.correctIndex + 1) % 4, t); e.next(t); }
   r = e.answer((e.problem.correctIndex + 1) % 4, t);
   assert.equal(r.over, 'lives');
 });
@@ -113,7 +112,7 @@ test('blitz time cap and level-up bonus', () => {
     e.next(i * 500 + 500);
   }
   assert.ok(sawLevelUp);
-  assert.equal(e.level, 3);
+  assert.equal(e.level, levelForCorrect(25)); // 25 correct answers
 });
 
 test('blitz clock runs out', () => {

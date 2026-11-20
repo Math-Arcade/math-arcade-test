@@ -167,7 +167,7 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 [data-kind="daily"] .hearts, [data-kind="daily"] .levelrow { display: none; }
 [data-kind="zen"] .hud, [data-kind="daily"] .hud { grid-template-columns: 1fr auto 1fr; }
 
-.stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; position: relative; }
+.stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1rem; position: relative; padding-top: .6rem; }
 .pcard { position: relative; width: 100%; min-height: clamp(11.5rem, 30dvh, 17rem); display: grid; place-items: center; padding: 1.2rem .8rem; overflow: hidden;
   background: var(--bg-2); border: 3px solid var(--primary); border-radius: 16px; box-shadow: 0 6px 0 var(--shade), 0 0 30px var(--glow);
   transition: border-color .12s, box-shadow .12s; }
@@ -401,6 +401,27 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 @keyframes flash { 0% { opacity: 0; } 25% { opacity: .75; } 100% { opacity: 0; } }
 @keyframes cd-pop { 0% { transform: scale(1.8); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(.92); opacity: .9; } }
 @keyframes banner { 0% { transform: translateY(12px) scale(.9); opacity: 0; } 15%, 80% { transform: none; opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
+
+/* ===== question formats: the card and the answer buttons follow the question ===== */
+.answer[hidden] { display: none; }
+/* comparison: three buttons ( > = < ) */
+.answers[data-fmt="compare"] { grid-template-columns: repeat(3, 1fr); }
+.answers[data-fmt="compare"] .answer { font-size: 3.4rem; }
+.cmp-q { display: inline-block; min-width: .85em; margin: 0 .3em; text-align: center; color: var(--warn); }
+.pcard.ok .cmp-q, .pcard.ok .seq-q { color: inherit; }
+/* find the incorrect equation: four equations, stacked so each one stays readable */
+.problem[data-fmt="equations"] { white-space: normal; text-align: center; max-width: 100%; line-height: 1.2; letter-spacing: .08em;
+  font-size: calc(1.7rem * var(--fit, 1)); text-wrap: balance; }
+.answers[data-fmt="equations"] { grid-template-columns: 1fr; gap: .65rem; }
+.answers[data-fmt="equations"] .answer { height: clamp(3.4rem, 8.4dvh, 4.5rem); font-size: calc(1.9rem * var(--bfit, 1)); }
+.eqt { display: inline-block; white-space: nowrap; }
+.eqt sup { font-size: .55em; vertical-align: .62em; line-height: 0; margin-left: .04em; }
+.eqt .rad-sign { color: currentColor; }
+/* number sequence: one row when it fits, otherwise two balanced rows; the hidden term is highlighted */
+.problem[data-fmt="sequence"] { display: inline-flex; flex-direction: column; align-items: center; gap: .12em; font-size: calc(3rem * var(--fit, 1)); }
+.seq-row { display: flex; gap: .55em; justify-content: center; }
+.seq-i { min-width: 1.1em; text-align: center; }
+.seq-q { color: var(--warn); border-bottom: .07em solid currentColor; }
 
 /* ===== accessibility & preferences ===== */
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
