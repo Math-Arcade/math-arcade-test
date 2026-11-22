@@ -185,9 +185,9 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .verdict .ico { width: 100%; height: 100%; }
 .pcard.ok .verdict { color: var(--good); }
 .pcard.bad .verdict { color: var(--bad); }
-.cat { position: relative; width: 9.5rem; cursor: pointer; }
+.cat { position: relative; width: 4.6rem; color: var(--primary); cursor: pointer; flex: none; }
 .cat-svg { display: block; width: 100%; height: auto; overflow: visible; }
-.cat-b { fill: #F2A65A; } .cat-d { fill: #B5652A; } .cat-w { fill: #FFE3BD; } .cat-o { fill: #2A1810; }
+.cat-px { fill: currentColor; }
 .cat-body { transform-box: fill-box; transform-origin: 50% 100%; animation: breathe 2.8s ease-in-out infinite; }
 .cat-tail { transform-box: fill-box; transform-origin: 50% 100%; animation: tail 2.4s steps(2) infinite; }
 .cat[data-state="happy"] .cat-tail { animation-duration: .45s; }
