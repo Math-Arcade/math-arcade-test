@@ -259,7 +259,22 @@
         <div class="xp-track big"><i id="pfl-fill"></i></div>
         <div class="pfl-foot"><small class="muted" id="pfl-note"></small><span class="pfl-link" aria-hidden="true">TITLES<svg class="ico"><use href="#i-chevron"></use></svg></span></div>
       </div>
+      <div class="panel pf-ach" id="pf-ach" role="button" tabindex="0" aria-label="Open achievements">
+        <div class="pfl-top"><b id="pfa-count">ACHIEVEMENTS</b><small class="muted" id="pfa-note"></small></div>
+        <div class="ach-show" id="pfa-show"></div>
+        <div class="pfl-foot"><small class="muted">Pin up to 3 on your profile</small><span class="pfl-link" aria-hidden="true">VIEW<svg class="ico"><use href="#i-chevron"></use></svg></span></div>
+      </div>
       <div id="st-body"></div>
+    </div>
+    <div class="sheet titles-sheet" id="pf-achs" hidden role="dialog" aria-modal="true" aria-labelledby="pf-achs-heading">
+      <div class="sheet-card pf-title-card">
+        <header class="tt-head">
+          <h2 id="pf-achs-heading">ACHIEVEMENTS</h2>
+          <button class="icon-btn tt-close" id="pf-achs-close" type="button" aria-label="Close achievements"><svg class="ico"><use href="#i-cross"></use></svg></button>
+        </header>
+        <section class="tt-hero" id="ach-hero" aria-live="polite"></section>
+        <div class="pf-title-scroll" id="ach-scroll"></div>
+      </div>
     </div>
     <div class="sheet titles-sheet" id="pf-titles" hidden role="dialog" aria-modal="true" aria-labelledby="pf-titles-heading">
       <div class="sheet-card pf-title-card">
@@ -287,15 +302,15 @@
     <div class="scroll" id="fr-body"></div>
   </section>
 
-  <!-- STORE (empty for now) -->
+  <!-- STORE: avatar frames and profile cards -->
   <section class="screen store" data-screen="store" hidden>
     <header class="bar">
       <button class="icon-btn" data-back type="button" aria-label="Back"><svg class="ico"><use href="#i-back"></use></svg></button>
       <h2>STORE</h2><span class="coins" id="st-coins" aria-label="Coins"><svg class="ico"><use href="#i-coin"></use></svg><b>0</b></span>
     </header>
     <div class="scroll">
-      <p class="st-intro">Earn coins from every Blitz run and Daily Challenge. Frames show on your profile, in Ranks and in Friends.</p>
-      <div class="st-grid" id="store-body"></div>
+      <p class="st-intro">Earn coins from every Blitz run and Daily Challenge, then spend them on frames and cards. They show on your profile, in Ranks and in Friends.</p>
+      <div id="store-body"></div>
     </div>
   </section>
 

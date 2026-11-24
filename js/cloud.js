@@ -4,8 +4,9 @@
 import { FIREBASE_CONFIG, FIREBASE_SDK, MODES } from './config.js';
 import { safePic } from './avatar.js';
 import { cleanPublic } from './public.js';
-import { cleanFrame } from './shop.js';
+import { cleanFrame, cleanCard } from './shop.js';
 import { planWipe, planRename } from './cloudplan.js';
+import { PLATINUM, topCount, isTopPercent } from './achievements.js';
 
 let F = null;
 let initPromise = null;
@@ -40,6 +41,7 @@ export const cloud = {
   lvl: 1, // account level shown on the leaderboard
   title: 'Rookie', // equipped profile title
   frame: null, // equipped avatar frame
+  card: null, // equipped profile card (the look of your row in Ranks and Friends)
 
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   _emit() { listeners.forEach((fn) => fn(this.user)); },
@@ -454,7 +456,7 @@ export const cloud = {
         const snap = await withTimeout(dbM.get(dbM.ref(db, `leaderboard/${mode}/${uid}`)));
         if (!snap.exists()) return null;
         const v = snap.val();
-        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40), frame: cleanFrame(v.frame) };
+        return { uid, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40), frame: cleanFrame(v.frame), card: cleanCard(v.card) };
       } catch { return null; }
     }))).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
     return { rows, friendCount: friends.length };
@@ -491,10 +493,16 @@ export const cloud = {
     if (!this.user || this.user.uid !== uid) return false;
     const r = F.dbM.ref(F.db, `publicProfiles/${uid}`);
     try { await withTimeout(F.dbM.set(r, data)); }
-    catch (e) { // rules without the newer "xp" field must not stop the rest of the profile from publishing
-      const { xp, titleLevel, frame, ...rest } = data; // newer optional fields
-      if (xp === undefined && titleLevel === undefined && frame === undefined) throw e;
-      await withTimeout(F.dbM.set(r, rest));
+    catch (e) { // rules without the newer fields must not stop the rest of the profile from publishing
+      const { ach, showcase, achTitle, ...base } = data; // achievements are the newest optional fields
+      try {
+        if (ach === undefined && showcase === undefined && achTitle === undefined) throw e;
+        await withTimeout(F.dbM.set(r, base));
+      } catch (e2) {
+        const { xp, titleLevel, frame, card, ...rest } = base; // older optional fields
+        if (xp === undefined && titleLevel === undefined && frame === undefined && card === undefined) throw e2;
+        await withTimeout(F.dbM.set(r, rest));
+      }
     }
     return true;
   },
@@ -554,6 +562,18 @@ export const cloud = {
     if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
   },
 
+  async updateLeaderboardCard(card) {
+    if (this.deleting) return;
+    if (!this.user) return;
+    await this.need();
+    const uid = this.user.uid, updates = {};
+    await Promise.all(MODES.map(async (mode) => {
+      const snap = await withTimeout(F.dbM.get(F.dbM.ref(F.db, `leaderboard/${mode}/${uid}`)));
+      if (snap.exists()) updates[`leaderboard/${mode}/${uid}/card`] = card || null;
+    }));
+    if (Object.keys(updates).length) await withTimeout(F.dbM.update(F.dbM.ref(F.db), updates));
+  },
+
   async updateLeaderboardTitle(title) {
     if (this.deleting) return;
     if (!this.user) return;
@@ -592,6 +612,7 @@ export const cloud = {
       if (this.lvl > 1) extras.lvl = this.lvl;
       if (this.title && this.title !== 'Rookie') extras.title = this.title;
       if (this.frame) extras.frame = this.frame;
+      if (this.card) extras.card = this.card;
       try {
         await withTimeout(F.dbM.set(r, { ...entry, ...extras }));
       } catch (e) {
@@ -602,12 +623,33 @@ export const cloud = {
     }
   },
 
+  // How many players have a score in this mode. A shallow read returns only the keys, never the entries.
+  async leaderboardCount(mode) {
+    const url = `${FIREBASE_CONFIG.databaseURL}leaderboard/${mode}.json?shallow=true`;
+    const res = await withTimeout(fetch(url));
+    if (!res.ok) throw fail('count-failed');
+    const keys = await res.json();
+    return keys && typeof keys === 'object' ? Object.keys(keys).length : 0;
+  },
+
+  // Platinum check: is `myScore` inside the top percent of this mode? Reads the player count, then only the top 1% of the board.
+  async topPercentCheck(mode, myScore) {
+    await this.need();
+    const total = await this.leaderboardCount(mode);
+    if (total < PLATINUM.minPlayers) return { total, qualifies: false };
+    const q = F.dbM.query(F.dbM.ref(F.db, `leaderboard/${mode}`), F.dbM.orderByChild('score'), F.dbM.limitToLast(topCount(total)));
+    const snap = await withTimeout(F.dbM.get(q));
+    const scores = [];
+    snap.forEach((c) => { scores.push(Number(c.val() && c.val().score) || 0); });
+    return { total, qualifies: isTopPercent({ total, scores, myScore }) };
+  },
+
   async leaderboard(mode, n = 50) {
     await this.need();
     const q = F.dbM.query(F.dbM.ref(F.db, `leaderboard/${mode}`), F.dbM.orderByChild('score'), F.dbM.limitToLast(n));
     const snap = await withTimeout(F.dbM.get(q));
     const rows = [];
-    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40), frame: cleanFrame(v.frame) }); });
+    snap.forEach((c) => { const v = c.val(); rows.push({ uid: c.key, name: String(v.name || '?'), score: Number(v.score) || 0, pic: safePic(v.pic), lvl: cleanLvl(v.lvl), title: String(v.title || 'Rookie').slice(0, 40), frame: cleanFrame(v.frame), card: cleanCard(v.card) }); });
     return rows.sort((a, b) => b.score - a.score);
   },
 };

@@ -46,6 +46,20 @@ Every problem carries `format` (`number`, `sequence`, `equations`, `compare`) pl
 
 Sequences (`js/engine/sequences.js`) are generated from a named rule and then proven unambiguous: every other value for the hidden term is tried, and none may complete the sequence into any known pattern (arithmetic, geometric, quadratic, cubic, alternating steps, Fibonacci-style, affine, interleaved).
 
+## Store: frames and profile cards
+Coins (earned with XP) buy cosmetics. The Store is one scrolling page with a titled section per kind of item (add a section in `SECTIONS` in `js/screens/store.js` to add a new kind):
+- **Frames** decorate your avatar (Neon Edge, Frostbite, Gold Rush, Aurora, Prismatic).
+- **Profile cards** restyle your whole row in Ranks and in Friends: Neon Grid, Snowdrift, Gold Ledger, Northern Lights, Crystal Prism. Each one reuses the look of a frame (neon glow, snowflakes, coins, aurora sparkles and curtain, the prism gem), and a frame and a card can be worn together.
+
+Cards travel the same way frames do: `profile.card` in the store, `card` on your leaderboard entries and public profile, validated in `database.rules.json` and cleaned with `cleanCard` when read back. Styles are in `css/app.css` (`[data-card="..."]`); the catalog is `CARDS` in `js/shop.js`. **Deploy the updated `database.rules.json` before the new version**; until then the app still works (a rejected `card` field falls back to saving without it), but other players cannot see your card. Both frame and card animations stop when the device asks for reduced motion.
+
+## Achievements
+Rules live in `js/achievements.js` (catalog, thresholds, `evaluate`), the UI in `js/screens/achievements.js` (a panel on the Profile with three pinned medals, and a sheet listing everything).
+- **Blitz**: The Adder / Subtractor / Multiplier / Divider / Polymath, one per mode. Bronze 100, Silver 500, Gold 1000 cumulative correct answers in that mode (`BLITZ_TIERS`; counted per mode in `profile.modeCorrect`, Blitz runs only). Platinum needs Gold plus the top 1% of that mode's leaderboard once at least 100 players are on it (`PLATINUM`), checked online by `js/achievementsync.js`.
+- **The Streaker** (Daily Challenge 30 days in a row), **The Collector** (every Store item), **The Absolute** (every other live achievement and level 100). The four Elo ones are in the catalog with `live: false`; set `live: true` when online 1v1 exists and The Absolute will require them too.
+- Every achievement name is a title: Blitz ones unlock it at Platinum, the others when earned. Earned tiers never go away and sync with max-merge (`profile.ach`). The title worn and the pinned medals are choices, so the newest copy wins.
+- Public data: `ach`, `showcase` and `achTitle` on `publicProfiles/<uid>`. **Deploy the updated `database.rules.json`**; until then the app still works (the profile publishes without those fields) but other players will not see your medals.
+
 ## Tuning the game
 Everything balance-related is in `js/engine/run.js` (`RULES`: start time, lives, `levelSteps` = correct answers per level, time bonus per level and per format, Daily levels, Zen range) and the tables at the top of `js/engine/problems.js` (`TYPES` unlock levels and weights, number ranges). Difficulty rises through new concepts and multi-step questions, not bigger numbers (no operand above ~260).
 

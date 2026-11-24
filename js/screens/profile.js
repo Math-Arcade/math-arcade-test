@@ -6,7 +6,9 @@ import { validateName, friendlyError } from '../cloud.js';
 import { fileToAvatar } from '../avatar.js';
 import { ownStats, THEMES, publishFor } from '../public.js';
 import { levelInfo } from '../engine/level.js';
-import { TITLES, titleByMilestone, cleanTitleLevel, tierForLevel, tierForTitle, titleProgress } from '../titles.js';
+import { TITLES, titleByMilestone, cleanTitleLevel, tierForLevel, tierForTitle, titleProgress, equippedTitleName } from '../titles.js';
+import { achByTitle } from '../achievements.js';
+import { initAchievements } from './achievements.js';
 
 // Name shown for the player: online name if signed in, else the local name, else "Guest".
 export const displayName = (cloud, store) => (cloud.user && cloud.user.name) || store.settings.localName || 'Guest';
@@ -64,6 +66,8 @@ export function initProfile() {
   const lvPanel = $('#pf-level'), lvBadge = $('#pf-lvbadge');
   const titleEl = $('#pf-title'), titleSheet = $('#pf-titles'), titleScroll = $('#pf-title-scroll');
   const equippedTitle = () => titleByMilestone(cleanTitleLevel(store.profile.titleLevel, store.level.level));
+  const wornTitle = () => equippedTitleName(store.profile, store.level.level); // an achievement title if one is worn, else the level title
+  const achievements = initAchievements();
   function paintTitle(name) { titleEl.textContent = name || 'Rookie'; titleEl.dataset.tier = tierForTitle(name || 'Rookie').id; titleEl.hidden = false; }
   function paintLevel(info) {
     $('#pfl-lv').textContent = info.maxed ? 'MAX LEVEL' : `LEVEL ${info.level}`;
@@ -122,7 +126,7 @@ export function initProfile() {
     remove.hidden = !av;
 
     paintLevel(store.level);
-    paintTitle(equippedTitle().name);
+    paintTitle(wornTitle());
     body.textContent = '';
     renderStats(body, ownStats(store));
 
@@ -133,7 +137,7 @@ export function initProfile() {
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
   function equipTitle(t) {
-    store.update((p) => { p.titleLevel = t.level; });
+    store.update((p) => { p.titleLevel = t.level; p.achTitle = null; });
     cloud.title = t.name;
     paintTitle(t.name);
     if (cloud.user) cloud.updateLeaderboardTitle(t.name).catch((e) => console.warn('Title leaderboard sync failed', e));
@@ -142,19 +146,19 @@ export function initProfile() {
   }
 
   function paintTitles() {
-    const info = store.level, level = info.level, selected = equippedTitle();
+    const info = store.level, level = info.level, selected = equippedTitle(), wornAch = achByTitle(wornTitle()); // wornAch: an achievement title is on, so no level title is marked
     const prog = titleProgress(level, info.pct);
     const keep = titleScroll.scrollTop;
 
     // hero: what you wear now, and what is next
-    const tier = tierForLevel(selected.level);
+    const tier = wornAch ? tierForTitle(wornAch.name) : tierForLevel(selected.level);
     heroEl.dataset.tier = tier.id;
     heroEl.textContent = '';
     const chips = h('div', 'tt-chips');
-    chips.append(h('span', 'tt-chip', `LEVEL ${level}`), h('span', 'tt-chip tier', tier.name));
+    chips.append(h('span', 'tt-chip', `LEVEL ${level}`), h('span', 'tt-chip tier', wornAch ? 'ACHIEVEMENT' : tier.name));
     const eyebrow = h('div', 'tt-hero-top');
     eyebrow.append(h('span', 'tt-eyebrow', 'EQUIPPED TITLE'), h('span', 'tt-eyebrow tt-count', `${prog.unlockedCount} / ${prog.total}`));
-    heroEl.append(eyebrow, h('b', 'tt-hero-name', selected.name), chips);
+    heroEl.append(eyebrow, h('b', 'tt-hero-name', wornAch ? wornAch.name : selected.name), chips);
     const nx = h('div', 'tt-next');
     if (prog.next) {
       nx.dataset.tier = tierForLevel(prog.next.level).id;
@@ -169,7 +173,7 @@ export function initProfile() {
     // the ladder
     titleScroll.textContent = '';
     TITLES.forEach((t, i) => {
-      const unlocked = t.level <= level, equipped = t.level === selected.level, isNext = !!prog.next && prog.next.level === t.level;
+      const unlocked = t.level <= level, equipped = !wornAch && t.level === selected.level, isNext = !!prog.next && prog.next.level === t.level;
       const tr = tierForLevel(t.level);
       const row = h('button', `tt-row${unlocked ? ' unlocked' : ' locked'}${equipped ? ' equipped' : ''}${isNext ? ' next' : ''}${t.level === 100 ? ' final' : ''}`);
       row.type = 'button'; row.dataset.tier = tr.id;
@@ -241,7 +245,7 @@ export function initProfile() {
 
   function reset() {
     token++; other = null;
-    fbox.hidden = true; lvPanel.hidden = false; lvBadge.hidden = false; titleSheet.hidden = true;
+    fbox.hidden = true; lvPanel.hidden = false; lvBadge.hidden = false; titleSheet.hidden = true; achievements.showOwn();
     lvPanel.setAttribute('role', 'button'); lvPanel.tabIndex = 0;
     screen.classList.remove('is-other');
     screen.removeAttribute('data-other'); screen.removeAttribute('data-theme');
@@ -300,6 +304,7 @@ export function initProfile() {
     lvPanel.removeAttribute('role'); lvPanel.tabIndex = -1;
     $('#pf-avatar').dataset.frame = params.frame || '';
     lvPanel.hidden = true; lvBadge.hidden = !params.lvl; if (params.lvl) lvBadge.textContent = String(params.lvl);
+    achievements.hideOther();
     body.textContent = ''; body.append(h('div', 'lb-msg', 'Loading…'));
     loadRelation(mine);
     try {
@@ -309,7 +314,8 @@ export function initProfile() {
       if (!p) { body.append(h('div', 'lb-msg', "This player hasn't shared a profile yet.")); return; }
       if (THEMES.includes(p.theme)) screen.dataset.theme = p.theme;
       pfName.textContent = p.name;
-      paintTitle(titleByMilestone(cleanTitleLevel(p.titleLevel, p.level)).name);
+      paintTitle(p.title);
+      achievements.showOther(p);
       showAvatar(p.pic || params.pic || '');
       paintLevel(levelInfo(p.xp));
       $('#pf-avatar').dataset.frame = p.frame || '';

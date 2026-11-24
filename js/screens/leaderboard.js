@@ -42,6 +42,7 @@ export function initLeaderboard() {
       row.setAttribute('role', 'listitem');
       const pic = h('span', 'lb-pic');
       const fr = r.uid === myId ? store.profile.frame : r.frame; if (fr) pic.dataset.frame = fr;
+      const cd = r.uid === myId ? store.profile.card : r.card; if (cd) row.dataset.card = cd;
       if (r.pic) { const im = document.createElement('img'); im.src = r.pic; im.alt = ''; pic.append(im); }
       else pic.innerHTML = icon('user'); // default avatar for players without a photo
       const av = h('span', 'lb-av');

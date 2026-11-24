@@ -5,9 +5,12 @@ import { fx } from './fx.js';
 import { Router } from './router.js';
 import { cloud } from './cloud.js';
 import { MODES } from './config.js';
-import { sleep, fillSymbols, utcDay } from './util.js';
+import { sleep, fillSymbols, utcDay, toast } from './util.js';
 import { thumbFrom } from './avatar.js';
 import { publishFor } from './public.js';
+import { createPlatinumWatcher } from './achievementsync.js';
+import { achById } from './achievements.js';
+import { equippedTitleName } from './titles.js';
 import { levelInfo } from './engine/level.js';
 import { initHome } from './screens/home.js';
 import { initModes } from './screens/modes.js';
@@ -58,7 +61,7 @@ async function syncPic() {
 let lvlTimer = 0;
 function syncLevel(now = false) {
   const lvl = levelInfo(store.profile.xp).level;
-  import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
+  cloud.title = equippedTitleName(store.profile, lvl);
   cloud.lvl = lvl; // used for new leaderboard entries straight away
   clearTimeout(lvlTimer);
   // work the level out when the timer fires, for whoever is signed in then (the account may have changed meanwhile)
@@ -75,6 +78,29 @@ function syncFrame(now = false) {
   if (cloud.user) cloud.updateLeaderboardFrame(f).catch((e) => console.warn('Frame sync failed', e));
 }
 
+// Same for the equipped profile card.
+let lastCard = store.profile.card || null;
+function syncCard(now = false) {
+  const c = store.profile.card || null;
+  cloud.card = c;
+  if (!now && c === lastCard) return;
+  lastCard = c;
+  if (cloud.user) cloud.updateLeaderboardCard(c).catch((e) => console.warn('Card sync failed', e));
+}
+
+// Platinum needs the leaderboard, so a watcher checks it online (see js/achievementsync.js).
+const platinum = createPlatinumWatcher({ store, cloud });
+app.platinum = platinum;
+
+// Tell the player when something is unlocked.
+store.on('unlock', (list) => {
+  if (list.length > 1) { toast(`${list.length} achievements unlocked!`, 3800); return; }
+  const u = list[0], a = achById(u.id);
+  if (!a) return;
+  const tier = a.kind === 'blitz' ? ['', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM'][u.tier] : '';
+  toast(`Achievement unlocked: ${a.name}${tier ? ` · ${tier}` : ''}`, 3800);
+});
+
 // Publish the public profile (name, theme, picture, stats) so other players can open it from Ranks.
 let pubTimer = 0;
 function publishSoon(delay = 1500) {
@@ -88,9 +114,9 @@ function publishSoon(delay = 1500) {
 // When a player signs in: merge cloud + local progress, then push the result back.
 function wireCloudSync() {
   store.on('settings', (k) => { if (k === 'avatar') syncPic(); if (k === 'avatar' || k === 'theme') publishSoon(); });
-  store.on('profile', () => { publishSoon(4000); syncLevel(); syncFrame(); import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; if (cloud.user) cloud.updateLeaderboardTitle(cloud.title).catch((e) => console.warn('Title sync failed', e)); }); });
-  cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null;
-  import('./titles.js').then(({ titleByMilestone }) => { cloud.title = titleByMilestone(store.profile.titleLevel || 1).name; });
+  store.on('profile', () => { publishSoon(4000); syncLevel(); syncFrame(); syncCard(); cloud.title = equippedTitleName(store.profile, store.level.level); if (cloud.user) cloud.updateLeaderboardTitle(cloud.title).catch((e) => console.warn('Title sync failed', e)); platinum.schedule(); });
+  cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null; cloud.card = store.profile.card || null;
+  cloud.title = equippedTitleName(store.profile, store.level.level);
   if (new URLSearchParams(location.search).has('debug')) { window.__store = store; window.__cloud = cloud; }
   cloud.onAccountDeleted((uid) => store.purgeOwner(uid)); // a deleted account's progress must never come back
   let syncGen = 0;
@@ -103,7 +129,7 @@ function wireCloudSync() {
       else store.switchOwner(owner);
     }
     if (cloud.upgradedUid === user.uid) cloud.upgradedUid = null;
-    cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null;
+    cloud.lvl = levelInfo(store.profile.xp).level; cloud.frame = store.profile.frame || null; cloud.card = store.profile.card || null;
     const uid = user.uid, gen = ++syncGen;
     const stale = () => gen !== syncGen || !cloud.user || cloud.user.uid !== uid; // the account changed while we were waiting
     await syncPic();
@@ -114,12 +140,12 @@ function wireCloudSync() {
       const merged = store.mergeRemote(remote);
       await cloud.pushProfile(merged);
       if (stale()) return;
-      const { titleByMilestone } = await import('./titles.js');
-      cloud.title = titleByMilestone(merged.titleLevel || 1).name;
+      cloud.title = equippedTitleName(merged, levelInfo(merged.xp).level);
       for (const m of MODES) { if (stale()) return; if (merged.best[m] > 0) await cloud.submitScore(m, merged.best[m]); }
     } catch (e) { console.warn('Cloud sync failed', e); }
     if (stale()) return;
-    publishSoon(300); syncLevel(true); syncFrame(true);
+    publishSoon(300); syncLevel(true); syncFrame(true); syncCard(true);
+    platinum.check();
     const today = store.today; // a Daily played before signing in (or offline) still reaches friends
     if (today) cloud.publishDaily(utcDay(), today).catch((e) => console.warn('Daily sync failed', e));
   });
@@ -161,6 +187,7 @@ async function boot() {
   else if (mode === 'blitz') router.go('game', { kind: 'blitz', mode: store.settings.op });
 
   wireCloudSync();
+  store.checkAchievements(); // anything already earned (for example a full shop) unlocks now
   cloud.init();
   registerServiceWorker();
 }

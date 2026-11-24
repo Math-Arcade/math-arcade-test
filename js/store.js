@@ -4,7 +4,8 @@
 
 import { utcDay } from './util.js';
 import { levelInfo, MAX_XP } from './engine/level.js';
-import { COINS_PER_XP, LEVEL_UP_COINS, frameById, cleanFrame, balance } from './shop.js';
+import { COINS_PER_XP, LEVEL_UP_COINS, frameById, cardById, itemById, cleanFrame, cleanCard, balance } from './shop.js';
+import { evaluate, cleanAch, cleanAchTitle, cleanShowcase, blitzAch, tierOf, SHOWCASE_MAX, achById, hasTitle } from './achievements.js';
 
 const SKEY = 'ma2.settings';
 const PKEY = 'ma2.profile'; // the device's guest profile; every registered account gets its own: `${PKEY}.${uid}`
@@ -28,7 +29,9 @@ export const newProfile = () => ({
   xp: 0, // account experience; the level is worked out from it (js/engine/level.js)
   titleLevel: null, // equipped title milestone; null defaults to Rookie
   coinsEarned: 0, coinsSpent: 0, // balance = earned - spent (both only ever grow, so syncing can't lose coins)
-  owned: [], frame: null, // store: frames you bought, and the one you wear
+  owned: [], frame: null, card: null, // store: frames and cards you bought, and the ones you wear
+  modeCorrect: { mix: 0, add: 0, sub: 0, mul: 0, div: 0 }, // correct answers per Blitz mode (counts towards achievements)
+  ach: {}, achTitle: null, showcase: [], // achievements earned (id -> tier), the achievement title worn, up to 3 shown on the profile
   updated: 0,
 });
 
@@ -46,9 +49,20 @@ export function mergeProfiles(a, b) {
   out.titleLevel = a?.titleLevel ?? b?.titleLevel ?? null;
   out.coinsEarned = Math.max(a?.coinsEarned || 0, b?.coinsEarned || 0);
   out.coinsSpent = Math.max(a?.coinsSpent || 0, b?.coinsSpent || 0);
-  out.owned = [...new Set([...(a?.owned || []), ...(b?.owned || [])].filter((id) => frameById(id)))];
+  out.owned = [...new Set([...(a?.owned || []), ...(b?.owned || [])].filter((id) => itemById(id)))];
   out.frame = cleanFrame(a?.frame ?? b?.frame ?? null);
   if (out.frame && !out.owned.includes(out.frame)) out.owned.push(out.frame);
+  out.card = cleanCard(a?.card ?? b?.card ?? null);
+  if (out.card && !out.owned.includes(out.card)) out.owned.push(out.card);
+  for (const k of Object.keys(out.modeCorrect)) out.modeCorrect[k] = Math.max(a?.modeCorrect?.[k] || 0, b?.modeCorrect?.[k] || 0);
+  // earned tiers only ever go up
+  const ta = cleanAch(a?.ach), tb = cleanAch(b?.ach);
+  out.ach = cleanAch(Object.fromEntries([...new Set([...Object.keys(ta), ...Object.keys(tb)])].map((id) => [id, Math.max(ta[id] || 0, tb[id] || 0)])));
+  // what you wear and show is a choice, not progress: the most recently changed copy wins
+  const newer = (a?.updated || 0) >= (b?.updated || 0) ? [a, b] : [b, a];
+  const pick = (k) => (newer[0] && newer[0][k] !== undefined ? newer[0][k] : newer[1] && newer[1][k] !== undefined ? newer[1][k] : undefined);
+  out.achTitle = cleanAchTitle(pick('achTitle') ?? null, out.ach);
+  out.showcase = cleanShowcase(pick('showcase'), out.ach);
   out.updated = Math.max(a?.updated || 0, b?.updated || 0);
   return out;
 }
@@ -94,6 +108,7 @@ class Store {
     this.profile = mergeProfiles(read(slotKey(owner)), null);
     this._loadPrefs(owner);
     this.emit('profile');
+    this.checkAchievements();
     return true;
   }
 
@@ -111,6 +126,7 @@ class Store {
     this.profile = merged;
     this.settings.localName = ''; write(SKEY, this.settings);
     this.emit('settings', 'localName'); this.emit('profile');
+    this.checkAchievements();
     return true;
   }
 
@@ -149,19 +165,43 @@ class Store {
     this.emit('settings', key);
   }
 
+  // Work out what the profile has earned. Returns what was newly unlocked or upgraded (the profile is updated in place).
+  _evaluate(before) {
+    const r = evaluate(this.profile, { streak: dailyStreak(this.profile.days), before });
+    this.profile.ach = r.ach;
+    return r.unlocked;
+  }
+
   update(fn) {
+    const before = cleanAch(this.profile.ach);
     fn(this.profile);
+    const unlocked = this._evaluate(before);
     this.profile.updated = Date.now();
     write(slotKey(this._owner), this.profile);
     this.emit('profile');
+    if (unlocked.length) this.emit('unlock', unlocked);
+  }
+
+  // Catch up on anything already earned (for example a player who already owns every item, or loaded a synced profile).
+  checkAchievements() {
+    const unlocked = this._evaluate();
+    if (!unlocked.length) return [];
+    this.profile.updated = Date.now();
+    write(slotKey(this._owner), this.profile);
+    this.emit('profile');
+    this.emit('unlock', unlocked);
+    return unlocked;
   }
 
   mergeRemote(remote) {
+    const before = JSON.stringify(this.profile);
     const merged = mergeProfiles(this.profile, remote);
-    const changed = JSON.stringify(merged) !== JSON.stringify(this.profile);
     this.profile = merged;
+    const unlocked = this._evaluate(cleanAch(merged.ach)); // tiers that arrived with the cloud copy are not announced again
+    if (unlocked.length) merged.updated = Date.now();
     write(slotKey(this._owner), merged);
-    if (changed) this.emit('profile');
+    if (JSON.stringify(merged) !== before) this.emit('profile');
+    if (unlocked.length) this.emit('unlock', unlocked);
     return merged;
   }
 
@@ -184,11 +224,42 @@ class Store {
     return true;
   }
   equipFrame(id) { // null takes the frame off
-    if (id && !this.profile.owned.includes(id)) return false;
+    if (id && !(frameById(id) && this.profile.owned.includes(id))) return false;
     this.update((p) => { p.frame = id || null; });
     return true;
   }
+  buyCard(id) {
+    const c = cardById(id);
+    if (!c || this.profile.owned.includes(id) || this.coins < c.price) return false;
+    this.update((p) => { p.coinsSpent = (p.coinsSpent || 0) + c.price; p.owned = [...p.owned, id]; p.card = id; });
+    return true;
+  }
+  equipCard(id) { // null takes the card off
+    if (id && !(cardById(id) && this.profile.owned.includes(id))) return false;
+    this.update((p) => { p.card = id || null; });
+    return true;
+  }
   get level() { return levelInfo(this.profile.xp); }
+
+  // Platinum is granted by the rank check (js/achievementsync.js); it needs Gold first.
+  grantPlatinum(mode) {
+    const a = blitzAch(mode);
+    if (!a || tierOf(this.profile.ach, a.id) < 3) return false;
+    this.update((p) => { p.ach[a.id] = 4; });
+    return true;
+  }
+  equipAchTitle(id) { // null takes it off (the level title shows again)
+    if (id && !hasTitle(this.profile.ach, id)) return false;
+    this.update((p) => { p.achTitle = id || null; });
+    return true;
+  }
+  // Pin up to three earned achievements on the profile.
+  setShowcase(list) {
+    const next = cleanShowcase(list, this.profile.ach);
+    if (next.length > SHOWCASE_MAX) return false;
+    this.update((p) => { p.showcase = next; });
+    return true;
+  }
 
   get streak() { return dailyStreak(this.profile.days); }
   get today() { return this.profile.days[utcDay()] || null; }

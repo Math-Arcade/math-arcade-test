@@ -1,3 +1,5 @@
+import { achById, achByTitle, cleanAchTitle, titleTier } from './achievements.js';
+
 // Level milestone titles. Keep this list easy to edit as the game evolves.
 export const TITLES = [
   { level: 1, name: 'Rookie' },
@@ -40,7 +42,18 @@ export const TIERS = [
   { id: 'mythic', name: 'MYTHIC', from: 100 },
 ];
 export const tierForLevel = (level) => { const l = Math.max(1, Number(level) || 1); return [...TIERS].reverse().find((x) => x.from <= l) || TIERS[0]; };
-export const tierForTitle = (name) => tierForLevel((TITLES.find((x) => x.name === name) || TITLES[0]).level);
+export const tierForTitle = (name) => {
+  const a = achByTitle(name); // achievement titles have their own metal
+  if (a) return TIERS.find((x) => x.id === titleTier(a)) || TIERS[0];
+  return tierForLevel((TITLES.find((x) => x.name === name) || TITLES[0]).level);
+};
+
+// The title a player wears: an earned achievement title if they picked one, otherwise their level title.
+export function equippedTitleName(profile, level = 1) {
+  const id = cleanAchTitle(profile && profile.achTitle, profile && profile.ach);
+  if (id) return achById(id).name;
+  return titleByMilestone(cleanTitleLevel(profile && profile.titleLevel, level)).name;
+}
 
 // Where you stand on the ladder: the equipped milestone, the next one, and how far along that stretch you are.
 export function titleProgress(level, frac = 0) {

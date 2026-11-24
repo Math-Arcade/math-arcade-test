@@ -445,7 +445,7 @@ export function initGame() {
       p.totals.bestStreak = Math.max(p.totals.bestStreak, s.bestStreak);
       p.totals.bestLevel = Math.max(p.totals.bestLevel, s.maxLevel);
       p.totals.seconds += Math.round((performance.now() - startedAt) / 1000);
-      if (kind === 'blitz') { p.totals.blitzGames++; if (newBest) p.best[mode] = s.score; }
+      if (kind === 'blitz') { p.totals.blitzGames++; if (newBest) p.best[mode] = s.score; p.modeCorrect[mode] = (p.modeCorrect[mode] || 0) + s.correct; }
       if (kind === 'daily' && scored) p.days[cfg.date] = { score: s.correct, ms: Math.round(s.avgMs * s.answered), grid: s.history.map((x) => (x ? 1 : 0)).join(''), xp: xpGained };
     });
     const gain = xpGained > 0 ? store.addXp(xpGained) : null;
