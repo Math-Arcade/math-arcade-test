@@ -500,7 +500,8 @@ export const cloud = {
         await withTimeout(F.dbM.set(r, base));
       } catch (e2) {
         const { xp, titleLevel, frame, card, ...rest } = base; // older optional fields
-        if (xp === undefined && titleLevel === undefined && frame === undefined && card === undefined) throw e2;
+        if (rest.theme === 'notebook') rest.theme = 'light'; else if (rest.theme === 'space') rest.theme = 'dark'; else if (rest.theme === 'winter') rest.theme = 'light'; else if (rest.theme === 'candy') rest.theme = 'light'; else if (rest.theme === 'gothic') rest.theme = 'dark'; // a bought theme shows as its closest free one if the rules do not know it yet
+        if (xp === undefined && titleLevel === undefined && frame === undefined && card === undefined && rest.theme === base.theme) throw e2;
         await withTimeout(F.dbM.set(r, rest));
       }
     }

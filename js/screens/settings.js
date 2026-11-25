@@ -1,6 +1,7 @@
 import { app } from '../app.js';
 import { $, h, toast } from '../util.js';
 import { THEMES, MUSIC, VERSION } from '../config.js';
+import { THEME_ITEMS } from '../shop.js';
 import { confirmDialog } from '../router.js';
 import { friendlyError } from '../cloud.js';
 
@@ -39,6 +40,18 @@ export function initSettings() {
     b.onclick = () => { store.set('theme', id); paint(); };
     themes.append(b);
   });
+  // bought themes: a locked swatch sends you to the Store
+  THEME_ITEMS.forEach((item) => {
+    const b = h('button', 'swatch premium');
+    b.type = 'button'; b.dataset.t = item.id; b.dataset.theme = item.id; b.setAttribute('role', 'radio'); b.setAttribute('aria-label', `${item.name} theme`);
+    const dot = h('span', 'dot'); dot.innerHTML = '<svg class="ico lock"><use href="#i-lock"></use></svg>';
+    b.append(dot, h('span', '', item.name));
+    b.onclick = () => {
+      if (store.profile.owned.includes(item.id)) { store.set('theme', item.id); paint(); return; }
+      toast(`${item.name} is in the Store`); app.router.go('store');
+    };
+    themes.append(b);
+  });
 
   $('#s-reset').onclick = async () => {
     const r = await confirmDialog({ title: 'RESET STATS?', text: 'This clears scores and stats on this device. Your online account is not deleted.', ok: 'RESET', danger: true });
@@ -47,8 +60,13 @@ export function initSettings() {
 
   function paint() {
     music.querySelectorAll('[data-v]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === store.settings.music)));
-    themes.querySelectorAll('[data-t]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.t === store.settings.theme)));
+    themes.querySelectorAll('[data-t]').forEach((b) => {
+      b.setAttribute('aria-checked', String(b.dataset.t === store.theme));
+      if (b.classList.contains('premium')) b.classList.toggle('locked', !store.profile.owned.includes(b.dataset.t));
+    });
   }
+  store.on('profile', paint); // buying a theme unlocks its swatch
+  store.on('settings', (k) => { if (k === 'theme') paint(); }); // and the Store can switch it
 
   const acct = $('#s-account');
   function renderAccount() {

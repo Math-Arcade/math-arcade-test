@@ -5,7 +5,7 @@
 //   Every other achievement: 1 = unlocked.
 // Tiers only ever go up, and syncing merges them with max(), so nothing earned can be lost.
 // Each achievement's name is also a title; it can be worn once the title is unlocked.
-import { FRAMES, CARDS } from './shop.js';
+import { FRAMES, CARDS, THEME_ITEMS } from './shop.js';
 import { levelInfo } from './engine/level.js';
 
 // Cumulative correct answers in that Blitz mode (Blitz runs only).
@@ -38,7 +38,7 @@ export const ACHIEVEMENTS = [
   { id: 'absolute', name: 'The Absolute', kind: 'ultimate', live: true },
 ];
 
-export const SHOP_IDS = [...FRAMES, ...CARDS].map((i) => i.id);
+export const SHOP_IDS = [...FRAMES, ...CARDS, ...THEME_ITEMS].map((i) => i.id);
 export const liveAchievements = () => ACHIEVEMENTS.filter((a) => a.live);
 export const achById = (id) => ACHIEVEMENTS.find((a) => a.live && a.id === id) || null;
 export const achByTitle = (name) => ACHIEVEMENTS.find((a) => a.live && a.name === name) || null;

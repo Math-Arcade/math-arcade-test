@@ -362,7 +362,7 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 
 /* ===== CRT lines: same look as the original game (-20deg bands, 6px on / 18px off, scrolling), equation displays only ===== */
 :root { --crt-line: rgba(0, 0, 0, .22); }
-[data-theme="light"] { --crt-line: rgba(0, 0, 0, .07); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) { --crt-line: rgba(0, 0, 0, .07); }
 .crt .pcard::after, .crt .p-card::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background: repeating-linear-gradient(-20deg, var(--crt-line) 0 6px, transparent 6px 24px); background-size: 100% 24px; animation: crtSmooth .8s linear infinite; }
 
@@ -584,11 +584,11 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 [data-tier="gold"]     { --tier: #ffcf4a; --tier-ink: #2b2000; --tier-soft: rgba(255, 207, 74, .16); }
 [data-tier="platinum"] { --tier: #74e6ff; --tier-ink: #00232c; --tier-soft: rgba(116, 230, 255, .16); }
 [data-tier="mythic"]   { --tier: #ff7ad9; --tier-ink: #2a0030; --tier-soft: rgba(255, 122, 217, .17); --tier-fill: linear-gradient(135deg, #ff7ad9, #8f7bff 52%, #45e8ff); }
-[data-theme="light"] [data-tier="bronze"]   { --tier-text: #a85a12; }
-[data-theme="light"] [data-tier="silver"]   { --tier-text: #55657f; }
-[data-theme="light"] [data-tier="gold"]     { --tier-text: #8a6500; }
-[data-theme="light"] [data-tier="platinum"] { --tier-text: #0a7a94; }
-[data-theme="light"] [data-tier="mythic"]   { --tier-text: #b0239a; }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-tier="bronze"]   { --tier-text: #a85a12; }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-tier="silver"]   { --tier-text: #55657f; }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-tier="gold"]     { --tier-text: #8a6500; }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-tier="platinum"] { --tier-text: #0a7a94; }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-tier="mythic"]   { --tier-text: #b0239a; }
 
 /* ===== titles screen ===== */
 .titles-sheet { padding: .5rem; }
@@ -679,10 +679,12 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 [data-frame]:not([data-frame=""]) { position: relative; overflow: visible; border-width: 3px; }
 [data-frame]:not([data-frame=""]) img { border-radius: 5px; }
 [data-frame="neon"] { border-color: #3dffb0; box-shadow: 0 0 0 1px rgba(61, 255, 176, .35), 0 0 12px rgba(61, 255, 176, .7); }
-[data-frame="frost"], [data-frame="gold"], [data-frame="aurora"], [data-frame="rainbow"] {
+[data-frame="frost"], [data-frame="sugar"], [data-frame="bone"], [data-frame="aurora"], [data-frame="rainbow"] {
   border-color: transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--fr-grad) border-box; background-size: 100% 100%, 300% 300%; }
 [data-frame="frost"]   { --fr-grad: linear-gradient(135deg, #ffffff, #7fe3ff, #ffffff); box-shadow: 0 0 12px rgba(127, 227, 255, .65); }
-[data-frame="gold"]    { --fr-grad: linear-gradient(120deg, #a87a00, #fff2a8, #ffcf4a, #a87a00); box-shadow: 0 0 12px rgba(255, 207, 74, .55); animation: fr-shift 3s linear infinite; }
+[data-frame="sugar"]   { --fr-grad: linear-gradient(45deg, #ff5c9a 25%, #fff 25% 50%, #ff5c9a 50% 75%, #fff 75%); background-size: 100% 100%, 1.1rem 1.1rem; box-shadow: 0 0 12px rgba(255, 92, 154, .6); animation: fr-stripe 1.6s linear infinite; }
+[data-frame="bone"]    { --fr-grad: linear-gradient(120deg, #ffffff, #8a8a8a, #ffffff, #4a4a4a, #ffffff); box-shadow: 0 0 10px rgba(255, 255, 255, .35), 0 0 0 1px rgba(0, 0, 0, .55); animation: fr-shift 6s linear infinite; }
+@keyframes fr-stripe { from { background-position: 0 0, 0 0; } to { background-position: 0 0, 1.1rem 0; } }
 [data-frame="aurora"]  { --fr-grad: linear-gradient(120deg, #45e8ff, #8f7bff, #ff7ad9, #45e8ff); box-shadow: 0 0 14px rgba(143, 123, 255, .6); animation: fr-shift 5s linear infinite; }
 /* prismatic: a clear crystal ring with one band of refracted light turning around it, a faceted gem and a passing glint */
 [data-frame="rainbow"] { --fr-grad: conic-gradient(from var(--fr-a), #fff 0deg, #fff 60deg, #ff9bb8 84deg, #ffdc8f 106deg, #a4ffcf 128deg, #94d6ff 150deg, #c7a8ff 172deg, #fff 198deg, #fff 360deg); background-size: 100% 100%, 100% 100%;
@@ -690,11 +692,12 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 @property --fr-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes fr-shift { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 300% 50%; } }
 @keyframes fr-spin { to { --fr-a: 360deg; } }
-/* decorations sit on the corners of the frame; frost and gold are still, aurora and prismatic move */
-[data-frame="frost"]::before, [data-frame="gold"]::before, [data-frame="aurora"]::before, [data-frame="rainbow"]::before {
+/* decorations sit on the corners of the frame; frost and sugar are still, bone, aurora and prismatic move */
+[data-frame="frost"]::before, [data-frame="sugar"]::before, [data-frame="bone"]::before, [data-frame="aurora"]::before, [data-frame="rainbow"]::before {
   content: ''; position: absolute; inset: -.42rem; z-index: 2; pointer-events: none; background-repeat: no-repeat; }
 [data-frame="frost"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9f5ff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4l2 1l2 -1'/%3E%3Cpath d='M12 2v6.5l3 1.72'/%3E%3Cpath d='M17.928 6.268l.134 2.232l1.866 1.232'/%3E%3Cpath d='M20.66 7l-5.629 3.25l.01 3.458'/%3E%3Cpath d='M19.928 14.268l-1.866 1.232l-.134 2.232'/%3E%3Cpath d='M20.66 17l-5.629 -3.25l-2.99 1.738'/%3E%3Cpath d='M14 20l-2 -1l-2 1'/%3E%3Cpath d='M12 22v-6.5l-3 -1.72'/%3E%3Cpath d='M6.072 17.732l-.134 -2.232l-1.866 -1.232'/%3E%3Cpath d='M3.34 17l5.629 -3.25l-.01 -3.458'/%3E%3Cpath d='M4.072 9.732l1.866 -1.232l.134 -2.232'/%3E%3Cpath d='M3.34 7l5.629 3.25l2.99 -1.738'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9f5ff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4l2 1l2 -1'/%3E%3Cpath d='M12 2v6.5l3 1.72'/%3E%3Cpath d='M17.928 6.268l.134 2.232l1.866 1.232'/%3E%3Cpath d='M20.66 7l-5.629 3.25l.01 3.458'/%3E%3Cpath d='M19.928 14.268l-1.866 1.232l-.134 2.232'/%3E%3Cpath d='M20.66 17l-5.629 -3.25l-2.99 1.738'/%3E%3Cpath d='M14 20l-2 -1l-2 1'/%3E%3Cpath d='M12 22v-6.5l-3 -1.72'/%3E%3Cpath d='M6.072 17.732l-.134 -2.232l-1.866 -1.232'/%3E%3Cpath d='M3.34 17l5.629 -3.25l-.01 -3.458'/%3E%3Cpath d='M4.072 9.732l1.866 -1.232l.134 -2.232'/%3E%3Cpath d='M3.34 7l5.629 3.25l2.99 -1.738'/%3E%3C/svg%3E"); background-position: 100% 100%, 70% 100%; background-size: 34% 34%, 20% 20%; filter: drop-shadow(0 0 2px #3aa6df); }
-[data-frame="gold"]::before  { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffcf4a'%3E%3Cpath d='M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a1 1 0 0 0 -1 1a3 3 0 1 0 0 6v2a1.024 1.024 0 0 1 -.866 -.398l-.068 -.101a1 1 0 0 0 -1.732 .998a3 3 0 0 0 2.505 1.5h.161a1 1 0 0 0 .883 .994l.117 .007a1 1 0 0 0 1 -1l.176 -.005a3 3 0 0 0 -.176 -5.995v-2c.358 -.012 .671 .14 .866 .398l.068 .101a1 1 0 0 0 1.732 -.998a3 3 0 0 0 -2.505 -1.501h-.161a1 1 0 0 0 -1 -1zm1 7a1 1 0 0 1 0 2v-2zm-2 -4v2a1 1 0 0 1 0 -2z'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffcf4a'%3E%3Cpath d='M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a1 1 0 0 0 -1 1a3 3 0 1 0 0 6v2a1.024 1.024 0 0 1 -.866 -.398l-.068 -.101a1 1 0 0 0 -1.732 .998a3 3 0 0 0 2.505 1.5h.161a1 1 0 0 0 .883 .994l.117 .007a1 1 0 0 0 1 -1l.176 -.005a3 3 0 0 0 -.176 -5.995v-2c.358 -.012 .671 .14 .866 .398l.068 .101a1 1 0 0 0 1.732 -.998a3 3 0 0 0 -2.505 -1.501h-.161a1 1 0 0 0 -1 -1zm1 7a1 1 0 0 1 0 2v-2zm-2 -4v2a1 1 0 0 1 0 -2z'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffcf4a'%3E%3Cpath d='M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a1 1 0 0 0 -1 1a3 3 0 1 0 0 6v2a1.024 1.024 0 0 1 -.866 -.398l-.068 -.101a1 1 0 0 0 -1.732 .998a3 3 0 0 0 2.505 1.5h.161a1 1 0 0 0 .883 .994l.117 .007a1 1 0 0 0 1 -1l.176 -.005a3 3 0 0 0 -.176 -5.995v-2c.358 -.012 .671 .14 .866 .398l.068 .101a1 1 0 0 0 1.732 -.998a3 3 0 0 0 -2.505 -1.501h-.161a1 1 0 0 0 -1 -1zm1 7a1 1 0 0 1 0 2v-2zm-2 -4v2a1 1 0 0 1 0 -2z'/%3E%3C/svg%3E"); background-position: 100% 0%, 0% 100%, 100% 100%; background-size: 30% 30%, 24% 24%, 17% 17%; filter: drop-shadow(0 1px 0 #7a5800) drop-shadow(0 0 3px rgba(255, 207, 74, .7)); }
+[data-frame="sugar"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15 15L21.5 21.5' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='10' r='8.5' fill='%23ff5c9a' stroke='%23fff' stroke-width='1.4'/%3E%3Cpath d='M10 10.5m0-1a1 1 0 1 1-1 1a3 3 0 1 1 3 3a5 5 0 1 1-5-5' fill='none' stroke='%23fff' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='6' width='12' height='4.6' rx='2.3' fill='%232cbfa6' transform='rotate(-32 7 8)'/%3E%3Crect x='10' y='13' width='12' height='4.6' rx='2.3' fill='%23ffc02e' transform='rotate(24 16 15)'/%3E%3Crect x='4' y='15' width='9' height='4.2' rx='2.1' fill='%238e6be8' transform='rotate(-8 8 17)'/%3E%3C/svg%3E"); background-position: 100% 0%, 0% 0%; background-size: 34% 34%, 26% 26%; filter: drop-shadow(0 1px 1px rgba(120, 20, 70, .45)); }
+[data-frame="bone"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 24'%3E%3Cpath fill='%23DADADA' d='M24 9C22.5 5 21 3.5 19.500 1c-.6 4-2.400 6-6 6.400C8 6.400 4 8.500 0 12.500c5-1.200 8 0 10 3 2-2.300 5-2.600 7 .4 1.800-2.200 4-2.200 7 5.100 3-7.300 5.200-7.300 7-5.100 2-3 5-2.700 7-.4 2-3 5-4.200 10-3C44 8.500 40 6.400 34.500 7.400 30.900 7 29.100 5 28.500 1 27 3.500 25.500 5 24 9Z'/%3E%3Cellipse cx='24' cy='12' rx='2.600' ry='5' fill='%23DADADA'/%3E%3C/svg%3E"); background-position: 100% 0%, 0% 0%; background-size: 30% 34%, 36% 18%; filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 3px rgba(0, 0, 0, .65)); animation: fr-twinkle 3.2s ease-in-out infinite; }
 [data-frame="aurora"]::before, [data-frame="rainbow"]::before { background-position: 100% 0%, 0% 100%; background-size: 30% 30%, 20% 20%; animation: fr-twinkle 2s ease-in-out infinite; }
 [data-frame="aurora"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bff6ff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bff6ff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z'/%3E%3C/svg%3E"); }
 [data-frame="rainbow"]::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='white' stroke-width='.8' stroke-linejoin='round'%3E%3Cpath d='M2 9L7 4L9.5 9Z' fill='%23a9dcff'/%3E%3Cpath d='M7 4H17L14.5 9H9.5Z' fill='%23ffffff'/%3E%3Cpath d='M17 4L22 9L14.5 9Z' fill='%23ffc2e0'/%3E%3Cpath d='M2 9H9.5L12 21Z' fill='%238fb4ff'/%3E%3Cpath d='M9.5 9H14.5L12 21Z' fill='%23d9c8ff'/%3E%3Cpath d='M14.5 9H22L12 21Z' fill='%23ff9fcf'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 1l2 9l9 2l-9 2l-2 9l-2 -9l-9 -2l9 -2z'/%3E%3C/svg%3E"); background-size: 36% 36%, 20% 20%; }
@@ -710,7 +713,7 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 @keyframes fr-curtain { from { background-position: 0 0%; opacity: .5; } to { background-position: 0 100%; opacity: .95; } }
 
 /* ===== profile cards (bought in the Store): they restyle your row in Ranks and Friends, using the same pieces as the frames ===== */
-:root { --svg-snow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9f5ff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4l2 1l2 -1'/%3E%3Cpath d='M12 2v6.5l3 1.72'/%3E%3Cpath d='M17.928 6.268l.134 2.232l1.866 1.232'/%3E%3Cpath d='M20.66 7l-5.629 3.25l.01 3.458'/%3E%3Cpath d='M19.928 14.268l-1.866 1.232l-.134 2.232'/%3E%3Cpath d='M20.66 17l-5.629 -3.25l-2.99 1.738'/%3E%3Cpath d='M14 20l-2 -1l-2 1'/%3E%3Cpath d='M12 22v-6.5l-3 -1.72'/%3E%3Cpath d='M6.072 17.732l-.134 -2.232l-1.866 -1.232'/%3E%3Cpath d='M3.34 17l5.629 -3.25l-.01 -3.458'/%3E%3Cpath d='M4.072 9.732l1.866 -1.232l.134 -2.232'/%3E%3Cpath d='M3.34 7l5.629 3.25l2.99 -1.738'/%3E%3C/svg%3E"); --svg-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffcf4a'%3E%3Cpath d='M17 3.34a10 10 0 1 1 -15 8.66l.005 -.324a10 10 0 0 1 14.995 -8.336zm-5 2.66a1 1 0 0 0 -1 1a3 3 0 1 0 0 6v2a1.024 1.024 0 0 1 -.866 -.398l-.068 -.101a1 1 0 0 0 -1.732 .998a3 3 0 0 0 2.505 1.5h.161a1 1 0 0 0 .883 .994l.117 .007a1 1 0 0 0 1 -1l.176 -.005a3 3 0 0 0 -.176 -5.995v-2c.358 -.012 .671 .14 .866 .398l.068 .101a1 1 0 0 0 1.732 -.998a3 3 0 0 0 -2.505 -1.501h-.161a1 1 0 0 0 -1 -1zm1 7a1 1 0 0 1 0 2v-2zm-2 -4v2a1 1 0 0 1 0 -2z'/%3E%3C/svg%3E"); --svg-spark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bff6ff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z'/%3E%3C/svg%3E"); --svg-gem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='white' stroke-width='.8' stroke-linejoin='round'%3E%3Cpath d='M2 9L7 4L9.5 9Z' fill='%23a9dcff'/%3E%3Cpath d='M7 4H17L14.5 9H9.5Z' fill='%23ffffff'/%3E%3Cpath d='M17 4L22 9L14.5 9Z' fill='%23ffc2e0'/%3E%3Cpath d='M2 9H9.5L12 21Z' fill='%238fb4ff'/%3E%3Cpath d='M9.5 9H14.5L12 21Z' fill='%23d9c8ff'/%3E%3Cpath d='M14.5 9H22L12 21Z' fill='%23ff9fcf'/%3E%3C/svg%3E"); --svg-glint: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 1l2 9l9 2l-9 2l-2 9l-2 -9l-9 -2l9 -2z'/%3E%3C/svg%3E"); }
+:root { --svg-sweet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M1.5 6.5l6 5.5-6 5.500z' fill='%23ffc02e'/%3E%3Cpath d='M22.5 6.5l-6 5.500 6 5.500z' fill='%23ffc02e'/%3E%3Cellipse cx='12' cy='12' rx='6.8' ry='5.600' fill='%23ff5c9a' stroke='%23fff' stroke-width='1.2'/%3E%3Cpath d='M7.500 10.200q4.500 2.200 9 0' fill='none' stroke='%23fff' stroke-width='1.300' stroke-linecap='round' opacity='.85'/%3E%3C/svg%3E"); --svg-skull: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E"); --svg-bat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 24'%3E%3Cpath fill='%23DADADA' d='M24 9C22.5 5 21 3.5 19.500 1c-.6 4-2.400 6-6 6.400C8 6.400 4 8.500 0 12.500c5-1.200 8 0 10 3 2-2.300 5-2.600 7 .4 1.800-2.200 4-2.200 7 5.100 3-7.300 5.200-7.300 7-5.100 2-3 5-2.700 7-.4 2-3 5-4.200 10-3C44 8.500 40 6.400 34.500 7.400 30.900 7 29.100 5 28.500 1 27 3.500 25.500 5 24 9Z'/%3E%3Cellipse cx='24' cy='12' rx='2.600' ry='5' fill='%23DADADA'/%3E%3C/svg%3E"); --svg-snow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9f5ff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4l2 1l2 -1'/%3E%3Cpath d='M12 2v6.5l3 1.72'/%3E%3Cpath d='M17.928 6.268l.134 2.232l1.866 1.232'/%3E%3Cpath d='M20.66 7l-5.629 3.25l.01 3.458'/%3E%3Cpath d='M19.928 14.268l-1.866 1.232l-.134 2.232'/%3E%3Cpath d='M20.66 17l-5.629 -3.25l-2.99 1.738'/%3E%3Cpath d='M14 20l-2 -1l-2 1'/%3E%3Cpath d='M12 22v-6.5l-3 -1.72'/%3E%3Cpath d='M6.072 17.732l-.134 -2.232l-1.866 -1.232'/%3E%3Cpath d='M3.34 17l5.629 -3.25l-.01 -3.458'/%3E%3Cpath d='M4.072 9.732l1.866 -1.232l.134 -2.232'/%3E%3Cpath d='M3.34 7l5.629 3.25l2.99 -1.738'/%3E%3C/svg%3E"); --svg-spark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bff6ff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z'/%3E%3C/svg%3E"); --svg-gem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='white' stroke-width='.8' stroke-linejoin='round'%3E%3Cpath d='M2 9L7 4L9.5 9Z' fill='%23a9dcff'/%3E%3Cpath d='M7 4H17L14.5 9H9.5Z' fill='%23ffffff'/%3E%3Cpath d='M17 4L22 9L14.5 9Z' fill='%23ffc2e0'/%3E%3Cpath d='M2 9H9.5L12 21Z' fill='%238fb4ff'/%3E%3Cpath d='M9.5 9H14.5L12 21Z' fill='%23d9c8ff'/%3E%3Cpath d='M14.5 9H22L12 21Z' fill='%23ff9fcf'/%3E%3C/svg%3E"); --svg-glint: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 1l2 9l9 2l-9 2l-2 9l-2 -9l-9 -2l9 -2z'/%3E%3C/svg%3E"); }
 .lb-row[data-card], .fr-row[data-card] { position: relative; isolation: isolate; }
 /* every card except Neon Grid has a gradient border (like the frames) and a soft tint over the normal row colour */
 .lb-row[data-card]:not([data-card="neongrid"]), .fr-row[data-card]:not([data-card="neongrid"]) {
@@ -735,11 +738,17 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 [data-card="snowdrift"]::before { background-image: var(--svg-snow), var(--svg-snow), var(--svg-snow); background-size: 1.2rem 1.2rem, .8rem .8rem, .6rem .6rem;
   background-position: right .3rem top .2rem, right 1.7rem bottom .3rem, right 2.7rem top .35rem; filter: drop-shadow(0 0 2px #3aa6df); }
 
-/* Gold Ledger: moving gold border, warm tint, coins */
-[data-card="goldledger"] { --cd-grad: linear-gradient(120deg, #a87a00, #fff2a8, #ffcf4a, #a87a00);
-  box-shadow: 0 0 12px rgba(255, 207, 74, .5); animation: cd-shift 3s linear infinite; }
-[data-card="goldledger"]::before { background-image: var(--svg-coin), var(--svg-coin), var(--svg-coin); background-size: 1.2rem 1.2rem, .85rem .85rem, .6rem .6rem;
-  background-position: right .3rem top .2rem, right 1.7rem bottom .3rem, right 2.7rem top .4rem; filter: drop-shadow(0 1px 0 #7a5800) drop-shadow(0 0 3px rgba(255, 207, 74, .7)); }
+/* Sprinkle Pop: a candy-coloured moving border, sprinkles scattered behind the text, wrapped sweets */
+[data-card="sprinkle"] { --cd-grad: linear-gradient(120deg, #ff5c9a, #ffc02e, #2cbfa6, #8e6be8, #ff5c9a); box-shadow: 0 0 12px rgba(255, 92, 154, .45); animation: cd-shift 5s linear infinite; }
+.lb-row[data-card="sprinkle"]::after, .fr-row[data-card="sprinkle"]::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Crect x='6' y='11.5' width='12' height='5' rx='2.5' fill='%232cbfa6' transform='rotate(151 12 14)'/%3E%3Crect x='38' y='7.5' width='12' height='5' rx='2.5' fill='%23ff8a5c' transform='rotate(33 44 10)'/%3E%3Crect x='70' y='19.5' width='12' height='5' rx='2.5' fill='%23ffc02e' transform='rotate(154 76 22)'/%3E%3Crect x='16' y='45.5' width='12' height='5' rx='2.5' fill='%238e6be8' transform='rotate(160 22 48)'/%3E%3Crect x='52' y='41.5' width='12' height='5' rx='2.5' fill='%23ff8a5c' transform='rotate(16 58 44)'/%3E%3Crect x='78' y='59.5' width='12' height='5' rx='2.5' fill='%23ff8a5c' transform='rotate(3 84 62)'/%3E%3Crect x='8' y='75.5' width='12' height='5' rx='2.5' fill='%238e6be8' transform='rotate(66 14 78)'/%3E%3Crect x='42' y='73.5' width='12' height='5' rx='2.5' fill='%23ff8a5c' transform='rotate(59 48 76)'/%3E%3Crect x='64' y='83.5' width='12' height='5' rx='2.5' fill='%232cbfa6' transform='rotate(120 70 86)'/%3E%3C/svg%3E"); background-size: 90px 90px; background-repeat: repeat; opacity: .5; }
+[data-card="sprinkle"]::before { background-image: var(--svg-sweet), var(--svg-sweet), var(--svg-sweet); background-size: 1.2rem 1.2rem, .85rem .85rem, .6rem .6rem;
+  background-position: right .3rem top .2rem, right 1.7rem bottom .3rem, right 2.7rem top .4rem; filter: drop-shadow(0 1px 0 rgba(120, 20, 70, .35)); }
+
+/* Crypt Keeper: a silver edge with a sheen moving through it, a damask pattern behind the text, a skull and a bat */
+[data-card="crypt"] { --cd-grad: linear-gradient(120deg, #ffffff, #6e6e6e, #ffffff, #3a3a3a, #ffffff); box-shadow: 0 0 12px rgba(255, 255, 255, .22); animation: cd-shift 7s linear infinite; }
+.lb-row[data-card="crypt"]::after, .fr-row[data-card="crypt"]::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 80 80' fill='none' stroke='%23FFFFFF' stroke-opacity='.13' stroke-width='2'%3E%3Cpath d='M40 0L80 40L40 80L0 40Z'/%3E%3Cpath d='M40 26C34 32 34 36 40 40C46 36 46 32 40 26ZM40 54C34 48 34 44 40 40C46 44 46 48 40 54Z'/%3E%3C/svg%3E"); background-size: 40px 40px; background-repeat: repeat; }
+[data-card="crypt"]::before { background-image: var(--svg-skull), var(--svg-bat), var(--svg-skull); background-size: 1.25rem 1.45rem, 1.55rem .78rem, .7rem .8rem;
+  background-position: right .3rem top .2rem, right 1.9rem bottom .35rem, right 3.1rem top .5rem; filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 3px rgba(0, 0, 0, .6)); }
 
 /* Northern Lights: aurora border, a curtain of light drifting through the card, sparkles */
 [data-card="northern"] { --cd-grad: linear-gradient(120deg, #45e8ff, #8f7bff, #ff7ad9, #45e8ff); box-shadow: 0 0 14px rgba(143, 123, 255, .55); animation: cd-shift 5s linear infinite; }
@@ -756,12 +765,16 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
   filter: drop-shadow(0 0 3px rgba(190, 225, 255, .8)); animation: fr-twinkle 2.6s ease-in-out infinite; }
 
 /* light theme: white edges would vanish on a white page, so they get a soft slate/ice tone instead */
-[data-theme="light"] [data-card="snowdrift"] { --cd-grad: linear-gradient(135deg, #9fe0f7, #4db6e6, #9fe0f7); }
-[data-theme="light"] [data-card="snowdrift"]::before { filter: brightness(.6) saturate(2.4) drop-shadow(0 0 1px #2c8fc4); }
-[data-theme="light"] [data-card="crystal"] { --cd-grad: linear-gradient(110deg, #c9d3ec 0%, #c9d3ec 28%, #ff9bb8 38%, #ffdc8f 46%, #a4ffcf 54%, #94d6ff 62%, #c7a8ff 70%, #c9d3ec 80%, #c9d3ec 100%); }
-[data-theme="light"] [data-card="crystal"]::before { filter: drop-shadow(0 0 2px #7f9fe0); }
-[data-theme="light"] [data-frame="rainbow"] { --fr-grad: conic-gradient(from var(--fr-a), #c9d3ec 0deg, #c9d3ec 60deg, #ff9bb8 84deg, #ffdc8f 106deg, #a4ffcf 128deg, #94d6ff 150deg, #c7a8ff 172deg, #c9d3ec 198deg, #c9d3ec 360deg); }
-[data-theme="light"] [data-frame="rainbow"]::before { filter: drop-shadow(0 0 2px #7f9fe0); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-card="snowdrift"] { --cd-grad: linear-gradient(135deg, #9fe0f7, #4db6e6, #9fe0f7); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-card="snowdrift"]::before { filter: brightness(.6) saturate(2.4) drop-shadow(0 0 1px #2c8fc4); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-card="crystal"] { --cd-grad: linear-gradient(110deg, #c9d3ec 0%, #c9d3ec 28%, #ff9bb8 38%, #ffdc8f 46%, #a4ffcf 54%, #94d6ff 62%, #c7a8ff 70%, #c9d3ec 80%, #c9d3ec 100%); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-card="crystal"]::before { filter: drop-shadow(0 0 2px #7f9fe0); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-frame="rainbow"] { --fr-grad: conic-gradient(from var(--fr-a), #c9d3ec 0deg, #c9d3ec 60deg, #ff9bb8 84deg, #ffdc8f 106deg, #a4ffcf 128deg, #94d6ff 150deg, #c7a8ff 172deg, #c9d3ec 198deg, #c9d3ec 360deg); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-frame="rainbow"]::before { filter: drop-shadow(0 0 2px #7f9fe0); }
+
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-frame="bone"] { --fr-grad: linear-gradient(120deg, #2b2b2b, #9a9a9a, #2b2b2b, #6a6a6a, #2b2b2b); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) [data-card="crypt"] { --cd-grad: linear-gradient(120deg, #2b2b2b, #9a9a9a, #2b2b2b, #6a6a6a, #2b2b2b); box-shadow: 0 0 10px rgba(0, 0, 0, .22); }
+:is([data-theme="light"], [data-theme="notebook"], [data-theme="winter"], [data-theme="candy"]) :is(.lb-row, .fr-row)[data-card="crypt"]::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 80 80' fill='none' stroke='%23000000' stroke-opacity='.10' stroke-width='2'%3E%3Cpath d='M40 0L80 40L40 80L0 40Z'/%3E%3Cpath d='M40 26C34 32 34 36 40 40C46 36 46 32 40 26ZM40 54C34 48 34 44 40 40C46 44 46 48 40 54Z'/%3E%3C/svg%3E"); }
 
 /* people who ask for less motion get still frames and cards */
 @media (prefers-reduced-motion: reduce) { [data-frame], [data-frame]::before, [data-frame]::after, [data-card], [data-card]::before, [data-card]::after { animation: none !important; } }
@@ -843,3 +856,434 @@ button.card:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line)
 .ach-btn:focus-visible { outline: 3px solid var(--primary-2); outline-offset: 2px; }
 .ach-lock { font-family: var(--font-body); font-weight: 700; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .ach-acts .tt-state { margin-left: 0; }
+
+/* ===== Notebook theme (bought in the Store): ruled page, red margin, crayon-drawn borders ===== */
+[data-theme="notebook"] #bg {
+  background:
+    linear-gradient(90deg, transparent 2.6rem, rgba(222, 80, 90, .5) 2.6rem calc(2.6rem + 2px), transparent calc(2.6rem + 2px)),
+    repeating-linear-gradient(to bottom, transparent 0 calc(2rem - 2px), rgba(95, 140, 220, .3) calc(2rem - 2px) 2rem),
+    #FDFCF8;
+}
+[data-theme="notebook"] .bg-grid, [data-theme="notebook"] .bg-glow { display: none; }
+[data-theme="notebook"] .bg-symbols span { opacity: .13; color: var(--primary); }
+[data-theme="notebook"].crt .pcard::after, [data-theme="notebook"].crt .p-card::after { display: none; } /* no scan lines on paper */
+/* Sketched borders: the real border goes transparent (layout stays the same) and two wobbly crayon strokes are drawn on top by ::before and ::after.
+   Each stroke is pushed around by an SVG turbulence filter (#sk-a / #sk-b in index.html), so the wobble follows the whole edge at any size.
+   The stroke colour is --sk; states (selected, right, wrong...) just change --sk. Visual effects off = no filter, plain clean strokes. */
+[data-theme="notebook"] {
+  --sk: #6B80B3;
+  --sk-r1: 5px 11px 6px 12px / 11px 5px 12px 6px; --sk-r2: 12px 6px 11px 5px / 6px 12px 5px 11px;
+}
+[data-theme="notebook"] :is(.btn, .icon-btn, .cbtn, .tile, .card, .stats-mini div, .lb-row:not([data-card]), .fr-row:not([data-card]), .stat, .panel, .group, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot.on, .answer, .sheet-card, .pcard, .p-card, .logo-panel, #toast) {
+  border-color: transparent; border-radius: var(--sk-r1);
+}
+[data-theme="notebook"] :is(.stats-mini div, .lb-row:not([data-card]), .fr-row:not([data-card]), .stat, .panel, .group, .cbtn, .tile, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot, .sheet-card) { position: relative; }
+[data-theme="notebook"] :is(.btn, .icon-btn, .cbtn, .tile, .card, .stats-mini div, .lb-row:not([data-card]), .fr-row:not([data-card]), .stat, .panel, .group, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot.on, .answer, .sheet-card, .pcard, .p-card, .logo-panel, #toast)::before,
+[data-theme="notebook"] :is(.btn, .icon-btn, .cbtn, .tile, .card, .stats-mini div, .lb-row:not([data-card]), .fr-row:not([data-card]), .stat, .panel, .group, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot.on, .answer, .sheet-card, .pcard, .p-card, .logo-panel, #toast)::after {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; box-sizing: border-box; background: none; animation: none; opacity: 1; transform: none;
+  border: 3px solid var(--sk); border-radius: var(--sk-r1); filter: url(#sk-a);
+}
+[data-theme="notebook"] :is(.btn, .icon-btn, .cbtn, .tile, .card, .stats-mini div, .lb-row:not([data-card]), .fr-row:not([data-card]), .stat, .panel, .group, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot.on, .answer, .sheet-card, .pcard, .p-card, .logo-panel, #toast)::after {
+  inset: 3px; border-width: 2px; border-radius: var(--sk-r2); filter: url(#sk-b); opacity: .6;
+}
+[data-theme="notebook"] :is(.pcard, .p-card) { --sk: var(--primary); } /* low specificity on purpose, so the .ok / .bad / .half-2 colours below can override it */
+[data-theme="notebook"] :is(.sheet-card, .logo-panel, .st-card.on, .lb-row.me, .ft-row.me, .tt-row.equipped .tt-card, .tt-row.next .tt-card) { --sk: var(--primary); }
+[data-theme="notebook"] #toast { --sk: var(--primary); } /* (kept apart: an #id inside the list above would out-rank the .ok / .bad colours) */
+[data-theme="notebook"] :is(.btn-primary, .cbtn[aria-checked="true"], .fr-tab.on) { --sk: var(--shade); }
+[data-theme="notebook"] :is(.pcard.ok, .p-card.ok, .answer.good, .btn-daily.done) { --sk: var(--good); }
+[data-theme="notebook"] :is(.pcard.bad, .p-card.bad, .answer.bad, .btn-danger) { --sk: var(--bad); }
+[data-theme="notebook"] .half-2 .p-card { --sk: var(--warn); }
+[data-theme="notebook"] .tt-row.unlocked .tt-card { --sk: color-mix(in srgb, var(--tier) 70%, #6B80B3); }
+[data-theme="notebook"].no-grid :is(.btn, .icon-btn, .cbtn, .tile, .card, .stats-mini div, .lb-row, .fr-row, .stat, .panel, .group, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot, .answer, .sheet-card, .pcard, .p-card, .logo-panel, #toast)::before,
+[data-theme="notebook"].no-grid :is(.btn, .icon-btn, .cbtn, .tile, .card, .stats-mini div, .lb-row, .fr-row, .stat, .panel, .group, .fr-tab, .ft-row, .tt-card, .tt-hero, .coins, .st-card, .ach-card, .ach-slot, .answer, .sheet-card, .pcard, .p-card, .logo-panel, #toast)::after { filter: none; }
+/* inputs cannot have pseudo-elements: they keep a crayon border image */
+[data-theme="notebook"] :is(.field input, .fr-search) { border-image: var(--crayon) 10 / 6px / 1px stretch; border-radius: 6px; }
+[data-theme="notebook"] .btn.primary { color: var(--on-primary); }
+[data-theme="notebook"] :is(.btn, .icon-btn, .cbtn, .answer, .tile, .st-card, .panel, .lb-row, .stat, .card, .group, .coins, .fr-tab, .tt-card, .ach-card) { box-shadow: none; } /* flat, like ink on paper */
+[data-theme="notebook"] :is(.st-state, .tt-state, .chip, .tt-chip) { border-style: dashed; }
+
+/* the Store preview and the Settings swatch for bought themes */
+.st-tprev { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem .8rem; min-height: 4.6rem; pointer-events: none;
+  background: var(--bg); color: var(--text); border: 2px solid var(--line); border-radius: 10px; }
+.st-tprev[data-theme="notebook"] { background:
+  linear-gradient(90deg, transparent 1.4rem, rgba(222, 80, 90, .5) 1.4rem calc(1.4rem + 2px), transparent calc(1.4rem + 2px)),
+  repeating-linear-gradient(to bottom, transparent 0 calc(1.2rem - 1px), rgba(95, 140, 220, .35) calc(1.2rem - 1px) 1.2rem), #FDFCF8; }
+.st-tcard { display: grid; gap: .1rem; padding-left: 1.2rem; }
+.st-tcard b { font-family: var(--font-px); font-weight: 400; font-size: 1.1rem; color: var(--primary); }
+.st-tcard small { font-family: var(--font-body); font-size: .9rem; color: var(--muted); }
+.st-tbtn { font-family: var(--font-px); font-size: .9rem; padding: .35rem .9rem; color: var(--on-primary); background: var(--primary); border: 2px solid var(--shade); border-radius: 8px; }
+.swatch.premium .dot { display: grid; place-items: center; }
+.swatch.premium .dot .ico { width: 1.4rem; height: 1.4rem; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .7)); display: none; }
+.swatch.premium.locked .dot .ico { display: block; }
+.swatch.premium.locked { opacity: .8; }
+[data-theme="notebook"] :is(.lv, .xp-lv, .section-label, .chips-label, .fr-label, .ft-rank, .p-name, .ach-slot small, .fr-tab, .ft-score, .lb-rank) { font-size: max(.8rem, 1em); } /* handwriting needs a little more size than pixels */
+/* the problem box gets a bolder crayon line than the rest */
+/* (#none only lifts the specificity to match the #toast in the shared rule above) */
+[data-theme="notebook"] :is(.pcard, .p-card, #none)::before { border-width: 7px; }
+[data-theme="notebook"] :is(.pcard, .p-card, #none)::after { inset: 6px; border-width: 4px; opacity: .8; }
+
+/* ===== Space theme (bought in the Store): starfield, nebula, a planet on the horizon, cockpit-style problem window ===== */
+/* Wallpaper: two fixed star layers plus nebula washes sit in #bg; a third layer of brighter stars (.bg-grid) twinkles slowly; the planet is drawn by .bg-glow. */
+[data-theme="space"] #bg {
+  background:
+    radial-gradient(1px 1px at 165px 77px, rgba(166,243,248,0.64) 60%, transparent 100%),
+    radial-gradient(1px 1px at 37px 274px, rgba(255,255,255,0.51) 60%, transparent 100%),
+    radial-gradient(1px 1px at 29px 259px, rgba(255,255,255,0.37) 60%, transparent 100%),
+    radial-gradient(1px 1px at 222px 214px, rgba(255,255,255,0.46) 60%, transparent 100%),
+    radial-gradient(1px 1px at 282px 217px, rgba(255,255,255,0.72) 60%, transparent 100%),
+    radial-gradient(1px 1px at 63px 114px, rgba(255,255,255,0.61) 60%, transparent 100%),
+    radial-gradient(1px 1px at 203px 25px, rgba(255,255,255,0.37) 60%, transparent 100%),
+    radial-gradient(1px 1px at 68px 148px, rgba(166,243,248,0.41) 60%, transparent 100%),
+    radial-gradient(1px 1px at 60px 292px, rgba(255,255,255,0.6) 60%, transparent 100%),
+    radial-gradient(1px 1px at 92px 52px, rgba(255,255,255,0.52) 60%, transparent 100%),
+    radial-gradient(1px 1px at 280px 32px, rgba(255,255,255,0.63) 60%, transparent 100%),
+    radial-gradient(1px 1px at 254px 272px, rgba(166,243,248,0.7) 60%, transparent 100%),
+    radial-gradient(1px 1px at 238px 299px, rgba(166,243,248,0.51) 60%, transparent 100%),
+    radial-gradient(1px 1px at 127px 92px, rgba(255,255,255,0.39) 60%, transparent 100%),
+    radial-gradient(1px 1px at 153px 268px, rgba(166,243,248,0.74) 60%, transparent 100%),
+    radial-gradient(1px 1px at 229px 147px, rgba(255,255,255,0.4) 60%, transparent 100%),
+    radial-gradient(1px 1px at 214px 84px, rgba(255,255,255,0.42) 60%, transparent 100%),
+    radial-gradient(1px 1px at 250px 215px, rgba(255,255,255,0.78) 60%, transparent 100%),
+    radial-gradient(1px 1px at 39px 285px, rgba(255,255,255,0.5) 60%, transparent 100%),
+    radial-gradient(1px 1px at 179px 304px, rgba(166,243,248,0.61) 60%, transparent 100%),
+    radial-gradient(1px 1px at 233px 35px, rgba(255,255,255,0.78) 60%, transparent 100%),
+    radial-gradient(1px 1px at 242px 340px, rgba(255,255,255,0.38) 60%, transparent 100%),
+    radial-gradient(1px 1px at 158px 331px, rgba(166,243,248,0.48) 60%, transparent 100%),
+    radial-gradient(1px 1px at 197px 177px, rgba(255,255,255,0.77) 60%, transparent 100%),
+    radial-gradient(1px 1px at 181px 86px, rgba(255,255,255,0.57) 60%, transparent 100%),
+    radial-gradient(1px 1px at 111px 147px, rgba(255,255,255,0.68) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 407px 400px, rgba(166,243,248,0.63) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 459px 411px, rgba(255,200,130,0.7) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 140px 440px, rgba(255,200,130,0.7) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 425px 367px, rgba(255,200,130,0.91) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 236px 154px, rgba(255,255,255,0.66) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 237px 238px, rgba(255,255,255,0.77) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 186px 269px, rgba(166,243,248,0.6) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 429px 378px, rgba(255,200,130,0.8) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 128px 55px, rgba(166,243,248,0.91) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 401px 407px, rgba(166,243,248,0.74) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 493px 410px, rgba(255,255,255,0.67) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 213px 451px, rgba(255,255,255,0.64) 60%, transparent 100%),
+    radial-gradient(62% 36% at 12% 14%, rgba(124, 92, 255, .24), transparent 72%),
+    radial-gradient(48% 30% at 96% 46%, rgba(79, 227, 240, .12), transparent 72%),
+    radial-gradient(70% 30% at 30% 78%, rgba(255, 106, 140, .08), transparent 72%),
+    linear-gradient(#060919, #0A1031 70%, #0C0F2A);
+  background-size: 340px 340px, 523px 523px, auto, auto, auto, auto;
+}
+[data-theme="space"] .bg-grid {
+  inset: 0; animation: star-twinkle 7s ease-in-out infinite alternate; -webkit-mask-image: none; mask-image: none;
+  background-image:
+    radial-gradient(2px 2px at 53px 104px, rgba(255,255,255,0.91) 60%, transparent 100%),
+    radial-gradient(2px 2px at 549px 103px, rgba(255,200,130,0.92) 60%, transparent 100%),
+    radial-gradient(2px 2px at 72px 212px, rgba(255,255,255,0.83) 60%, transparent 100%),
+    radial-gradient(2px 2px at 258px 355px, rgba(255,200,130,0.89) 60%, transparent 100%),
+    radial-gradient(2px 2px at 118px 499px, rgba(255,255,255,0.9) 60%, transparent 100%),
+    radial-gradient(2px 2px at 319px 87px, rgba(166,243,248,0.82) 60%, transparent 100%),
+    radial-gradient(2px 2px at 350px 271px, rgba(255,255,255,0.97) 60%, transparent 100%),
+    radial-gradient(2px 2px at 165px 528px, rgba(255,255,255,0.84) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 270px 185px, rgba(255,255,255,0.91) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 13px 388px, rgba(166,243,248,0.99) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 442px 46px, rgba(166,243,248,0.86) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 85px 182px, rgba(255,255,255,0.86) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 398px 257px, rgba(166,243,248,0.89) 60%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 313px 415px, rgba(255,255,255,0.94) 60%, transparent 100%);
+  background-size: 607px 607px, 449px 449px; will-change: opacity;
+}
+[data-theme="space"] .bg-glow { background: none; overflow: hidden; }
+/* the planet: a huge dark sphere rising over the bottom edge, lit from behind by a sun (amber rim), with a thin ring crossing it */
+[data-theme="space"] .bg-glow::before {
+  content: ''; position: absolute; left: 50%; top: 89%; width: 190%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 50% 0%, #2B1E4D 0%, #150F34 22%, #0A0A22 48%, #05061A 70%);
+  box-shadow: 0 -2px 0 rgba(255, 190, 120, .9), 0 -6px 18px rgba(255, 157, 77, .55), 0 -22px 60px rgba(255, 106, 92, .30), 0 -60px 120px rgba(124, 92, 255, .22);
+}
+[data-theme="space"] .bg-glow::after {
+  content: ''; position: absolute; left: 50%; top: 84%; width: 240%; height: 26%; transform: translateX(-50%) rotate(-4deg); border-radius: 50%;
+  border: 2px solid rgba(255, 200, 130, .30); border-bottom-color: transparent;
+  box-shadow: 0 0 0 7px rgba(166, 243, 248, .06), 0 -2px 18px rgba(255, 157, 77, .18);
+  -webkit-mask-image: linear-gradient(#000 35%, transparent 62%); mask-image: linear-gradient(#000 35%, transparent 62%);
+}
+[data-theme="space"] .bg-symbols span { opacity: .10; color: var(--primary-2); }
+.no-grid[data-theme="space"] #bg { background-size: 340px 340px, 523px 523px, auto, auto, auto, auto; }
+@keyframes star-twinkle { from { opacity: .35; } to { opacity: 1; } }
+
+/* Problem window: thin glowing frame with bright corner brackets, like a cockpit display. Right and wrong recolour the brackets. */
+[data-theme="space"] :is(.pcard, .p-card) {
+  --br: var(--primary); --brl: 22px; --brw: 3px;
+  border: 2px solid color-mix(in srgb, var(--primary) 38%, transparent); border-radius: 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-2) 92%, #000), var(--bg-2) 60%, color-mix(in srgb, var(--bg-2) 80%, #3B2A7A));
+  box-shadow: 0 0 34px var(--glow), inset 0 0 34px rgba(79, 227, 240, .05);
+}
+[data-theme="space"] :is(.pcard, .p-card)::before {
+  content: ''; position: absolute; inset: 7px; pointer-events: none; z-index: 2;
+  background:
+    linear-gradient(var(--br), var(--br)) top left / var(--brl) var(--brw), linear-gradient(var(--br), var(--br)) top left / var(--brw) var(--brl),
+    linear-gradient(var(--br), var(--br)) top right / var(--brl) var(--brw), linear-gradient(var(--br), var(--br)) top right / var(--brw) var(--brl),
+    linear-gradient(var(--br), var(--br)) bottom left / var(--brl) var(--brw), linear-gradient(var(--br), var(--br)) bottom left / var(--brw) var(--brl),
+    linear-gradient(var(--br), var(--br)) bottom right / var(--brl) var(--brw), linear-gradient(var(--br), var(--br)) bottom right / var(--brw) var(--brl);
+  background-repeat: no-repeat; filter: drop-shadow(0 0 4px var(--br));
+}
+[data-theme="space"] :is(.pcard, .p-card).ok { --br: var(--good); border-color: color-mix(in srgb, var(--good) 55%, transparent); box-shadow: 0 0 34px var(--good-t); }
+[data-theme="space"] :is(.pcard, .p-card).bad { --br: var(--bad); border-color: color-mix(in srgb, var(--bad) 55%, transparent); box-shadow: 0 0 34px var(--bad-t); }
+[data-theme="space"] .half-2 .p-card { --br: var(--warn); }
+[data-theme="space"].crt :is(.pcard, .p-card)::after { opacity: .5; } /* softer scan lines on the display */
+
+/* Main buttons glow like a lit control; answer buttons and panels keep the arcade press-down shadow in the hull colour. */
+[data-theme="space"] .btn-primary { background: linear-gradient(180deg, var(--primary-2), var(--primary) 55%); border-color: var(--primary-2); box-shadow: 0 5px 0 var(--shade), 0 0 22px var(--glow); }
+[data-theme="space"] .btn-primary:active { box-shadow: 0 1px 0 var(--shade), 0 0 12px var(--glow); }
+[data-theme="space"] .logo-panel { border-color: var(--primary); box-shadow: 7px 7px 0 var(--shade), -7px -7px 0 var(--shade), 0 0 46px var(--glow); }
+[data-theme="space"] :is(.coins b, .coins .ico) { color: var(--warn); }
+[data-theme="space"] :is(.tile, .card, .group, .panel, .stat, .st-card) { background: color-mix(in srgb, var(--bg-2) 94%, transparent); }
+
+/* the Store preview and the Settings swatch */
+.st-tprev[data-theme="space"] { border-color: var(--line); background:
+  radial-gradient(1.5px 1.5px at 14% 26%, #fff 60%, transparent), radial-gradient(1px 1px at 38% 70%, #fff 60%, transparent), radial-gradient(1.5px 1.5px at 62% 22%, #A6F3F8 60%, transparent),
+  radial-gradient(1px 1px at 88% 40%, #fff 60%, transparent), radial-gradient(1px 1px at 74% 78%, #fff 60%, transparent),
+  radial-gradient(110% 100% at 50% 150%, #2B1E4D 0 82%, rgba(255, 157, 77, .9) 84%, rgba(255, 157, 77, 0) 90%),
+  linear-gradient(#060919, #0E1534); }
+.swatch[data-theme="space"] .dot { border-color: var(--line); background:
+  radial-gradient(circle at 70% 72%, #FFC857 0 3px, transparent 3.5px),
+  radial-gradient(1px 1px at 20% 24%, #fff 60%, transparent), radial-gradient(1px 1px at 46% 12%, #fff 60%, transparent), radial-gradient(1px 1px at 82% 30%, #fff 60%, transparent),
+  radial-gradient(90% 79% at 50% 145%, #2B1E4D 0 90%, #FF9D4D 92%, transparent 100%), #060919; }
+
+/* ===== Winter theme (bought in the Store): snowy day, falling snow, pines and a drift on the horizon, snow-capped problem window ===== */
+[data-theme="winter"] #bg { background: linear-gradient(#A8C8E2 0%, #C9DFEF 38%, #EAF3F9 72%, #F8FBFD 100%); }
+/* three layers of snow (the .bg-grid layer), each falling at its own speed; every layer moves by exactly one tile so the loop never jumps */
+[data-theme="winter"] .bg-grid {
+  inset: 0; animation: snow-fall 20s linear infinite; -webkit-mask-image: none; mask-image: none; will-change: background-position;
+  background-image:
+    radial-gradient(1.6px 1.6px at 231px 286px, rgba(255,255,255,0.91) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 238px 231px, rgba(255,255,255,0.83) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 300px 97px, rgba(255,255,255,0.75) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 262px 243px, rgba(255,255,255,0.86) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 95px 48px, rgba(255,255,255,0.81) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 72px 46px, rgba(255,255,255,0.83) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 21px 202px, rgba(255,255,255,0.94) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 80px 7px, rgba(255,255,255,0.91) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 32px 30px, rgba(255,255,255,0.71) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 123px 15px, rgba(255,255,255,0.89) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 167px 225px, rgba(255,255,255,0.85) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 100px 265px, rgba(255,255,255,0.76) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 150px 255px, rgba(255,255,255,0.7) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 43px 234px, rgba(255,255,255,0.86) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 208px 282px, rgba(255,255,255,0.95) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 42px 130px, rgba(255,255,255,0.78) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 117px 262px, rgba(255,255,255,0.77) 60%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 35px 288px, rgba(255,255,255,0.89) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 205px 55px, rgba(255,255,255,0.97) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 197px 34px, rgba(255,255,255,0.99) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 350px 0px, rgba(255,255,255,0.84) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 26px 240px, rgba(255,255,255,0.88) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 362px 203px, rgba(255,255,255,0.88) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 289px 322px, rgba(255,255,255,0.84) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 345px 138px, rgba(255,255,255,0.87) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 159px 170px, rgba(255,255,255,0.8) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 209px 388px, rgba(255,255,255,0.98) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 68px 126px, rgba(255,255,255,0.94) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 5px 30px, rgba(255,255,255,0.89) 60%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 249px 90px, rgba(255,255,255,0.94) 60%, transparent 100%),
+    radial-gradient(4.2px 4.2px at 192px 458px, rgba(255,255,255,0.73) 45%, transparent 100%),
+    radial-gradient(4.2px 4.2px at 134px 429px, rgba(255,255,255,0.76) 45%, transparent 100%),
+    radial-gradient(4.2px 4.2px at 119px 404px, rgba(255,255,255,0.71) 45%, transparent 100%),
+    radial-gradient(4.2px 4.2px at 217px 0px, rgba(255,255,255,0.67) 45%, transparent 100%),
+    radial-gradient(4.2px 4.2px at 311px 20px, rgba(255,255,255,0.65) 45%, transparent 100%),
+    radial-gradient(4.2px 4.2px at 403px 590px, rgba(255,255,255,0.63) 45%, transparent 100%);
+  background-size: 300px 300px, 400px 400px, 600px 600px;
+}
+[data-theme="winter"] .bg-glow { background: none; overflow: hidden; }
+[data-theme="winter"] .bg-glow::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 18px; height: 110px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='110' viewBox='0 0 360 110' fill='%239DBBD3'%3E%3Cpath d='M30 40.0L45.3 69.4H14.7Z'/%3E%3Cpath d='M30 59.6L54.8 89.0H5.2Z'/%3E%3Cpath d='M30 79.2L64.3 108.6H-4.3Z'/%3E%3Crect x='27' y='102' width='6' height='8'/%3E%3Cpath d='M80 18.0L98.0 56.6H62.0Z'/%3E%3Cpath d='M80 43.8L109.2 82.4H50.8Z'/%3E%3Cpath d='M80 69.5L120.4 108.2H39.6Z'/%3E%3Crect x='77' y='102' width='6' height='8'/%3E%3Cpath d='M135 46.0L148.5 72.9H121.5Z'/%3E%3Cpath d='M135 63.9L156.9 90.8H113.1Z'/%3E%3Cpath d='M135 81.8L165.3 108.7H104.7Z'/%3E%3Crect x='132' y='102' width='6' height='8'/%3E%3Cpath d='M190 10.0L209.8 52.0H170.2Z'/%3E%3Cpath d='M190 38.0L222.1 80.0H157.9Z'/%3E%3Cpath d='M190 66.0L234.4 108.0H145.6Z'/%3E%3Crect x='187' y='102' width='6' height='8'/%3E%3Cpath d='M250 34.0L265.3 65.9H234.7Z'/%3E%3Cpath d='M250 55.3L274.8 87.2H225.2Z'/%3E%3Cpath d='M250 76.6L284.3 108.5H215.7Z'/%3E%3Crect x='247' y='102' width='6' height='8'/%3E%3Cpath d='M305 22.0L323.0 59.0H287.0Z'/%3E%3Cpath d='M305 46.6L334.2 83.6H275.8Z'/%3E%3Cpath d='M305 71.3L345.4 108.2H264.6Z'/%3E%3Crect x='302' y='102' width='6' height='8'/%3E%3Cpath d='M345 50.0L356.7 75.2H333.3Z'/%3E%3Cpath d='M345 66.8L364.0 92.0H326.0Z'/%3E%3Cpath d='M345 83.6L371.3 108.8H318.7Z'/%3E%3Crect x='342' y='102' width='6' height='8'/%3E%3C/svg%3E") repeat-x left bottom / 360px 110px, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='90' viewBox='0 0 300 90' fill='%237FA4C2'%3E%3Cpath d='M25 26.0L39.4 52.9H10.6Z'/%3E%3Cpath d='M25 43.9L48.4 70.8H1.6Z'/%3E%3Cpath d='M25 61.8L57.3 88.7H-7.3Z'/%3E%3Crect x='22' y='82' width='6' height='8'/%3E%3Cpath d='M95 10.0L112.1 43.6H77.9Z'/%3E%3Cpath d='M95 32.4L122.7 66.0H67.3Z'/%3E%3Cpath d='M95 54.8L133.4 88.4H56.6Z'/%3E%3Crect x='92' y='82' width='6' height='8'/%3E%3Cpath d='M160 32.0L172.6 56.4H147.4Z'/%3E%3Cpath d='M160 48.2L180.4 72.6H139.6Z'/%3E%3Cpath d='M160 64.5L188.3 88.8H131.7Z'/%3E%3Crect x='157' y='82' width='6' height='8'/%3E%3Cpath d='M225 6.0L243.0 41.3H207.0Z'/%3E%3Cpath d='M225 29.5L254.2 64.8H195.8Z'/%3E%3Cpath d='M225 53.0L265.4 88.3H184.6Z'/%3E%3Crect x='222' y='82' width='6' height='8'/%3E%3Cpath d='M280 24.0L293.5 51.7H266.5Z'/%3E%3Cpath d='M280 42.5L301.9 70.2H258.1Z'/%3E%3Cpath d='M280 61.0L310.3 88.7H249.7Z'/%3E%3Crect x='277' y='82' width='6' height='8'/%3E%3C/svg%3E") repeat-x 120px bottom / 300px 90px;
+}
+[data-theme="winter"] .bg-glow::after {
+  content: ''; position: absolute; left: -15%; width: 130%; bottom: -46px; height: 96px; border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(#FFFFFF, #EAF3F9); box-shadow: 0 -3px 14px rgba(110, 150, 185, .28);
+}
+[data-theme="winter"] .bg-symbols span { opacity: .12; color: var(--primary-2); }
+@keyframes snow-fall { to { background-position: 0 300px, 0 400px, 0 600px; } }
+
+/* Problem window: an icy pane with a cap of snow along its top edge. The right/wrong colours still come from the shared .ok / .bad rules. */
+[data-theme="winter"] :is(.pcard, .p-card) { background: linear-gradient(180deg, #CFE2F1, #F2F8FC 55%, #FFFFFF); }
+[data-theme="winter"] :is(.pcard, .p-card)::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 18px; pointer-events: none; z-index: 2;
+  background:
+    radial-gradient(circle at 14px 0, #FFF 0 11px, transparent 12px) 0 0 / 31px 18px repeat-x,
+    radial-gradient(circle at 20px 0, #FFF 0 8px, transparent 9px) 0 0 / 47px 14px repeat-x,
+    linear-gradient(#FFF, #FFF) 0 0 / 100% 4px no-repeat;
+  filter: drop-shadow(0 2px 0 rgba(130, 170, 200, .55));
+}
+[data-theme="winter"] .btn-primary { background: linear-gradient(180deg, #2E93BF, var(--primary)); }
+[data-theme="winter"] :is(.tile, .card, .group, .panel, .stat, .st-card) { background: rgba(255, 255, 255, .88); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+[data-theme="winter"] .logo-panel { background: #FFFFFF; box-shadow: 7px 7px 0 var(--shade), -7px -7px 0 var(--shade), 0 0 34px var(--glow); }
+[data-theme="winter"] .logo-a { color: var(--primary-2); }
+[data-theme="winter"] .btn-daily .ico-l { color: var(--berry); }
+
+/* the Store preview and the Settings swatch */
+.st-tprev[data-theme="winter"] { border-color: var(--line); background:
+  radial-gradient(1.5px 1.5px at 12% 24%, #fff 60%, transparent), radial-gradient(2px 2px at 40% 14%, #fff 60%, transparent), radial-gradient(1.5px 1.5px at 66% 34%, #fff 60%, transparent), radial-gradient(2px 2px at 90% 18%, #fff 60%, transparent), radial-gradient(1.5px 1.5px at 78% 60%, #fff 60%, transparent),
+  radial-gradient(110% 40% at 50% 128%, #fff 0 90%, transparent 92%),
+  linear-gradient(#A8C8E2, #E6F1F9); }
+.swatch[data-theme="winter"] .dot { border-color: var(--line); background:
+  radial-gradient(1.2px 1.2px at 22% 26%, #fff 60%, transparent), radial-gradient(1.2px 1.2px at 56% 14%, #fff 60%, transparent), radial-gradient(1.2px 1.2px at 80% 36%, #fff 60%, transparent),
+  radial-gradient(100% 38% at 50% 125%, #fff 0 90%, transparent 92%),
+  linear-gradient(#A8C8E2, #E6F1F9); }
+/* answer tints must hide the trees behind them */
+[data-theme="winter"] .answer.good { background: color-mix(in srgb, var(--good) 16%, #FFFFFF); }
+[data-theme="winter"] .answer.bad { background: color-mix(in srgb, var(--bad) 14%, #FFFFFF); }
+
+/* ===== Notebook refinements: red-pen marks, index-card problem window, highlighter, paper-like shadows ===== */
+/* The pixel check and cross become hand-drawn strokes (a mask over the same icon box; the pixel shapes inside are hidden). */
+[data-theme="notebook"] :is(.verdict .ico, .answer .mark) { background: currentColor; -webkit-mask: var(--pen) center / contain no-repeat; mask: var(--pen) center / contain no-repeat; transform: rotate(-4deg); }
+[data-theme="notebook"] :is(.verdict .ico, .answer .mark) use { display: none; }
+[data-theme="notebook"] :is(.pcard.ok .verdict .ico, .p-card.ok .verdict .ico, .answer.good .mark) { --pen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 21Q11 25 15 33Q22 17 35 6'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-theme="notebook"] :is(.pcard.bad .verdict .ico, .p-card.bad .verdict .ico, .answer.bad .mark) { --pen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 9Q20 21 33 32'/%3E%3Cpath d='M32 8Q20 20 7 33'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-theme="notebook"] .verdict .ico { --pen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 9Q20 21 33 32'/%3E%3Cpath d='M32 8Q20 20 7 33'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-theme="notebook"] .pcard.ok .verdict .ico { --pen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='black' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 21Q11 25 15 33Q22 17 35 6'/%3E%3C/g%3E%3C/svg%3E"); }
+
+/* Problem window = an index card: faint blue rules, a red top line, and a pencil-shaded edge instead of the hard arcade shadow. */
+[data-theme="notebook"] :is(.pcard, .p-card) {
+  background:
+    linear-gradient(to bottom, transparent 2.5rem, rgba(222, 80, 90, .45) 2.5rem calc(2.5rem + 2px), transparent calc(2.5rem + 2px)),
+    repeating-linear-gradient(to bottom, transparent 0 calc(2.1rem - 1px), rgba(95, 140, 220, .2) calc(2.1rem - 1px) 2.1rem),
+    #FFFFFF;
+  box-shadow: 3px 4px 0 rgba(95, 110, 150, .26);
+}
+[data-theme="notebook"] :is(.pcard, .p-card).ok { box-shadow: 3px 4px 0 var(--good-t); }
+[data-theme="notebook"] :is(.pcard, .p-card).bad { box-shadow: 3px 4px 0 var(--bad-t); }
+
+/* Title: a yellow highlighter swipe behind ARCADE and a single soft ink offset instead of two heavy ones; the panel looks like a card on the page. */
+[data-theme="notebook"] .logo-panel { box-shadow: 4px 5px 0 rgba(95, 110, 150, .28); }
+[data-theme="notebook"] :is(.logo-a, .logo-b) { text-shadow: 2px 2px 0 rgba(47, 85, 212, .30); }
+[data-theme="notebook"] .logo-b { width: fit-content; margin-inline: auto; padding: 0 .35em;
+  background: linear-gradient(transparent 46%, rgba(255, 224, 70, .85) 46% 90%, transparent 90%); transform: rotate(-1.5deg); }
+/* section headings get highlighted like study notes */
+[data-theme="notebook"] :is(.panel h3, .group h3) { width: fit-content; padding: 0 .3em; margin-left: -.3em; color: var(--text);
+  background: linear-gradient(transparent 50%, rgba(255, 224, 70, .7) 50% 92%, transparent 92%); }
+
+/* Notebook swatch and Store preview show the ruled page */
+.swatch[data-theme="notebook"] .dot { border-color: var(--line); background:
+  linear-gradient(90deg, transparent 22%, rgba(222, 80, 90, .75) 22% 28%, transparent 28%),
+  repeating-linear-gradient(to bottom, transparent 0 6px, rgba(95, 140, 220, .55) 6px 7px), #FDFCF8; }
+
+/* ===== Candy theme (bought in the Store): pastel wallpaper with polka dots, sprinkles that fall, icing dripping from the top, gumdrop buttons ===== */
+[data-theme="candy"] #bg {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='440' height='440' opacity='0.35'%3E%3Crect x='192' y='301' width='16' height='6' rx='3' fill='%238E6BE8' transform='rotate(2 200 304)'/%3E%3Crect x='23' y='367' width='16' height='6' rx='3' fill='%23FF8A5C' transform='rotate(46 31 370)'/%3E%3Crect x='100' y='65' width='16' height='6' rx='3' fill='%238E6BE8' transform='rotate(62 108 68)'/%3E%3Crect x='176' y='267' width='16' height='6' rx='3' fill='%23FF8A5C' transform='rotate(90 184 270)'/%3E%3Crect x='128' y='402' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(118 136 405)'/%3E%3Crect x='301' y='388' width='16' height='6' rx='3' fill='%23FFC02E' transform='rotate(94 309 391)'/%3E%3Crect x='18' y='226' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(23 26 229)'/%3E%3Crect x='174' y='267' width='16' height='6' rx='3' fill='%23FFC02E' transform='rotate(156 182 270)'/%3E%3Crect x='75' y='179' width='16' height='6' rx='3' fill='%234DA3FF' transform='rotate(70 83 182)'/%3E%3Crect x='279' y='52' width='16' height='6' rx='3' fill='%234DA3FF' transform='rotate(79 287 55)'/%3E%3C/svg%3E") 0 0 / 440px 440px,
+    radial-gradient(circle, rgba(255, 255, 255, .75) 5px, transparent 6px) 0 0 / 46px 46px,
+    linear-gradient(#FFD3E5 0%, #FFE6F0 40%, #FFF3EC 100%);
+}
+[data-theme="candy"] .bg-grid {
+  inset: 0; animation: sprinkle-fall 60s linear infinite; -webkit-mask-image: none; mask-image: none; will-change: background-position;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' opacity='1.0'%3E%3Crect x='318' y='135' width='16' height='6' rx='3' fill='%234DA3FF' transform='rotate(91 326 138)'/%3E%3Crect x='333' y='276' width='16' height='6' rx='3' fill='%238E6BE8' transform='rotate(7 341 279)'/%3E%3Crect x='127' y='337' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(13 135 340)'/%3E%3Crect x='57' y='195' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(120 65 198)'/%3E%3Crect x='194' y='283' width='16' height='6' rx='3' fill='%23FF8A5C' transform='rotate(26 202 286)'/%3E%3Crect x='127' y='11' width='16' height='6' rx='3' fill='%238E6BE8' transform='rotate(55 135 14)'/%3E%3Crect x='143' y='98' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(99 151 101)'/%3E%3Crect x='36' y='76' width='16' height='6' rx='3' fill='%23FF8A5C' transform='rotate(158 44 79)'/%3E%3Crect x='227' y='69' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(33 235 72)'/%3E%3Crect x='2' y='112' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(55 10 115)'/%3E%3Crect x='85' y='153' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(80 93 156)'/%3E%3Crect x='276' y='325' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(52 284 328)'/%3E%3Crect x='100' y='201' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(76 108 204)'/%3E%3Crect x='184' y='217' width='16' height='6' rx='3' fill='%232CBFA6' transform='rotate(42 192 220)'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520' opacity='1.0'%3E%3Crect x='135' y='38' width='16' height='6' rx='3' fill='%23FFC02E' transform='rotate(84 143 41)'/%3E%3Crect x='418' y='313' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(150 426 316)'/%3E%3Crect x='305' y='352' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(86 313 355)'/%3E%3Crect x='158' y='186' width='16' height='6' rx='3' fill='%238E6BE8' transform='rotate(78 166 189)'/%3E%3Crect x='356' y='166' width='16' height='6' rx='3' fill='%238E6BE8' transform='rotate(47 364 169)'/%3E%3Crect x='241' y='365' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(45 249 368)'/%3E%3Crect x='131' y='504' width='16' height='6' rx='3' fill='%234DA3FF' transform='rotate(5 139 507)'/%3E%3Crect x='183' y='437' width='16' height='6' rx='3' fill='%23FF5C9A' transform='rotate(103 191 440)'/%3E%3Crect x='281' y='408' width='16' height='6' rx='3' fill='%23FFC02E' transform='rotate(107 289 411)'/%3E%3C/svg%3E"); background-size: 360px 360px, 520px 520px;
+}
+@keyframes sprinkle-fall { to { background-position: 0 360px, 0 520px; } }
+[data-theme="candy"] .bg-glow { background: none; overflow: hidden; }
+[data-theme="candy"] .bg-glow::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 48px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='48' viewBox='0 0 260 48'%3E%3Cpath d='M0 0H260V12L232 12V26A6 6 0 0 1 220 26V12L183 12V33A7 7 0 0 1 169 33V12L133 12V23A5 5 0 0 1 123 23V12L86 12V38A8 8 0 0 1 70 38V12L36 12V28A6 6 0 0 1 24 28V12L0 12Z' fill='%23FF8FBD'/%3E%3Crect y='0' width='260' height='4' fill='%23FFB3D2'/%3E%3Crect x='26' y='15' width='2.5' height='14' rx='1.2' fill='white' opacity='.55'/%3E%3Crect x='72' y='15' width='2.5' height='24' rx='1.2' fill='white' opacity='.55'/%3E%3Crect x='125' y='15' width='2.5' height='9' rx='1.2' fill='white' opacity='.55'/%3E%3Crect x='171' y='15' width='2.5' height='19' rx='1.2' fill='white' opacity='.55'/%3E%3Crect x='222' y='15' width='2.5' height='12' rx='1.2' fill='white' opacity='.55'/%3E%3C/svg%3E") repeat-x left top / 260px 48px; filter: drop-shadow(0 3px 0 rgba(168, 28, 98, .22));
+}
+[data-theme="candy"] .bg-symbols span { opacity: .12; color: var(--primary-2); }
+.no-grid[data-theme="candy"] .bg-glow::before { display: block; }
+
+/* Gumdrops: rounder corners and a glossy highlight on the main buttons */
+[data-theme="candy"] :is(.btn, .tile, .card, .stat, .panel, .group, .answer, .st-card, .coins, .icon-btn) { border-radius: 18px; }
+[data-theme="candy"] .btn-primary { background: linear-gradient(180deg, #F0589B, var(--primary) 60%); border-color: #FF8FBD; box-shadow: 0 5px 0 var(--shade), inset 0 3px 0 rgba(255, 255, 255, .45); }
+[data-theme="candy"] .btn-primary:active { box-shadow: 0 1px 0 var(--shade), inset 0 3px 0 rgba(255, 255, 255, .45); }
+[data-theme="candy"] .btn-primary .ico { color: #FFFFFF; }
+
+/* Problem window: a glossy pink-edged pane with a white highlight, like candy shell */
+[data-theme="candy"] :is(.pcard, .p-card) {
+  border-width: 4px; border-radius: 26px;
+  background: linear-gradient(180deg, #FFE3EF, #FFFFFF 55%);
+  box-shadow: 0 7px 0 var(--shade), 0 0 30px var(--glow), inset 0 4px 0 rgba(255, 255, 255, .9);
+}
+[data-theme="candy"] :is(.pcard, .p-card)::before {
+  content: ''; position: absolute; left: 7%; top: 9px; width: 26%; height: 11px; border-radius: 99px; pointer-events: none; z-index: 2;
+  background: rgba(255, 255, 255, .95); box-shadow: 0 0 0 1px rgba(214, 51, 127, .08);
+}
+[data-theme="candy"] :is(.pcard, .p-card).ok { box-shadow: 0 7px 0 rgba(0, 0, 0, .18), 0 0 30px var(--good-t), inset 0 4px 0 rgba(255, 255, 255, .9); }
+[data-theme="candy"] :is(.pcard, .p-card).bad { box-shadow: 0 7px 0 rgba(0, 0, 0, .18), 0 0 30px var(--bad-t), inset 0 4px 0 rgba(255, 255, 255, .9); }
+[data-theme="candy"].crt :is(.pcard, .p-card)::after { display: none; } /* no scan lines on candy */
+
+/* Title: bubblegum MATH over a grape ARCADE, each with a clean drop instead of the stacked offsets */
+[data-theme="candy"] .logo-panel { border-radius: 30px; box-shadow: 0 9px 0 var(--shade), 0 0 40px var(--glow); }
+[data-theme="candy"] .logo-a { color: var(--primary); text-shadow: 0 5px 0 var(--shade); }
+[data-theme="candy"] .logo-b { color: var(--grape); text-shadow: 0 4px 0 #4B1FA8; }
+[data-theme="candy"] .logo-tiles i { border-radius: 50%; }
+
+/* the Store preview and the Settings swatch */
+.st-tprev[data-theme="candy"] { border-color: var(--line); background:
+  radial-gradient(circle at 80% 90%, #2CBFA6 0 2.5px, transparent 3.5px), radial-gradient(circle at 88% 86%, #FFC02E 0 2.5px, transparent 3.5px), radial-gradient(circle at 94% 91%, #8E6BE8 0 2.5px, transparent 3.5px),
+  linear-gradient(#FF8FBD 0 16%, transparent 16%), linear-gradient(#FFD3E5, #FFF3EC); }
+.swatch[data-theme="candy"] .dot { border-color: var(--line); background:
+  radial-gradient(circle at 24% 72%, #2CBFA6 0 2.5px, transparent 3.5px), radial-gradient(circle at 60% 82%, #FFC02E 0 2.5px, transparent 3.5px), radial-gradient(circle at 78% 58%, #8E6BE8 0 2.5px, transparent 3.5px),
+  linear-gradient(#FF8FBD 0 22%, transparent 22%), linear-gradient(#FFD3E5, #FFF3EC); }
+/* answer tints must hide the sprinkles behind them */
+[data-theme="candy"] .answer.good { background: color-mix(in srgb, var(--good) 16%, #FFFFFF); }
+[data-theme="candy"] .answer.bad { background: color-mix(in srgb, var(--bad) 16%, #FFFFFF); }
+
+/* ===== Gothic theme (bought in the Store): damask lattice, drifting skulls and bats, cobweb, thorny vines, ornate gold-framed problem window ===== */
+[data-theme="gothic"] #bg {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='none' stroke='%23FFFFFF' stroke-opacity='.11' stroke-width='1'%3E%3Cpath d='M40 0L80 40L40 80L0 40Z'/%3E%3Cpath d='M40 14L66 40L40 66L14 40Z' stroke-opacity='.08'/%3E%3Ccircle cx='40' cy='40' r='5' stroke-opacity='.16'/%3E%3Ccircle cx='0' cy='0' r='2.5'/%3E%3Ccircle cx='80' cy='0' r='2.5'/%3E%3Ccircle cx='0' cy='80' r='2.5'/%3E%3Ccircle cx='80' cy='80' r='2.5'/%3E%3Cpath d='M40 26C34 32 34 36 40 40C46 36 46 32 40 26ZM40 54C34 48 34 44 40 40C46 44 46 48 40 54Z' stroke-opacity='.14'/%3E%3C/svg%3E") 0 0 / 80px 80px,
+    radial-gradient(120% 70% at 50% 0%, #161616, transparent 70%),
+    #070707;
+}
+/* slow grey fog */
+[data-theme="gothic"] .bg-grid {
+  inset: -12%; animation: fog-drift 34s ease-in-out infinite alternate; -webkit-mask-image: none; mask-image: none; will-change: transform;
+  background-image: radial-gradient(40% 30% at 22% 32%, rgba(255, 255, 255, .07), transparent 72%), radial-gradient(44% 34% at 82% 68%, rgba(255, 255, 255, .05), transparent 72%);
+  background-size: 100% 100%;
+}
+@keyframes fog-drift { from { transform: translate3d(-3%, 0, 0); } to { transform: translate3d(3%, -2%, 0); } }
+[data-theme="gothic"] .bg-glow { background: radial-gradient(70% 30% at 50% 112%, rgba(255, 255, 255, .12), transparent 72%); }
+[data-theme="gothic"] .bg-glow::before { content: ''; position: absolute; top: 0; right: 0; width: 190px; height: 190px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200' fill='none' stroke='%23FFFFFF' stroke-opacity='.42' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M200 0L200.0 200.0M200 0L125.1 185.4M200 0L58.6 141.4M200 0L15.9 78.1M200 0L0.0 0.0M200.0 42.0Q193.3 34.6 184.3 38.9M184.3 38.9Q180.5 29.4 170.3 29.7M170.3 29.7Q170.8 19.7 161.3 16.4M161.3 16.4Q165.4 7.0 158.0 0.0M200.0 82.0Q186.9 67.6 169.3 76.0M169.3 76.0Q162.0 57.4 142.0 58.0M142.0 58.0Q142.9 38.5 124.5 32.0M124.5 32.0Q132.5 13.7 118.0 0.0M200.0 122.0Q180.4 100.6 154.3 113.1M154.3 113.1Q143.4 85.5 113.7 86.3M113.7 86.3Q115.0 57.3 87.7 47.7M87.7 47.7Q99.6 20.4 78.0 0.0M200.0 162.0Q174.0 133.6 139.3 150.2M139.3 150.2Q124.9 113.5 85.4 114.6M85.4 114.6Q87.2 76.1 50.9 63.3M50.9 63.3Q66.7 27.1 38.0 0.0M200.0 196.0Q168.6 161.6 126.6 181.7M126.6 181.7Q109.1 137.3 61.4 138.6M61.4 138.6Q63.5 92.1 19.6 76.6M19.6 76.6Q38.7 32.8 4.0 0.0'/%3E%3C/svg%3E") no-repeat right top / 190px 190px; }
+[data-theme="gothic"] .bg-glow::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='90' viewBox='0 0 220 90'%3E%3Cpath d='M0 44C40 8 80 8 110 44C140 80 180 80 220 44' fill='none' stroke='%23333333' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M18.5 29.8L26.1 35.8L24.6 26.3ZM46.2 18.2L48.3 8.8L53.1 17.2ZM73.0 18.7L73.6 28.3L79.7 20.8ZM96.1 30.3L104.6 25.7L101.5 34.9ZM124.2 57.9L132.2 52.5L130.0 61.9ZM148.9 69.8L151.0 79.2L155.8 70.9ZM176.2 69.2L177.0 59.6L182.9 67.2ZM202.7 57.4L210.7 62.8L208.5 53.4Z' fill='%23333333'/%3E%3C/svg%3E") repeat-x left bottom / 220px 90px; opacity: .9; }
+/* the drifting maths symbols become skulls and bats (a plus sign would read as a cross, so none of the glyphs show) */
+[data-theme="gothic"] .bg-symbols span { color: transparent; opacity: .17; animation-name: skull-drift; }
+[data-theme="gothic"] .bg-symbols span::after { content: ''; position: absolute; left: 0; top: 0; width: 1em; height: 1.15em; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat center / contain; }
+[data-theme="gothic"] .bg-symbols span:nth-child(even) { opacity: .28; }
+[data-theme="gothic"] .bg-symbols span:nth-child(even)::after { width: 1.7em; height: .85em; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 24'%3E%3Cpath fill='%23A6A6A6' d='M24 9C22.5 5 21 3.5 19.5 1c-.6 4-2.4 6-6 6.4C8 6.4 4 8.5 0 12.5c5-1.2 8 0 10 3 2-2.3 5-2.6 7 .4 1.8-2.2 4-2.2 7 5.1 3-7.300 5.200-7.300 7-5.100 2-3 5-2.700 7-.4 2-3 5-4.200 10-3C44 8.500 40 6.400 34.500 7.400 30.900 7 29.100 5 28.500 1 27 3.500 25.500 5 24 9Z'/%3E%3Cellipse cx='24' cy='12' rx='2.6' ry='5' fill='%23A6A6A6'/%3E%3C/svg%3E"); }
+@keyframes skull-drift { from { transform: translateY(105vh) rotate(-10deg); } to { transform: translateY(-20vh) rotate(10deg); } }
+
+/* Sharper corners, white main buttons */
+[data-theme="gothic"] :is(.btn, .tile, .card, .stat, .panel, .group, .answer, .st-card, .coins, .icon-btn) { border-radius: 6px; }
+[data-theme="gothic"] .btn-primary { background: linear-gradient(180deg, #FFFFFF, var(--primary) 60%); border-color: var(--primary-2); box-shadow: 0 5px 0 var(--shade), 0 0 20px rgba(255, 255, 255, .18); }
+[data-theme="gothic"] .btn-primary:active { box-shadow: 0 1px 0 var(--shade), 0 0 12px rgba(255, 255, 255, .18); }
+
+/* Problem window: a double white frame with a small skull in each bottom corner */
+[data-theme="gothic"] :is(.pcard, .p-card) {
+  border-width: 3px; border-radius: 6px;
+  background: linear-gradient(180deg, #1A1A1A, #0E0E0E);
+  box-shadow: 0 6px 0 var(--shade), 0 0 34px var(--glow), inset 0 0 0 5px #0E0E0E, inset 0 0 0 6px rgba(255, 255, 255, .55);
+}
+[data-theme="gothic"] :is(.pcard, .p-card).ok { box-shadow: 0 6px 0 rgba(0, 0, 0, .5), 0 0 30px var(--good-t), inset 0 0 0 5px #0E0E0E, inset 0 0 0 6px rgba(95, 211, 160, .5); }
+[data-theme="gothic"] :is(.pcard, .p-card).bad { box-shadow: 0 6px 0 rgba(0, 0, 0, .5), 0 0 30px var(--bad-t), inset 0 0 0 5px #0E0E0E, inset 0 0 0 6px rgba(255, 77, 109, .5); }
+[data-theme="gothic"] :is(.pcard, .p-card)::before {
+  content: ''; position: absolute; inset: 10px; pointer-events: none; z-index: 2; opacity: .85;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat left bottom / 20px 23px, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat right bottom / 20px 23px;
+}
+
+/* Title: white letters with a grey edge */
+[data-theme="gothic"] .logo-panel { border-radius: 6px; background: #0E0E0E; box-shadow: 0 8px 0 var(--shade), 0 0 44px var(--glow); }
+[data-theme="gothic"] .logo-a { color: var(--primary-2); text-shadow: 3px 3px 0 #6E6E6E, 6px 6px 0 #262626; }
+[data-theme="gothic"] .logo-b { color: var(--text); text-shadow: 3px 3px 0 #6E6E6E, 6px 6px 0 #262626; }
+
+/* the Store preview and the Settings swatch */
+.st-tprev[data-theme="gothic"] { border-color: var(--line); background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat 96% 93% / 14px 16px, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='none' stroke='%23FFFFFF' stroke-opacity='.11' stroke-width='1'%3E%3Cpath d='M40 0L80 40L40 80L0 40Z'/%3E%3Cpath d='M40 14L66 40L40 66L14 40Z' stroke-opacity='.08'/%3E%3Ccircle cx='40' cy='40' r='5' stroke-opacity='.16'/%3E%3Ccircle cx='0' cy='0' r='2.5'/%3E%3Ccircle cx='80' cy='0' r='2.5'/%3E%3Ccircle cx='0' cy='80' r='2.5'/%3E%3Ccircle cx='80' cy='80' r='2.5'/%3E%3Cpath d='M40 26C34 32 34 36 40 40C46 36 46 32 40 26ZM40 54C34 48 34 44 40 40C46 44 46 48 40 54Z' stroke-opacity='.14'/%3E%3C/svg%3E") 0 0 / 50px 50px, #070707; }
+.st-tprev[data-theme="gothic"] .st-tcard b { color: var(--primary-2); }
+.swatch[data-theme="gothic"] .dot { border-color: var(--line); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath fill='%23F2F2F2' d='M20 1C9.5 1 3.5 8.5 3.5 18c0 6 2.8 10 7 12.4V38h19v-7.6c4.2-2.4 7-6.4 7-12.4C36.5 8.5 30.5 1 20 1Z'/%3E%3Crect x='11.5' y='36' width='17' height='8' rx='2' fill='%23F2F2F2'/%3E%3Cellipse cx='13' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cellipse cx='27' cy='19' rx='5' ry='5.6' fill='%23070707'/%3E%3Cpath d='M20 25l-3.2 6.2h6.4z' fill='%23070707'/%3E%3Cpath d='M16 37.5v6M20 37.5v6M24 37.5v6' stroke='%23070707' stroke-width='1.3'/%3E%3C/svg%3E") no-repeat 50% 50% / 62% auto, radial-gradient(circle at 50% 120%, rgba(255, 255, 255, .35), transparent 70%), #070707; }
+/* answer tints must hide the drifting skulls behind them */
+[data-theme="gothic"] .answer.good { background: color-mix(in srgb, var(--good) 18%, var(--bg-2)); }
+[data-theme="gothic"] .answer.bad { background: color-mix(in srgb, var(--bad) 20%, var(--bg-2)); }
+[data-theme="gothic"] .logo-tiles i { color: var(--text); } /* the four operation tiles stay black and white too */
+
+/* ===== Polish pass ===== */
+/* Candy: falling sprinkles stay in the background so plain text and links on the sign-in, Ranks and Friends screens stay readable */
+[data-theme="candy"] .bg-grid { opacity: .5; }
+/* Gothic: inputs get a clear edge on the black background */
+[data-theme="gothic"] :is(input, select, textarea) { border-color: #7A7A7A; background: #0E0E0E; }
+[data-theme="gothic"] :is(input, select, textarea):focus { border-color: var(--primary-2); outline-color: var(--primary-2); }
+/* Notebook: pixel icons become marker blobs (not the red-pen check/cross, which are drawn separately) */
+[data-theme="notebook"] .ico { filter: url(#sk-ico); }
+[data-theme="notebook"] :is(.verdict .ico, .answer .mark) { filter: none; }

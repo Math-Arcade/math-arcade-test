@@ -1,5 +1,5 @@
 // Offline support. Bump VERSION on every release so the precache is rebuilt.
-const VERSION = 'ma-2.15.0';
+const VERSION = 'ma-2.20.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -10,7 +10,7 @@ const PRECACHE = [
   'js/engine/duel.js', 'js/engine/problems.js', 'js/engine/rng.js', 'js/engine/run.js', 'js/engine/sequences.js',
   'js/screens/auth.js', 'js/screens/duel.js', 'js/screens/game.js', 'js/screens/home.js', 'js/screens/leaderboard.js',
   'js/screens/modes.js', 'js/screens/profile.js', 'js/screens/friends.js', 'js/screens/settings.js', 'js/screens/store.js', 'js/screens/achievements.js',
-  'assets/fonts/chakra-petch-latin-500-normal.woff2', 'assets/fonts/chakra-petch-latin-700-normal.woff2', 'assets/fonts/press-start-2p-latin-400-normal.woff2',
+  'assets/fonts/chakra-petch-latin-500-normal.woff2', 'assets/fonts/chakra-petch-latin-700-normal.woff2', 'assets/fonts/press-start-2p-latin-400-normal.woff2', 'assets/fonts/gochi-hand-latin-400-normal.woff2', 'assets/fonts/jersey-25-latin-400-normal.woff2',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png', 'assets/icons/maskable-512.png',
 ];
 

@@ -1,4 +1,4 @@
-export const VERSION = '2.15.0';
+export const VERSION = '2.20.0';
 
 // Firebase web config. These values are public by design; what protects your data is
 // database.rules.json (deploy it!) plus, ideally, App Check and an API-key restriction.
@@ -21,4 +21,5 @@ export const THEMES = [
   ['green', 'Neon'], ['blue', 'Ocean'], ['red', 'Ruby'], ['yellow', 'Sun'],
   ['purple', 'Grape'], ['light', 'Light'], ['dark', 'Mono'], ['colorblind', 'Color-safe'],
 ];
+export const ALL_THEME_IDS = [...THEMES.map((t) => t[0]), 'notebook', 'space', 'winter', 'candy', 'gothic']; // free ones plus the bought ones (see THEME_ITEMS in shop.js)
 export const MUSIC = [['none', 'Off'], ['campfire', 'Campfire'], ['rain', 'Rain'], ['wildlife', 'Wildlife']];

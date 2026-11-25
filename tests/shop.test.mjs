@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeProfiles, newProfile, store } from '../js/store.js';
-import { FRAMES, CARDS, balance, cleanFrame, cleanCard, frameById, cardById, itemById } from '../js/shop.js';
+import { FRAMES, CARDS, RETIRED_ITEMS, balance, cleanFrame, cleanCard, frameById, cardById, itemById } from '../js/shop.js';
 import { cleanPublic } from '../js/public.js';
 
 test('coins only grow when merging, so syncing never loses or duplicates them', () => {
@@ -15,8 +15,8 @@ test('coins only grow when merging, so syncing never loses or duplicates them', 
 });
 
 test('unknown frames are dropped and the worn frame is always owned', () => {
-  const m = mergeProfiles({ ...newProfile(), owned: ['nope', 'gold'], frame: 'rainbow' }, null);
-  assert.deepEqual(m.owned.sort(), ['gold', 'rainbow']);
+  const m = mergeProfiles({ ...newProfile(), owned: ['nope', 'sugar'], frame: 'rainbow' }, null);
+  assert.deepEqual(m.owned.sort(), ['rainbow', 'sugar']);
   assert.equal(cleanFrame('nope'), null);
   assert.ok(FRAMES.every((f) => f.price > 0 && cleanFrame(f.id) === f.id));
 });
@@ -24,7 +24,7 @@ test('unknown frames are dropped and the worn frame is always owned', () => {
 // ---- profile cards ----
 
 test('cards: catalog is valid, ids never collide with frame ids, every card costs coins', () => {
-  assert.equal(CARDS.length, 5);
+  assert.equal(CARDS.length, 6);
   assert.ok(CARDS.every((c) => c.price > 0 && c.name && cleanCard(c.id) === c.id && cardById(c.id) === c));
   assert.equal(new Set([...FRAMES, ...CARDS].map((x) => x.id)).size, FRAMES.length + CARDS.length, 'frame and card ids are all different');
   assert.equal(cleanCard('nope'), null); assert.equal(cleanCard(null), null); assert.equal(cleanCard('neon'), null, 'a frame id is not a card');
@@ -75,4 +75,35 @@ test('cards: what comes back from the database is cleaned', () => {
   assert.equal(cleanPublic({ ...base, card: 'neon' }).card, null);
   assert.equal(cleanPublic({ ...base }).card, null);
   assert.equal(cleanPublic({ ...base, card: 'crystal', frame: 'rainbow' }).frame, 'rainbow');
+});
+
+// ---- items taken out of the Store ----
+
+test('retired items: Gold Rush and Gold Ledger are gone from the Store, and everyone who owned one gets the coins back', () => {
+  assert.equal(frameById('gold'), null); assert.equal(cardById('goldledger'), null);
+  assert.equal(cleanFrame('gold'), null); assert.equal(cleanCard('goldledger'), null);
+  assert.equal(itemById('gold'), null); assert.equal(itemById('goldledger'), null);
+  const bought = { ...newProfile(), coinsEarned: 3000, coinsSpent: 900 + 1100 + 250, owned: ['gold', 'goldledger', 'frost'], frame: 'gold', card: 'goldledger' };
+  const m = mergeProfiles(bought, null);
+  assert.deepEqual(m.owned, ['frost']); assert.equal(m.frame, null); assert.equal(m.card, null);
+  assert.equal(m.coinsSpent, 250, 'only the 250 for Frostbite stays spent');
+  assert.equal(balance(m), 2750, 'balance is exactly what it was before the two purchases');
+  // merging again with an old copy that still lists the items must not refund a second time
+  const again = mergeProfiles(m, bought);
+  assert.equal(again.coinsSpent, 250); assert.equal(balance(again), 2750);
+  assert.equal(mergeProfiles(again, m).coinsSpent, 250);
+  // someone who never owned them is untouched, and spending can never go below zero
+  assert.equal(mergeProfiles({ ...newProfile(), coinsSpent: 120, owned: ['neon'] }, null).coinsSpent, 120);
+  assert.equal(mergeProfiles({ ...newProfile(), coinsSpent: 0, owned: ['gold'] }, null).coinsSpent, 0);
+  assert.deepEqual(Object.keys(RETIRED_ITEMS).sort(), ['gold', 'goldledger']);
+});
+
+test('the Candy and Gothic frames and cards exist, are priced, and keep their ids away from the themes', () => {
+  for (const id of ['sugar', 'bone']) assert.ok(frameById(id) && frameById(id).price > 0, id);
+  for (const id of ['sprinkle', 'crypt']) assert.ok(cardById(id) && cardById(id).price > 0, id);
+  assert.equal(FRAMES.length, 6);
+  const all = [...FRAMES, ...CARDS].map((x) => x.id);
+  assert.equal(new Set(all).size, all.length);
+  for (const t of ['candy', 'gothic', 'notebook', 'space', 'winter']) assert.ok(!all.includes(t), 'item ids never overlap theme ids');
+  assert.equal(cleanFrame('bone'), 'bone'); assert.equal(cleanCard('crypt'), 'crypt'); assert.equal(cleanCard('bone'), null);
 });

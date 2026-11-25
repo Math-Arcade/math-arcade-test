@@ -85,3 +85,78 @@
   --good-t: rgba(86, 180, 233, .22); --bad-t: rgba(230, 159, 0, .22);
   --grid: rgba(204, 121, 167, .10); --glow: rgba(204, 121, 167, .20);
 }
+
+/* Notebook: a bought theme. Paper palette from the light theme, a crayon-like handwriting font (Gochi Hand, OFL), and a ruled-page wallpaper (see css/app.css).
+   The two faces are the same file, scaled so the handwriting is as readable as the pixel and body fonts it replaces. */
+@font-face { font-family: 'Gochi Px'; font-style: normal; font-weight: 400; font-display: swap; size-adjust: 138%;
+  src: url('../assets/fonts/gochi-hand-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Gochi Body'; font-style: normal; font-weight: 400 700; font-display: swap; size-adjust: 112%;
+  src: url('../assets/fonts/gochi-hand-latin-400-normal.woff2') format('woff2'); }
+
+/* Notebook: white page, blue pencil lines, a red margin, blue ink. */
+[data-theme="notebook"] {
+  color-scheme: light;
+  --font-px: 'Gochi Px', 'Comic Sans MS', 'Chalkboard SE', cursive;
+  --font-body: 'Gochi Body', 'Comic Sans MS', 'Chalkboard SE', cursive;
+  --bg: #FDFCF8; --bg-2: #FFFFFF; --bg-3: #F1EEE3; --line: #8FA2CC;
+  --primary: #2F55D4; --primary-2: #2447B8; --on-primary: #FFFFFF; --shade: #1B2E80;
+  --text: #1F2433; --muted: #5C6479;
+  --good: #17884D; --bad: #D6264A; --warn: #A85F00; --on-bad: #FFFFFF;
+  --good-t: rgba(23, 136, 77, .16); --bad-t: rgba(214, 38, 74, .14);
+  --grid: transparent; --glow: transparent;
+  --crayon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><defs><filter id='c' x='-10%' y='-10%' width='120%' height='120%'><feTurbulence type='fractalNoise' baseFrequency='.06' numOctaves='2' seed='4' result='w'/><feDisplacementMap in='SourceGraphic' in2='w' scale='4.2' xChannelSelector='R' yChannelSelector='G' result='d'/><feTurbulence type='fractalNoise' baseFrequency='.9 .55' numOctaves='3' seed='9' result='g'/><feColorMatrix in='g' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2 1.75' result='ga'/><feComposite in='d' in2='ga' operator='in'/></filter></defs><g filter='url(%23c)' fill='none' stroke='%236F86B8' stroke-linecap='round' stroke-linejoin='round'><path stroke-width='7.5' d='M10 6H30Q34 5.5 34 10V30Q34.5 34 30 34H10Q6 34.5 6 30V10Q5.5 6 10 6Z'/><path stroke-width='4.125' opacity='.55' d='M9 8.2H31Q32 8 32 9.5V30.5Q32 32 30.5 32H9.5Q8 32 8 30.5V9.5Q8 8.2 9 8.2Z'/></g></svg>");
+  --crayon-p: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><defs><filter id='c' x='-10%' y='-10%' width='120%' height='120%'><feTurbulence type='fractalNoise' baseFrequency='.06' numOctaves='2' seed='4' result='w'/><feDisplacementMap in='SourceGraphic' in2='w' scale='4.2' xChannelSelector='R' yChannelSelector='G' result='d'/><feTurbulence type='fractalNoise' baseFrequency='.9 .55' numOctaves='3' seed='9' result='g'/><feColorMatrix in='g' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2 1.75' result='ga'/><feComposite in='d' in2='ga' operator='in'/></filter></defs><g filter='url(%23c)' fill='none' stroke='%232F55D4' stroke-linecap='round' stroke-linejoin='round'><path stroke-width='8' d='M10 6H30Q34 5.5 34 10V30Q34.5 34 30 34H10Q6 34.5 6 30V10Q5.5 6 10 6Z'/><path stroke-width='4.4' opacity='.55' d='M9 8.2H31Q32 8 32 9.5V30.5Q32 32 30.5 32H9.5Q8 32 8 30.5V9.5Q8 8.2 9 8.2Z'/></g></svg>");
+}
+
+/* Space: a bought theme. Deep-void palette with ion-cyan as the main colour and sun-amber as the warm accent, a starfield and a planet on the horizon (see css/app.css).
+   Jersey 25 (already bundled) replaces the pixel font; the body font stays Chakra Petch. */
+@font-face { font-family: 'Jersey Space'; font-style: normal; font-weight: 400; font-display: swap; size-adjust: 150%;
+  src: url('../assets/fonts/jersey-25-latin-400-normal.woff2') format('woff2'); }
+
+[data-theme="space"] {
+  color-scheme: dark;
+  --font-px: 'Jersey Space', 'Press Start 2P', ui-monospace, monospace;
+  --bg: #060919; --bg-2: #0E1534; --bg-3: #18214B; --line: #36468F;
+  --primary: #4FE3F0; --primary-2: #A6F3F8; --on-primary: #031C24; --shade: #0F6F7C;
+  --text: #E9EEFF; --muted: #98A4D2;
+  --good: #46E08F; --bad: #FF6A5C; --warn: #FFC857; --on-bad: #260704;
+  --good-t: rgba(70, 224, 143, .20); --bad-t: rgba(255, 106, 92, .22);
+  --grid: transparent; --glow: rgba(79, 227, 240, .22);
+  --sun: #FF9D4D; /* the warm light on the planet's edge */
+}
+
+/* Winter: a bought theme. Snowy daylight: ice-blue sky, glacier-blue ink, berry-red accent. Falling snow, pine trees and a snow drift in the wallpaper (see css/app.css). */
+[data-theme="winter"] {
+  color-scheme: light;
+  --bg: #DDEAF4; --bg-2: #FFFFFF; --bg-3: #E8F1F8; --line: #9DB8CE;
+  --primary: #1F7FA8; --primary-2: #165F80; --on-primary: #FFFFFF; --shade: #0E4259;
+  --text: #14263A; --muted: #465E75;
+  --good: #17884D; --bad: #D6264A; --warn: #A85F00; --on-bad: #FFFFFF;
+  --good-t: rgba(23, 136, 77, .16); --bad-t: rgba(214, 38, 74, .14);
+  --grid: transparent; --glow: rgba(31, 127, 168, .16);
+  --berry: #C8334F; /* holly-berry accent */
+}
+
+/* Candy: a bought theme. Cotton-candy pink with bubblegum ink, grape and mint accents; sprinkles fall, icing drips from the top edge (see css/app.css). */
+[data-theme="candy"] {
+  color-scheme: light;
+  --bg: #FFE9F2; --bg-2: #FFFFFF; --bg-3: #FFE0EC; --line: #F1A8C7;
+  --primary: #D6337F; --primary-2: #A81C62; --on-primary: #FFFFFF; --shade: #8A1450;
+  --text: #4A1D3A; --muted: #86506E;
+  --good: #0E9470; --bad: #E4572E; --warn: #B06A00; --on-bad: #FFFFFF;
+  --good-t: rgba(14, 148, 112, .16); --bad-t: rgba(228, 87, 46, .16);
+  --grid: transparent; --glow: rgba(214, 51, 127, .18);
+  --grape: #7B3FE4; /* second candy colour */
+}
+
+/* Gothic: a bought theme. Black and white: near-black with bone-white lines, skulls and bats drift, a damask lattice, a cobweb in the corner and thorny vines along the bottom (see css/app.css). No crosses or religious symbols anywhere. */
+[data-theme="gothic"] {
+  color-scheme: dark;
+  --bg: #070707; --bg-2: #111111; --bg-3: #1B1B1B; --line: #505050;
+  --primary: #EDEDED; --primary-2: #FFFFFF; --on-primary: #0A0A0A; --shade: #6B6B6B;
+  --text: #F4F4F4; --muted: #9C9C9C;
+  --good: #5FD3A0; --bad: #FF4D6D; --warn: #D2D2D2; --on-bad: #240209;
+  --good-t: rgba(95, 211, 160, .20); --bad-t: rgba(255, 77, 109, .22);
+  --grid: transparent; --glow: rgba(255, 255, 255, .10);
+  --bone: #F2F2F2;
+}

@@ -41,10 +41,10 @@
             ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
           },
           "frame": {
-            ".validate": "newData.isString() && newData.val().matches(/^(neon|frost|gold|aurora|rainbow)$/)"
+            ".validate": "newData.isString() && newData.val().matches(/^(neon|frost|sugar|bone|aurora|rainbow)$/)"
           },
           "card": {
-            ".validate": "newData.isString() && newData.val().matches(/^(neongrid|snowdrift|goldledger|northern|crystal)$/)"
+            ".validate": "newData.isString() && newData.val().matches(/^(neongrid|snowdrift|sprinkle|crypt|northern|crystal)$/)"
           },
           "$other": {
             ".validate": false
@@ -61,7 +61,7 @@
           ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 16"
         },
         "theme": {
-          ".validate": "newData.isString() && newData.val().matches(/^(green|blue|red|yellow|purple|light|dark|colorblind)$/)"
+          ".validate": "newData.isString() && newData.val().matches(/^(green|blue|red|yellow|purple|light|dark|colorblind|notebook|space|winter|candy|gothic)$/)"
         },
         "pic": {
           ".validate": "newData.isString() && newData.val().length <= 14000 && newData.val().matches(/^data:image\\/jpeg;base64,[A-Za-z0-9+\\/=]+$/)"
@@ -126,10 +126,10 @@
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
         },
         "frame": {
-          ".validate": "newData.isString() && newData.val().matches(/^(neon|frost|gold|aurora|rainbow)$/)"
+          ".validate": "newData.isString() && newData.val().matches(/^(neon|frost|sugar|bone|aurora|rainbow)$/)"
         },
         "card": {
-          ".validate": "newData.isString() && newData.val().matches(/^(neongrid|snowdrift|goldledger|northern|crystal)$/)"
+          ".validate": "newData.isString() && newData.val().matches(/^(neongrid|snowdrift|sprinkle|crypt|northern|crystal)$/)"
         },
         "ach": {
           "$id": {

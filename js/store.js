@@ -3,8 +3,9 @@
 // so progress can never be lost by syncing).
 
 import { utcDay } from './util.js';
+import { ALL_THEME_IDS } from './config.js';
 import { levelInfo, MAX_XP } from './engine/level.js';
-import { COINS_PER_XP, LEVEL_UP_COINS, frameById, cardById, itemById, cleanFrame, cleanCard, balance } from './shop.js';
+import { COINS_PER_XP, LEVEL_UP_COINS, RETIRED_ITEMS, frameById, cardById, themeById, itemById, cleanFrame, cleanCard, balance } from './shop.js';
 import { evaluate, cleanAch, cleanAchTitle, cleanShowcase, blitzAch, tierOf, SHOWCASE_MAX, achById, hasTitle } from './achievements.js';
 
 const SKEY = 'ma2.settings';
@@ -48,8 +49,12 @@ export function mergeProfiles(a, b) {
   out.xp = Math.min(MAX_XP, Math.max(a?.xp || 0, b?.xp || 0));
   out.titleLevel = a?.titleLevel ?? b?.titleLevel ?? null;
   out.coinsEarned = Math.max(a?.coinsEarned || 0, b?.coinsEarned || 0);
-  out.coinsSpent = Math.max(a?.coinsSpent || 0, b?.coinsSpent || 0);
-  out.owned = [...new Set([...(a?.owned || []), ...(b?.owned || [])].filter((id) => itemById(id)))];
+  const ownedAll = [...new Set([...(a?.owned || []), ...(b?.owned || [])])];
+  // an item taken out of the Store is refunded: what it cost comes off the spent total, and it is worked out from the owned lists every time,
+  // so merging an old copy again (which still lists it) never refunds twice
+  const refund = ownedAll.reduce((sum, id) => sum + (RETIRED_ITEMS[id] || 0), 0);
+  out.coinsSpent = Math.max(0, Math.max(a?.coinsSpent || 0, b?.coinsSpent || 0) - refund);
+  out.owned = ownedAll.filter((id) => itemById(id));
   out.frame = cleanFrame(a?.frame ?? b?.frame ?? null);
   if (out.frame && !out.owned.includes(out.frame)) out.owned.push(out.frame);
   out.card = cleanCard(a?.card ?? b?.card ?? null);
@@ -81,7 +86,7 @@ class Store {
     this.settings = { ...DEFAULT_SETTINGS, ...(saved || this.legacySettings()) };
     if (saved && saved.effects === undefined) this.settings.effects = !saved.reduceMotion; // older saves had four separate switches
     for (const k of ['grid', 'crt', 'particles', 'reduceMotion']) delete this.settings[k];
-    if (!['green', 'blue', 'red', 'yellow', 'purple', 'light', 'dark', 'colorblind'].includes(this.settings.theme)) this.settings.theme = 'green';
+    if (!ALL_THEME_IDS.includes(this.settings.theme)) this.settings.theme = 'green';
     if (!saved) write(SKEY, this.settings);
     this._owner = cleanOwner(read(AKEY));
     this.profile = mergeProfiles(read(slotKey(this._owner)), null);
@@ -238,6 +243,24 @@ class Store {
     if (id && !(cardById(id) && this.profile.owned.includes(id))) return false;
     this.update((p) => { p.card = id || null; });
     return true;
+  }
+  // Themes: the chosen theme is a device setting, owning it is part of the profile.
+  buyTheme(id) {
+    const t = themeById(id);
+    if (!t || this.profile.owned.includes(id) || this.coins < t.price) return false;
+    this.update((p) => { p.coinsSpent = (p.coinsSpent || 0) + t.price; p.owned = [...p.owned, id]; });
+    this.set('theme', id);
+    return true;
+  }
+  equipTheme(id) { // null goes back to the default theme
+    if (id && !(themeById(id) && this.profile.owned.includes(id))) return false;
+    this.set('theme', id || 'green');
+    return true;
+  }
+  // The theme actually shown: a bought theme you do not own (another account on this device, say) falls back to the default.
+  get theme() {
+    const t = this.settings.theme;
+    return themeById(t) && !this.profile.owned.includes(t) ? 'green' : t;
   }
   get level() { return levelInfo(this.profile.xp); }
 

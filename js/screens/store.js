@@ -1,7 +1,7 @@
 import { app } from '../app.js';
 import { $, h, fmt, toast, lvlBadge } from '../util.js';
 import { confirmDialog } from '../router.js';
-import { FRAMES, CARDS } from '../shop.js';
+import { FRAMES, CARDS, THEME_ITEMS } from '../shop.js';
 import { equippedTitleName, tierForTitle } from '../titles.js';
 
 // Store: everything on one scrolling page, one titled section per kind of item, paid for with coins.
@@ -12,6 +12,8 @@ const SECTIONS = [
     buy: (s, id) => s.buyFrame(id), equip: (s, id) => s.equipFrame(id) },
   { id: 'cards', title: 'PROFILE CARDS', note: 'Restyle your row in Ranks and Friends', layout: 'list', items: CARDS, label: 'Card', worn: (p) => p.card,
     buy: (s, id) => s.buyCard(id), equip: (s, id) => s.equipCard(id) },
+  { id: 'themes', title: 'THEMES', note: 'Restyle the whole game', layout: 'list', items: THEME_ITEMS, label: 'Theme', worn: () => app.store.theme,
+    buy: (s, id) => s.buyTheme(id), equip: (s, id) => s.equipTheme(id) },
 ];
 
 export function initStore() {
@@ -43,12 +45,23 @@ export function initStore() {
     return row;
   }
 
+  // a miniature screen in that theme: its own palette, wallpaper and fonts (the theme CSS is scoped to data-theme)
+  function themePreview(id) {
+    const prev = h('span', 'st-tprev'); prev.dataset.theme = id;
+    const card = h('span', 'st-tcard');
+    card.append(h('b', '', '7 × 8 = ?'), h('small', '', 'Daily Challenge'));
+    const btn = h('span', 'st-tbtn', 'PLAY');
+    prev.append(card, btn);
+    return prev;
+  }
+
   // one shop item: buy it, wear it, or take it off
   function itemButton(sec, item) {
     const { owned } = store.profile;
     const has = owned.includes(item.id), on = sec.worn(store.profile) === item.id;
     const el = h('button', `st-card${sec.layout === 'list' ? ' st-cd' : ''}${on ? ' on' : ''}${has ? ' own' : ''}`);
     if (sec.id === 'cards') el.append(previewRow(item.id));
+    else if (sec.id === 'themes') el.append(themePreview(item.id));
     else { const prev = picture(item.id); prev.classList.add('st-prev'); el.append(prev); }
     el.append(h('b', 'st-name', item.name), stateChip(item, has, on));
     el.type = 'button';
@@ -77,6 +90,6 @@ export function initStore() {
   }
 
   store.on('profile', () => { if (router.current === 'store') render(); });
-  store.on('settings', (k) => { if (k === 'avatar' && router.current === 'store') render(); });
+  store.on('settings', (k) => { if ((k === 'avatar' || k === 'theme') && router.current === 'store') render(); });
   return { enter() { render(); } };
 }

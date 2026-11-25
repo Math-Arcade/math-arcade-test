@@ -25,7 +25,7 @@ import { initAuth } from './screens/auth.js';
 
 function applySettings() {
   const s = store.settings, root = document.documentElement;
-  root.dataset.theme = s.theme;
+  root.dataset.theme = store.theme;
   root.classList.toggle('no-grid', !s.effects);
   root.classList.toggle('crt', s.effects);
   root.classList.toggle('reduce-motion', !s.effects);
@@ -155,6 +155,7 @@ async function boot() {
   Object.assign(app, { store, audio, fx, cloud });
   applySettings();
   store.on('settings', (k) => { if (['theme', 'effects'].includes(k)) applySettings(); });
+  store.on('profile', () => { if (document.documentElement.dataset.theme !== store.theme) applySettings(); }); // a bought theme appears or goes away with the account
   audio.init(store);
   fx.init(store);
   backgroundSymbols();

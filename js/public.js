@@ -1,12 +1,12 @@
 // What other players can see about you: name, theme, picture and a stats summary.
-import { MODES } from './config.js';
+import { MODES, ALL_THEME_IDS } from './config.js';
 import { levelInfo } from './engine/level.js';
 import { cleanFrame, cleanCard } from './shop.js';
 import { titleByMilestone, cleanTitleLevel } from './titles.js';
 import { achById, cleanAch, cleanAchTitle, cleanShowcase } from './achievements.js';
 import { thumbFrom, safePic } from './avatar.js';
 
-export const THEMES = ['green', 'blue', 'red', 'yellow', 'purple', 'light', 'dark', 'colorblind'];
+export const THEMES = ALL_THEME_IDS;
 export const PUBLIC_PIC_MAX = 14000;
 
 const num = (v, max = 1e8) => (Number.isFinite(Number(v)) ? Math.max(0, Math.min(max, Math.round(Number(v)))) : 0);
@@ -24,7 +24,7 @@ export async function buildPublic(store, cloud, me = cloud.user) {
   const stats = { best: {} };
   for (const k of ['blitzGames', 'correct', 'wrong', 'bestStreak', 'bestLevel', 'seconds', 'dailies', 'dailyStreak']) stats[k] = num(s[k]);
   for (const m of MODES) stats.best[m] = num(s.best[m], 100000);
-  const out = { xp: num(store.profile.xp), titleLevel: Number(store.profile.titleLevel) || 1, name: me.name, theme: THEMES.includes(store.settings.theme) ? store.settings.theme : 'green', stats, updated: Date.now() };
+  const out = { xp: num(store.profile.xp), titleLevel: Number(store.profile.titleLevel) || 1, name: me.name, theme: THEMES.includes(store.theme) ? store.theme : 'green', stats, updated: Date.now() };
   const ach = cleanAch(store.profile.ach); // earned achievements, the one worn as a title, and the (up to 3) shown on the profile
   if (Object.keys(ach).length) out.ach = ach;
   const shown = cleanShowcase(store.profile.showcase, ach); if (shown.length) out.showcase = shown.join(',');
